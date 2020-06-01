@@ -1,11 +1,11 @@
 # Schrodinger's Cup
 A game of Peter Suber's Nomic running on the Tezos network
 
-<br/><br/>
+<br/>
 <p align="center">
   <img width="450px" height="auto" src="https://cdn.discordapp.com/attachments/709953915550171206/717048880000270431/schrodingers-cup.png">
 </p>
-<br/><br/>
+<br/>
 
 ## The legend of Tezos-Nomic
 
