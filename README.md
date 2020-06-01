@@ -7,7 +7,7 @@ A game of Peter Suber's Nomic running on the Tezos network
 </p>
 <br/>
 
-## The legend of Tezos-Nomic
+## The legend of "Tezos-Nomic"
 
 Tezos supports meta upgrades: the protocols can evolve by amending their own code. This is not unlike philosopher Peter Suber’s Nomic, a game built around a fully introspective set of rules that are changed and develop as the game progresses. Actually, the idea for Tezos was based on Nomic.
 
