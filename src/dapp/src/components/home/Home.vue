@@ -4,12 +4,10 @@
     <!-- Not Connected -->
     <div class="container" v-if="!connected">
       <h1>{{ title }}</h1>
-      <ul v-if="!connected">
-        <li class="connect" @click="connectUser()">
-          <span class="btn-connect">Connect</span>
-        </li>
-        <li class="proof">
-          <router-link to="/verify">Verify Proof</router-link>
+      <h5>{{ subtitle }}</h5>
+      <ul class="list-unstyled" v-if="!connected">
+        <li @click="connectUser()">
+          <button class="btn btn-primary btn-connect">Login With Tezos</button>
         </li>
       </ul>
       <p>Connect your Tezos wallet to get started</p>
@@ -18,9 +16,10 @@
     <!-- Connected -->
     <div class="container" v-else>
       <h1>{{ title }}</h1>
+      <h5>{{ subtitle }}</h5>
       <!-- Live Gameplay Countdown -->
       <div class="live-game-countdown" v-if="!live && liveStateVerified">
-        <p>Next game begins: {{ nextGameCountdown() }}</p>
+        <p>Next game begins: {{ nextGameCountdown }}</p>
       </div>
       <!-- Loading Gameplay Countdown -->
       <div class="loading" v-if="!live && !liveStateVerified">
@@ -66,7 +65,8 @@ export default {
     liveStateVerified: false,
     liveDailyHourUTC: 16,
     liveDailyHourClosedUTC: 17,
-    nextGamePlaySessionStart: null
+    nextGamePlaySessionStart: null,
+    nextGamePlayStartOffset: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -76,6 +76,9 @@ export default {
       this.connected = true;
       this.address = returningUser;
     }
+
+    // Calculate next game time
+    this.nextGame();
   },
   methods: {
     connectUser: async function () {
@@ -93,22 +96,11 @@ export default {
           sessionStorage.setItem('tzAddress', this.address);
           this.connected = true;
           let balance = await this.getBalance(this.address);
-          console.log("User balance =>", this.currentBalance);
+          console.log("User balance =>", balance);
         }
       }
     },
-  },
-  computed: {
-    nextGameCountdown: function () {
-      let gameState = null;
-      let countdown = '';
-      // Test data integrity before display
-      if (!this.liveDailyHourUTC) {
-        return countdown;
-      } else if (isNaN(this.liveDailyHourUTC)) {
-        return countdown;
-      }
-
+    nextGame: function () {
       // Countdown bounding props.
       const MINUTES_TO_MILLISECONDS_MULTIPLIER = 60000;
       let baseDate = new Date();                        // <= Basic date obj. (user timezone)
@@ -129,7 +121,11 @@ export default {
       if (utcHour >= this.liveDailyHourUTC && utcHour < this.liveDailyHourClosedUTC) {
         this.live = true;
         this.liveStateVerified = true;
-        return '00:00:00';
+        
+        // Set next gameplay start (now)
+        this.nextGamePlayStartOffset = 0;
+        this.nextGamePlaySessionTime = new Date();
+
       // ii) Next Gameplay Session is Tomorrow
       } else if (utcHour > this.liveDailyHourClosedUTC) {
         this.live = false;
@@ -146,11 +142,14 @@ export default {
         let tomorrowGameStartOffset = (this.liveDailyHourUTC * 60) * MINUTES_TO_MILLISECONDS_MULTIPLIER;
         let nextGameplaySesssion = new Date(tomorrowBegin + tomorrowGameStartOffset);
 
-        // Do calculation for next session
-        let nextGamePlaySessionTime = utcTomorrow - (hoursPassedDailyDeadline + minutesPassedDailyDeadline);
-        this.nextGamePlaySessionStart = nextGamePlaySessionTime;
+        // Set next gameplay start
+        this.nextGamePlayStartOffset = (nextGameplaySesssion.getTime()) - userTime;
+        this.nextGamePlaySessionStart = nextGameplaySesssion;
 
-        return this.nextGamePlaySessionStart;
+        // Start timer
+        setInterval(() => {
+          this.nextGamePlayStartOffset = this.nextGamePlayStartOffset - 1000;
+        }, 1000);
 
       // iii) Next Gameplay Session is Later Today
       } else {
@@ -168,19 +167,78 @@ export default {
 
         // Do calculation for next session
         let nextGamePlaySessionTime = new Date(utcTime + gameStartOffset);
+
+        // Set next gameplay start
+        this.nextGamePlayStartOffset = (nextGamePlaySessionStart.getTime()) - userTime;
         this.nextGamePlaySessionStart = nextGamePlaySessionTime;
 
-        return this.nextGamePlaySessionStart;
+        // Start timer
+        setInterval(() => {
+          this.nextGamePlayStartOffset = this.nextGamePlayStartOffset - 1000;
+        }, 1000);
+      }
+      console.log('Gameplay Start', [this.nextGamePlaySessionStart, this.nextGamePlayStartOffset])
+    }
+  },
+  computed: {
+    nextGameCountdown: function () {
+      let countdown = '';
+      // Test data integrity before display
+      if (!this.liveDailyHourUTC || !this.nextGamePlaySessionStart || !this.nextGamePlayStartOffset) {
+        return countdown;
+      } else if (isNaN(this.liveDailyHourUTC) || isNaN(this.nextGamePlayStartOffset)) {
+        return countdown;
+      } else if (this.nextGamePlayStartOffset < 0) {
+        // Gameplay already in progress
+        this.live = true;
+        return '00:00:00';
+      } else {
+        if (this.live) {
+          this.live = false;
+        }
       }
 
+      // Build timer countdown
+      let hours,
+          minutes,
+          seconds;
+      
+      // Hours
+      hours = parseInt(this.nextGamePlayStartOffset / (3600 * 1000));
+      
+      // Minutes
+      minutes = (this.nextGamePlayStartOffset / (3600 * 1000)) - hours;
+      minutes = parseInt(minutes * 60);
+
+      // Seconds
+      seconds = ((this.nextGamePlayStartOffset / (3600 * 1000)) - hours) * 60;
+      seconds = seconds - minutes;
+      seconds = (Math.round(seconds * 100) / 100) * 100;
+      
+      // Zero prefixing
+      if (hours < 10) {
+        hours = String('0' + hours);
+      }
+      if (minutes < 10) {
+        minutes = String('0' + minutes);
+      }
+      if (seconds < 10) {
+        seconds = String('0' + seconds);
+      }
+
+      // Countdown final format
+      countdown = hours + ':' + minutes + ':' + seconds;
+      
+      // Update timer in UI
+      return countdown;
     }
   }
 };
 </script>
 
 <style scoped>
-  .container {
+  /* .container {
     width: 90vw;
     margin: 2rem auto;
-  }
+  } */
 </style>

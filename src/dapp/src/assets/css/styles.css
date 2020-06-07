@@ -21,3 +21,15 @@
   left: -70px;
   clear: both;
 }
+
+/* Footer Content Pane */
+.footer {
+  display: inline-block;
+  margin: auto;
+  width: 100%;
+  padding: 1.5rem;
+}
+.footer img {
+  margin: auto;
+  display: block;
+}
