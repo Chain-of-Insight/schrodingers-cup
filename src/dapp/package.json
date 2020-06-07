@@ -1,0 +1,46 @@
+{
+  "name": "schrodingers-cup-nomic",
+  "version": "0.1.0",
+  "description": "A game of Nomic running on the Tezos blockchain",
+  "main": "app.js",
+  "scripts": {
+    "serve": "parcel src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:Chain-of-Insight/schrodingers-cup.git"
+  },
+  "keywords": [
+    "tezos",
+    "Nomic",
+    "blockchain",
+    "dapp",
+    "L. M. Goodman",
+    "Peter Suber",
+    "Erwin Schrodinger"
+  ],
+  "author": "@chainofinsight",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Chain-of-Insight/pop-machine-glow/issues"
+  },
+  "homepage": "https://github.com/Chain-of-Insight/pop-machine-glow#readme",
+  "dependencies": {
+    "@taquito/taquito": "^6.0.3-beta.0",
+    "@taquito/tezbridge-signer": "^6.1.0-beta.0",
+    "blake2b": "^2.1.3",
+    "dotenv": "^8.2.0",
+    "twilio-chat": "^3.4.0",
+    "vue": "^2.6.11",
+    "vue-hot-reload-api": "^2.3.4",
+    "vue-router": "^3.1.6"
+  },
+  "devDependencies": {
+    "@vue/component-compiler-utils": "^3.1.1",
+    "parcel-bundler": "^1.12.4",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "alias": {
+    "vue": "./node_modules/vue/dist/vue.esm.js"
+  }
+}
