@@ -1,0 +1,61 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "A game of Peter Suber's Nomic running on the Tezos network.",
+        "title": "Schrodinger's Cup API",
+        "contact": {},
+        "license": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/ping": {
+            "get": {
+                "description": "Ping/Health Check",
+                "produces": [
+                    "text/plain"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "pong",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/settle": {
+            "post": {
+                "description": "Settle game window"
+            }
+        },
+        "/test": {
+            "post": {
+                "description": "Run some arbitrary nomsu code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nomsu code",
+                        "name": "code",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "nomsu execution result",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/vote": {
+            "post": {
+                "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled"
+            }
+        }
+    }
+}

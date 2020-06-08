@@ -1,0 +1,33 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+server:
+  status: true
+  open: false
+  port: 5002
+  host: localhost
+schema:
+- name: nomsu-api
+  path: .
+  commands:
+    install:
+      status: true
+      method: go build -o ./build/server
+    run:
+      status: true
+      method: ./build/server
+  watcher:
+    extensions:
+    - go
+    paths:
+    - /
+    ignore:
+      paths:
+      - .git
+      - .realize
+      - vendor
+    scripts:
+      - type: before
+        command: swag init --generalInfo server.go
+        output: true
