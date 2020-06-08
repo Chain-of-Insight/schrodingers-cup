@@ -21,6 +21,10 @@
       <div class="live-game-countdown" v-if="!live && liveStateVerified">
         <div class="jumbotron">
           <p class="descr">Next gameplay session begins:<br/><h5 class="game-session-countdown counter-display">{{ nextGameCountdown }}<h5></p>
+          <div class="row">
+            <!-- //here -->
+            <router-link class="btn btn-primary btn-practice" to="/practice" tag="button">Go To Practice Zone</router-link>
+          </div>
         </div>
       </div>
       <!-- Loading Gameplay Countdown -->
@@ -244,7 +248,12 @@ export default {
 </script>
 
 <style scoped>
+  .container,
   .live-game-countdown {
     text-align: center;
+  }
+  .btn-practice {
+    margin: auto;
+    margin-top: 1.5rem;
   }
 </style>
