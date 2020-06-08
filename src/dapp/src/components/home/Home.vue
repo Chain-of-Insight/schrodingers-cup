@@ -22,7 +22,6 @@
         <div class="jumbotron">
           <p class="descr">Next gameplay session begins:<br/><h5 class="game-session-countdown counter-display">{{ nextGameCountdown }}<h5></p>
           <div class="row">
-            <!-- //here -->
             <router-link class="btn btn-primary btn-practice" to="/practice" tag="button">Go To Practice Zone</router-link>
           </div>
         </div>
@@ -34,10 +33,7 @@
       <!-- Gameplay is Live -->
       <div class="live-game" v-if="live && liveStateVerified">
         <p>A gameplay session is currently in progress</p>
-        <!-- 
-          TODO XXX (drew): 
-          Add nav. button here to proceed to live game 
-        -->
+        <router-link class="btn btn-primary btn-practice" to="/nomic" tag="button">Join</router-link>
       </div>
     </div>
 
