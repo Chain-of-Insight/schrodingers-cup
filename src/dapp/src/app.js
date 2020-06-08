@@ -6,6 +6,7 @@ Vue.use(VueRouter);
 // Components
 import Home from './components/home/Home';
 import Practice from './components/practice/Practice';
+import Nomic from './components/nomic/Nomic';
 
 // Internal
 import NotFound from './components/system/NotFound';
@@ -17,7 +18,8 @@ const router = new VueRouter({
   routes: [
     { name: 'home', path: '/', component: Home },
     { name: 'practice', path: '/practice', component: Practice },
-    { path: '/404', component: NotFound },  
+    { name: 'nomic', path: '/nomic', component: Nomic },
+    { path: '/404', component: NotFound },
     { path: '*', redirect: '/404' }
   ]
 });
