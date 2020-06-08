@@ -72,7 +72,8 @@ export default {
     liveDailyHourUTC: (process.env.hasOwnProperty('UTC_START')) ? process.env.UTC_START : 16,
     liveDailyHourClosedUTC: (process.env.hasOwnProperty('UTC_END')) ? process.env.UTC_END : 17,
     nextGamePlaySessionStart: null,
-    nextGamePlayStartOffset: null
+    nextGamePlayStartOffset: null,
+    userOffsetUTC: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -112,6 +113,7 @@ export default {
       let baseDate = new Date();                        // <= Basic date obj. (user timezone)
       let userTime = baseDate.getTime();                // <= as epoch milliseconds
       let userOffsetUTC = baseDate.getTimezoneOffset(); // <= User UTC offset in minutes
+      this.userOffsetUTC = userOffsetUTC / 60;          // <= Ref. user UTC offset in hours
       let mult = MINUTES_TO_MILLISECONDS_MULTIPLIER;
       userOffsetUTC = userOffsetUTC * mult;             // <= User UTC offset in milliseconds
       let utcTime = userTime + (userOffsetUTC);         // <= Current time as UTC date obj.
@@ -125,6 +127,7 @@ export default {
       
       // i) Live Game In Progress
       if (utcHour >= this.liveDailyHourUTC && utcHour < this.liveDailyHourClosedUTC) {
+        console.log('Now');
         this.live = true;
         this.liveStateVerified = true;
         
@@ -133,7 +136,7 @@ export default {
         this.nextGamePlaySessionTime = new Date();
 
       // ii) Next Gameplay Session is Tomorrow
-      } else if (utcHour > this.liveDailyHourClosedUTC) {
+      } else if (utcHour >= this.liveDailyHourClosedUTC) {
         this.live = false;
         this.liveStateVerified = true;
 
@@ -182,16 +185,16 @@ export default {
           this.nextGamePlayStartOffset = this.nextGamePlayStartOffset - 1000;
         }, 1000);
       }
-      console.log('Gameplay Start', [{nextSessionStart: this.nextGamePlaySessionStart}, {timeRemaining: this.nextGamePlayStartOffset}])
+      console.log('Gameplay Start', [{nextSessionStart: this.nextGamePlaySessionStart}, {timeRemaining: this.nextGamePlayStartOffset}, {currentHourUTC: utcHour}]);
     }
   },
   computed: {
     nextGameCountdown: function () {
       let countdown = '';
       // Test data integrity before display
-      if (!this.liveDailyHourUTC || !this.nextGamePlaySessionStart || !this.nextGamePlayStartOffset) {
+      if (!this.liveDailyHourUTC || !this.nextGamePlaySessionStart || !this.nextGamePlayStartOffset || !this.userOffsetUTC) {
         return countdown;
-      } else if (isNaN(this.liveDailyHourUTC) || isNaN(this.nextGamePlayStartOffset)) {
+      } else if (isNaN(this.liveDailyHourUTC) || isNaN(this.nextGamePlayStartOffset) || isNaN(this.userOffsetUTC)) {
         return countdown;
       } else if (this.nextGamePlayStartOffset < 0) {
         // Gameplay already in progress
@@ -219,6 +222,16 @@ export default {
       seconds = (this.nextGamePlayStartOffset / 1000);
       seconds = seconds - (hours * 3600) - (minutes * 60);
       // console.log(seconds);
+
+      // Subtract / Add user UTC offset
+      let userOffsetUTC = this.userOffsetUTC;
+      let isPositiveOffset = Math.sign(this.userOffsetUTC);
+      if (isPositiveOffset) {
+        hours = hours - userOffsetUTC;
+      } else {
+        hours = hours + (userOffsetUTC);
+      }
+      // console.log([hours, userOffsetUTC]);
       
       // Zero prefixing and decimal safety
       if (hours < 10) {
