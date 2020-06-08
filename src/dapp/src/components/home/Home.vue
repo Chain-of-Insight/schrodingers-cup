@@ -19,7 +19,9 @@
       <h5>{{ subtitle }}</h5>
       <!-- Live Gameplay Countdown -->
       <div class="live-game-countdown" v-if="!live && liveStateVerified">
-        <p>Next game begins: {{ nextGameCountdown }}</p>
+        <div class="jumbotron">
+          <p class="descr">Next gameplay session begins:<br/><h5 class="game-session-countdown counter-display">{{ nextGameCountdown }}<h5></p>
+        </div>
       </div>
       <!-- Loading Gameplay Countdown -->
       <div class="loading" v-if="!live && !liveStateVerified">
@@ -63,8 +65,8 @@ export default {
     mountProvider: mountProvider,
     live: null,
     liveStateVerified: false,
-    liveDailyHourUTC: 16,
-    liveDailyHourClosedUTC: 17,
+    liveDailyHourUTC: (process.env.hasOwnProperty('UTC_START')) ? process.env.UTC_START : 16,
+    liveDailyHourClosedUTC: (process.env.hasOwnProperty('UTC_END')) ? process.env.UTC_END : 17,
     nextGamePlaySessionStart: null,
     nextGamePlayStartOffset: null
   }),
@@ -242,8 +244,7 @@ export default {
 </script>
 
 <style scoped>
-  /* .container {
-    width: 90vw;
-    margin: 2rem auto;
-  } */
+  .live-game-countdown {
+    text-align: center;
+  }
 </style>
