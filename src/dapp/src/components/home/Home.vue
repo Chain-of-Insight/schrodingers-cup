@@ -211,19 +211,25 @@ export default {
       minutes = parseInt(minutes * 60);
 
       // Seconds
-      seconds = ((this.nextGamePlayStartOffset / (3600 * 1000)) - hours) * 60;
-      seconds = seconds - minutes;
-      seconds = (Math.round(seconds * 100) / 100) * 100;
+      seconds = (this.nextGamePlayStartOffset / 1000);
+      seconds = seconds - (hours * 3600) - (minutes * 60000);
+      // console.log(seconds);
       
-      // Zero prefixing
+      // Zero prefixing and decimal safety
       if (hours < 10) {
-        hours = String('0' + hours);
+        hours = String('0' + parseInt(hours));
+      } else {
+        hours = parseInt(hours);
       }
       if (minutes < 10) {
-        minutes = String('0' + minutes);
+        minutes = String('0' + parseInt(minutes));
+      } else {
+        minutes = parseInt(minutes);
       }
       if (seconds < 10) {
-        seconds = String('0' + seconds);
+        seconds = String('0' + parseInt(seconds));
+      } else {
+        seconds = parseInt(seconds);
       }
 
       // Countdown final format
