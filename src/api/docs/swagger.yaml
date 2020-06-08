@@ -28,6 +28,8 @@ paths:
         name: code
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: nomsu execution result

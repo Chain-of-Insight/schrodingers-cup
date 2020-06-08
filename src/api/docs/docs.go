@@ -49,6 +49,9 @@ var doc = `{
         "/test": {
             "post": {
                 "description": "Run some arbitrary nomsu code",
+                "produces": [
+                    "application/json"
+                ],
                 "parameters": [
                     {
                         "type": "string",
