@@ -178,7 +178,7 @@ export default {
           this.nextGamePlayStartOffset = this.nextGamePlayStartOffset - 1000;
         }, 1000);
       }
-      console.log('Gameplay Start', [this.nextGamePlaySessionStart, this.nextGamePlayStartOffset])
+      console.log('Gameplay Start', [{nextSessionStart: this.nextGamePlaySessionStart}, {timeRemaining: this.nextGamePlayStartOffset}])
     }
   },
   computed: {
