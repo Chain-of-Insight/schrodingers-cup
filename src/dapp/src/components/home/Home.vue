@@ -159,8 +159,7 @@ export default {
         // Calculate date difference
         let today = new Date(utcTime);
         let todayHours = (today.getHours() * 60) * MINUTES_TO_MILLISECONDS_MULTIPLIER;
-        // let todayHoursRemaining = this.liveDailyHourUTC - todayHours;
-        let todayHoursRemaining = ((16 * 60) * MINUTES_TO_MILLISECONDS_MULTIPLIER) - todayHours;
+        let todayHoursRemaining = ((this.liveDailyHourUTC * 60) * MINUTES_TO_MILLISECONDS_MULTIPLIER) - todayHours;
         let todayMinutes = today.getMinutes() * MINUTES_TO_MILLISECONDS_MULTIPLIER;
         let todaySeconds = today.getSeconds() * (MINUTES_TO_MILLISECONDS_MULTIPLIER / 60);
         let gameStartOffset = todayHoursRemaining - todayMinutes - todaySeconds;
@@ -169,7 +168,7 @@ export default {
         let nextGamePlaySessionTime = new Date(utcTime + gameStartOffset);
 
         // Set next gameplay start
-        this.nextGamePlayStartOffset = (nextGamePlaySessionStart.getTime()) - userTime;
+        this.nextGamePlayStartOffset = gameStartOffset;
         this.nextGamePlaySessionStart = nextGamePlaySessionTime;
 
         // Start timer
@@ -212,7 +211,7 @@ export default {
 
       // Seconds
       seconds = (this.nextGamePlayStartOffset / 1000);
-      seconds = seconds - (hours * 3600) - (minutes * 60000);
+      seconds = seconds - (hours * 3600) - (minutes * 60);
       // console.log(seconds);
       
       // Zero prefixing and decimal safety
