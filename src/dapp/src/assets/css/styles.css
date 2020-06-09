@@ -1,3 +1,8 @@
+/* General */
+.hidden {
+  display: none;
+}
+
 /* Main Content Pane */
 .container {
   width: 90vw;

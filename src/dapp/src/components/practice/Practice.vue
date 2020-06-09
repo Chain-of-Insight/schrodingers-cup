@@ -18,6 +18,7 @@
       <h1>{{ title }}</h1>
       <h5>{{ subtitle }}</h5>
 
+      <!-- IDE Input -->
       <div id="ide" class="ide input">
         <label>
           <strong>Input New Rule:</strong>
@@ -34,12 +35,12 @@
         </div>
       </div>
 
-      <div class="ide output">
-        <textarea 
-          v-model="ide.output" 
-          v-if="ide.output"
-          readonly
-        ></textarea>
+      <!-- IDE Output -->
+      <div class="ide output" v-if="ide.output">
+        <label>
+          <strong>Output:</strong>
+        </label>
+        <pre class="prettyprint">{{ ide.output }}</pre>
       </div>
     </div>
 
@@ -142,8 +143,28 @@ export default {
     },
     testRuleSet: async function () {
       console.log('Preparing to test rule', this.ide.input);
-      let result = await this.ide.execute(this.ide.input);
-      console.log('Result', result);
+      
+      // Fetch compiler result\
+      let result;
+      try {
+        result = await this.ide.execute(this.ide.input);
+        console.log('Result', result);
+      } catch(e) {
+        this.ide.output = "Error: compile failed!";
+      }
+      
+      // Show compiler feedback
+      let output;
+      if (result.data) {
+        if (result.data.result) {
+          output = result.data.result;
+        } 
+      }
+      if (output) {
+        this.ide.output = output;
+      } else {
+        this.ide.output = "Error: compiler failed for unknown reasons 😅";
+      }
     },
     saveRuleSet: function () {
       // TODO: this
@@ -160,7 +181,7 @@ export default {
 </script>
 
 <style scoped>
-  #ide {
+  .ide {
     margin-top: 2rem;
   }
 </style>
