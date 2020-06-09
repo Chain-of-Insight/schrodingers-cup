@@ -31,7 +31,7 @@
         </div>
 
         <!-- Chat Form Input -->
-        <div class="input-group">
+        <div class="input-group chat-controls">
           <input 
             id="chat-input" 
             type="text" 

@@ -108,3 +108,7 @@ section.chat input {
   display:inline-block;
   margin-right:5px;
 }
+
+.input-group.chat-controls {
+  min-width: 80vw;
+}
