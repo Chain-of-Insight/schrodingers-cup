@@ -22,7 +22,7 @@
       <section>
         <div id="messages" class="message-container">
           <!-- Chat Messages -->
-          <div v-for="message in chatMessages">
+          <div v-for="(message, index) in chatMessages" v-bind:key="index">
             <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
               <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
               <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
@@ -320,7 +320,7 @@ export default {
 
 <style scoped>
   /* Chat */
-  #chat-input {
+  .input-group.chat-controls {
     width: 80vw;
   }
 </style>
