@@ -22,7 +22,7 @@
       <section>
         <div id="messages" class="message-container">
           <!-- Chat Messages -->
-          <div v-for="message in chatMessages">
+          <div v-for="(message, index) in chatMessages" v-bind:key="index">
             <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
               <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
               <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
@@ -85,6 +85,7 @@ export default {
     TwilioChat: Twilio,
     chatClient: null,
     chatMessages: [],
+    chatChannelJoined: false,
     chatInput: {
       focused: false,
       value: null
@@ -199,16 +200,17 @@ export default {
 
         // Join user in channel as required
         if (chatChannel.status !== "joined") {
-          console.log('here');
-          this.chatClient.on('channelJoined', async () => {
-            console.log('Channel joined', channel);
-            this.chatMessages.push(joinedMessage);
+          this.chatMessages.push(joinedMessage);
+          if (!this.chatChannelJoined) {
             await this.chatChannel.join();
-            this.setupChatChannel();
-          });
+            console.log('Channel joined', channel);
+          }
+          this.chatChannelJoined = true;
+          this.setupChatChannel();
         } else {
           this.chatMessages.push(joinedMessage);
           this.setupChatChannel();
+          this.chatChannelJoined = true;
         }
       }).catch((error) => {
         console.log('Error joining chat', error);
@@ -318,7 +320,7 @@ export default {
 
 <style scoped>
   /* Chat */
-  #chat-input {
+  .input-group.chat-controls {
     width: 80vw;
   }
 </style>

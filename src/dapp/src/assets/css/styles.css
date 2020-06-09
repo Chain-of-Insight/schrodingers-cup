@@ -112,3 +112,16 @@ section.chat input {
 .input-group.chat-controls {
   min-width: 80vw;
 }
+
+/* IDE */
+.CodeMirror,
+.vue-codemirror {
+  border: 1px solid #eee;
+  height: auto;
+  min-height: 50vh;
+}
+.CodeMirror-code,
+.CodeMirror-line {
+  line-height: 1.25em;
+  font-size: 18px;
+}
