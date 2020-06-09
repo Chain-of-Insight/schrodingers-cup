@@ -20,16 +20,35 @@
 
       <!-- Player Chat -->
       <section>
-        <div id="messages"></div>
-        <input 
-          id="chat-input" 
-          type="text" 
-          placeholder="Send a chat message..." 
-          v-model="chatInput.value"
-          @focus="chatInput.focused = true"
-          @blur="chatInput.focused = false"
-          v-on:keyup="chatKeyListener($event)"
-        />
+        <div id="messages" class="message-container">
+          <!-- Chat Messages -->
+          <div v-for="message in chatMessages">
+            <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
+              <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
+              <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Chat Form Input -->
+        <div class="input-group">
+          <input 
+            id="chat-input" 
+            type="text" 
+            class="form-control"
+            aria-label="Send a chat message..."
+            aria-describedby="Nomic player chat"
+            placeholder="Send a chat message..." 
+            v-model="chatInput.value"
+            @focus="chatInput.focused = true"
+            @blur="chatInput.focused = false"
+            v-on:keyup="chatKeyListener($event)"
+          />
+          <!-- Send Message -->
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+          </div>
+        </div>
       </section>
 
 
@@ -164,6 +183,11 @@ export default {
           msg: 'Attempting to join chat...'
       };
 
+      let joinedMessage = {
+          type: 'info',
+          msg: 'Joined Nomic Player Chat'
+      };
+
       this.chatMessages.push(joinMessage);
 
       this.chatClient.getChannelByUniqueName(chatRoom)
@@ -178,12 +202,12 @@ export default {
           console.log('here');
           this.chatClient.on('channelJoined', async () => {
             console.log('Channel joined', channel);
-            this.chatMessages.push(joinMessage);
+            this.chatMessages.push(joinedMessage);
             await this.chatChannel.join();
             this.setupChatChannel();
           });
         } else {
-          this.chatMessages.push(joinMessage);
+          this.chatMessages.push(joinedMessage);
           this.setupChatChannel();
         }
       }).catch((error) => {
@@ -215,7 +239,7 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
-        console.log("Received message from " + message.author, message.body);
+        //console.log("Received message from " + message.author, message.body);
         // Determine message origins
         let messageType;
         if (message.author == this.TwilioIdentity) {
@@ -233,6 +257,7 @@ export default {
 
         // Release message to UI
         this.chatMessages.push(messageOutput);
+        // console.log(this.chatMessages);
       });
 
       /**
@@ -271,8 +296,8 @@ export default {
         // Push message to channel
         this.chatChannel.sendMessage(msgText);
         // Clear UI input
-        this.chatMessageInput = null;
-        console.log('Chat Messages', [this.chatMessages, this.chatChannel]);
+        this.chatInput.value = null;
+        // console.log('Chat Messages', [this.chatMessages, this.chatChannel]);
       }
     },
     // Send messages when pressing 'enter' key

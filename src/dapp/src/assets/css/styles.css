@@ -35,14 +35,6 @@
 }
 
 /* Nomic Chat Room */
-.config-value.set {
-  color:seagreen;
-}
-
-.config-value.unset {
-  color:darkred;
-}
-
 section.chat {
   height:70%;
   background-color:#2B2B2A;
@@ -94,12 +86,25 @@ section.chat input {
   color:#849091;
 }
 
-.me, .username.me {
+.chat-msg.local {
   font-weight:bold;
   color:cyan;
 }
 
-.message-container .username.me {
+.chat-msg.local span.chat-msg-body {
+  color: yellowgreen;
+}
+
+.chat-msg.remote {
+  font-weight:bold;
+  color: yellow;
+}
+
+.chat-msg.remote span.chat-msg-body {
+  color: mistyrose;
+}
+
+.message-container {
   display:inline-block;
   margin-right:5px;
 }
