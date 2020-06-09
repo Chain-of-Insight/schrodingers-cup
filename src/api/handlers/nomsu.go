@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type Result struct {
@@ -19,7 +20,7 @@ type Result struct {
 // @param code formData string true "Nomsu code"
 // @produce json
 func TestNomsu(c echo.Context) error {
-	cmd := exec.Command("nomsu", "-") // @todo add config to specify nomsu location
+	cmd := exec.Command(viper.GetString("NOMSU"), "-") // @todo add config to specify nomsu location
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err

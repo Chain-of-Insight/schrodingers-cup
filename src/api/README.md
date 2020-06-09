@@ -10,6 +10,14 @@
 go get github.com/oxequa/realize
 ```
 
+### Setup ENV file
+
+```
+cp env.example .env
+```
+
+Edit ENV file as necessary to set API port and NOMSU binary location
+
 ### Run local server
 
 ```
