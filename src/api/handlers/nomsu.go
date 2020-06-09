@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Input struct {
+	Code string `json:"code" form:"code"`
+}
+
 type Result struct {
 	Result string `json:"result"`
 }
@@ -26,11 +30,14 @@ func TestNomsu(c echo.Context) error {
 		return err
 	}
 
-	code := c.FormValue("code")
+	input := new(Input)
+	if err = c.Bind(input); err != nil {
+		return err
+	}
 
 	go func() {
 		defer stdin.Close()
-		io.WriteString(stdin, code)
+		io.WriteString(stdin, input.Code)
 	}()
 
 	out, err := cmd.CombinedOutput()
