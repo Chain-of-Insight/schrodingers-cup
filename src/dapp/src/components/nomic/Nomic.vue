@@ -85,6 +85,7 @@ export default {
     TwilioChat: Twilio,
     chatClient: null,
     chatMessages: [],
+    chatChannelJoined: false,
     chatInput: {
       focused: false,
       value: null
@@ -199,16 +200,17 @@ export default {
 
         // Join user in channel as required
         if (chatChannel.status !== "joined") {
-          console.log('here');
-          this.chatClient.on('channelJoined', async () => {
-            console.log('Channel joined', channel);
-            this.chatMessages.push(joinedMessage);
+          this.chatMessages.push(joinedMessage);
+          if (!this.chatChannelJoined) {
             await this.chatChannel.join();
-            this.setupChatChannel();
-          });
+            console.log('Channel joined', channel);
+          }
+          this.chatChannelJoined = true;
+          this.setupChatChannel();
         } else {
           this.chatMessages.push(joinedMessage);
           this.setupChatChannel();
+          this.chatChannelJoined = true;
         }
       }).catch((error) => {
         console.log('Error joining chat', error);
