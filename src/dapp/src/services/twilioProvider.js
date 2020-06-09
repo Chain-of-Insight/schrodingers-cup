@@ -19,7 +19,7 @@ async function getToken(username) {
 module.exports = {
   getToken: getToken,
   Twilio: Twilio
-}
+};
 
 
 /*
