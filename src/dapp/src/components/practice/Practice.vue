@@ -141,7 +141,7 @@ export default {
       }
     },
     testRuleSet: async function () {
-      console.log('Preparing to test rule', this.ide);
+      console.log('Preparing to test rule', this.ide.input);
       let result = await this.ide.execute(this.ide.input);
       console.log('Result', result);
     },

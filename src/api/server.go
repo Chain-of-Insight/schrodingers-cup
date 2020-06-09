@@ -37,6 +37,10 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// CORS default
+	// Allows requests from any origin wth GET, HEAD, PUT, POST or DELETE method.
+	e.Use(middleware.CORS())
+
 	// Routes
 	e.GET("/", handlers.HelloWorld)
 	e.GET("/ping", handlers.Ping)
