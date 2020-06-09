@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	_ "net/http"
 
 	"github.com/labstack/echo/v4"
@@ -23,7 +24,7 @@ func main() {
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic("error reading config file: %v\n", err)
+		panic(fmt.Sprintf("error reading config file: %v\n", err))
 	}
 
 	// set some defaults
