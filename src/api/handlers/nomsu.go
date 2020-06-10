@@ -27,7 +27,7 @@ type TestResult struct {
 // @param input body TestInput true "Nomsu code to run"
 // @produce json
 func TestNomsu(c echo.Context) error {
-	cmd := exec.Command(viper.GetString("NOMSU"), "-") // @todo add config to specify nomsu location
+	cmd := exec.Command(viper.GetString("NOMSU"), "-")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err
