@@ -101,7 +101,7 @@ export default {
       options: {
         // IDE Options
         // mode: 'text/x-lua',
-        tabSize: 2,
+        tabSize: 4,
         theme: 'dracula',
         lineNumbers: true,
         line: true
