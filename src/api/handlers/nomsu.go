@@ -6,22 +6,25 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/acarl005/stripansi"
+	"github.com/buildkite/terminal-to-html"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
-type Input struct {
+type TestInput struct {
 	Code string `json:"code" form:"code"`
 }
 
-type Result struct {
-	Result string `json:"result"`
+type TestResult struct {
+	Result     string `json:"result"`
+	ResultHtml string `json:"resultHtml"`
 }
 
 // @description Run some arbitrary nomsu code
-// @success 200 {string} string "nomsu execution result"
 // @router /test [post]
-// @param code formData string true "Nomsu code"
+// @success 200 {object} TestResult "Nomsu execution result"
+// @param input body TestInput true "Nomsu code to run"
 // @produce json
 func TestNomsu(c echo.Context) error {
 	cmd := exec.Command(viper.GetString("NOMSU"), "-") // @todo add config to specify nomsu location
@@ -30,7 +33,7 @@ func TestNomsu(c echo.Context) error {
 		return err
 	}
 
-	input := new(Input)
+	input := new(TestInput)
 	if err = c.Bind(input); err != nil {
 		return err
 	}
@@ -41,12 +44,20 @@ func TestNomsu(c echo.Context) error {
 	}()
 
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return err
+
+	// render ANSI output from nomsu as HTML
+	outHtml := string(terminal.Render(out))
+
+	// Strip ANSI from plain text output
+	outText := strings.TrimSpace(stripansi.Strip(string(out)))
+
+	r := &TestResult{
+		Result:     outText,
+		ResultHtml: outHtml,
 	}
 
-	r := &Result{
-		Result: strings.TrimSpace(string(out)),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, r)
 	}
 
 	return c.JSON(http.StatusOK, r)

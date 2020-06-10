@@ -1,4 +1,17 @@
 basePath: /
+definitions:
+  handlers.TestInput:
+    properties:
+      code:
+        type: string
+    type: object
+  handlers.TestResult:
+    properties:
+      result:
+        type: string
+      resultHtml:
+        type: string
+    type: object
 info:
   contact: {}
   description: A game of Peter Suber's Nomic running on the Tezos network.
@@ -23,18 +36,19 @@ paths:
     post:
       description: Run some arbitrary nomsu code
       parameters:
-      - description: Nomsu code
-        in: formData
-        name: code
+      - description: Nomsu code to run
+        in: body
+        name: input
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/handlers.TestInput'
       produces:
       - application/json
       responses:
         "200":
-          description: nomsu execution result
+          description: Nomsu execution result
           schema:
-            type: string
+            $ref: '#/definitions/handlers.TestResult'
   /vote:
     post:
       description: Receive and tabulate votes, stage vote outcome to be processed when game window is settled

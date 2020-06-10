@@ -3,7 +3,9 @@ module nomsu-api
 go 1.12
 
 require (
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/buildkite/terminal-to-html v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/spec v0.19.8 // indirect
 	github.com/go-openapi/swag v0.19.9 // indirect

@@ -54,18 +54,20 @@ var doc = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Nomsu code",
-                        "name": "code",
-                        "in": "formData",
-                        "required": true
+                        "description": "Nomsu code to run",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TestInput"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "nomsu execution result",
+                        "description": "Nomsu execution result",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.TestResult"
                         }
                     }
                 }
@@ -74,6 +76,27 @@ var doc = `{
         "/vote": {
             "post": {
                 "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled"
+            }
+        }
+    },
+    "definitions": {
+        "handlers.TestInput": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.TestResult": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "string"
+                },
+                "resultHtml": {
+                    "type": "string"
+                }
             }
         }
     }
