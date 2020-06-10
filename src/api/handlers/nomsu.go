@@ -1,15 +1,14 @@
 package handlers
 
 import (
-	"io"
 	"net/http"
-	"os/exec"
 	"strings"
 
 	"github.com/acarl005/stripansi"
 	"github.com/buildkite/terminal-to-html"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
+
+	"nomsu-api/nomsu"
 )
 
 type TestInput struct {
@@ -27,27 +26,12 @@ type TestResult struct {
 // @param input body TestInput true "Nomsu code to run"
 // @produce json
 func TestNomsu(c echo.Context) error {
-	cmd := exec.Command(viper.GetString("NOMSU"), "-")
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return err
-	}
-
 	input := new(TestInput)
-	if err = c.Bind(input); err != nil {
+	if err := c.Bind(input); err != nil {
 		return err
 	}
 
-	// cleanup input
-	input.Code = strings.TrimSpace(input.Code)
-	input.Code = strings.ReplaceAll(input.Code, "\t", "    ")
-
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, input.Code)
-	}()
-
-	out, err := cmd.CombinedOutput()
+	out, err := nomsu.RunCode(input.Code)
 
 	// render ANSI output from nomsu as HTML
 	outHtml := string(terminal.Render(out))
