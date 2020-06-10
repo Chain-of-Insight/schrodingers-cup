@@ -38,6 +38,10 @@ func TestNomsu(c echo.Context) error {
 		return err
 	}
 
+	// cleanup input
+	input.Code = strings.TrimSpace(input.Code)
+	input.Code = strings.ReplaceAll(input.Code, "\t", "    ")
+
 	go func() {
 		defer stdin.Close()
 		io.WriteString(stdin, input.Code)
