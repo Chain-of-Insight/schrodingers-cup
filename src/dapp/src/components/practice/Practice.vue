@@ -40,7 +40,7 @@
         <label>
           <strong>Output:</strong>
         </label>
-        <pre class="prettyprint">{{ ide.output }}</pre>
+        <div class="term-container" v-html="ide.output"></div>
       </div>
     </div>
 
@@ -148,16 +148,17 @@ export default {
       let result;
       try {
         result = await this.ide.execute(this.ide.input);
-        console.log('Result', result);
       } catch(e) {
-        this.ide.output = "Error: compile failed!";
+        result = e.response;
       }
-      
+
+      console.log('Result', result);
+
       // Show compiler feedback
       let output;
-      if (result.data) {
-        if (result.data.result) {
-          output = result.data.result;
+      if (result && result.data) {
+        if (result.data.resultHtml) {
+          output = result.data.resultHtml;
         } 
       }
       if (output) {
