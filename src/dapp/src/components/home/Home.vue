@@ -224,6 +224,9 @@ export default {
       let isPositiveOffset = Math.sign(this.userOffsetUTC);
       if (isPositiveOffset) {
         hours = hours - userOffsetUTC;
+        if (hours < 0) {
+          hours = 0;
+        }
       } else {
         hours = hours + (userOffsetUTC);
       }

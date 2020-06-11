@@ -1,16 +1,20 @@
 /* https://raw.githubusercontent.com/buildkite/terminal-to-html/master/assets/terminal.css */
 
 .term-container {
-  background: #171717;
-  border-radius: 5px;
+  background: #282a36;
+  /* border-radius: 5px; */
   color: white;
   word-break: break-word;
   overflow-wrap: break-word;
-  font-family: "SFMono-Regular", Monaco, Menlo, Consolas, "Liberation Mono", Courier, monospace;
-  font-size: 12px;
-  line-height: 20px;
+  /* font-family: "SFMono-Regular", Monaco, Menlo, Consolas, "Liberation Mono", Courier, monospace; */
+  font-family: monospace;
+  font-weight: 400;
+  font-variant-ligatures: contextual;
+  line-height: 1.25em;
+  font-size: 18px;
   padding: 14px 18px;
   white-space: pre-wrap;
+  text-size-adjust: 100%;
 }
 
 .term-container img { max-width: 100%; }
@@ -24,18 +28,21 @@
   }
 }
 
-.term-fg1 { } /* don't bold beccause it looks weird */
-.term-fg2 { color: #838887; } /* faint (decreased intensity) - same as gray really */
+.term-fg1 { font-weight: normal;} /* don't bold beccause it looks weird */
+.term-fg2 { color: #6D8A88; } /* line number */
 .term-fg3 { font-style: italic; } /* italic */
 .term-fg4 { text-decoration: underline; } /* underline */
 .term-fg5 { animation: blink-animation 1s steps(3, start) infinite; } /* blink */
 .term-fg9 { text-decoration: line-through; } /* crossed-out */
 
-.term-fg30 { color: #666666; } /* black (but we can't use black, so a diff color) */
+.term-fg30 { color: white; } /* black */
 .term-fg31 { color: #ff7070; } /* red */
-.term-fg32 { color: #b0f986; } /* green */
-.term-fg33 { color: #c6c502; } /* yellow */
-.term-fg34 { color: #8db7e0; } /* blue */
+/* .term-fg32 { color: #b0f986; } green */
+.term-fg32 { color: #50fa7b; } /* green */
+/* .term-fg33 { color: #c6c502; } yellow */
+.term-fg33 { color: #f1fa8c; } /*yellow */
+/* .term-fg34 { color: #8db7e0; } blue */
+.term-fg34 { color: #6272a4; } /* blue */
 .term-fg35 { color: #f271fb; } /* magenta */
 .term-fg36 { color: #6bf7ff; } /* cyan */
 

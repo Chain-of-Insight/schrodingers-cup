@@ -29,9 +29,9 @@
         ></codemirror>
         <div class="execute">
           <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-          <!--
-          <button class="btn btn-danger" @click="clearEditor()">Erase</button>
-          -->
+          <button class="btn btn-danger" @click="clearEditor()">
+            <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
 
@@ -172,11 +172,11 @@ export default {
     },
     loadRuleSet: function () {
       // TODO: this
-    }//,
-    // clearEditor: function () {
-    //   console.log('Clearing editor...', this.ide);
-    //   this.ide.input = null;
-    // }
+    },
+    clearEditor: function () {
+      console.log('Clearing editor...', this.ide);
+      this.ide.input = '';
+    }
   }
 };
 </script>
