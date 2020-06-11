@@ -48,6 +48,9 @@
           <strong>Output:</strong>
         </label>
         <div class="term-container" v-html="ide.output"></div>
+        <div class="executed">
+          <span class="clear" @click="clearEditorOutput()">clear output</span>
+        </div>
       </div>
     </div>
 
@@ -171,11 +174,11 @@ export default {
 
       if (result.status) {
         if (result.status == 500) {
-          console.log('Compile failed', result.status);
+          // console.log('Compile failed', result.status);
           this.alert.type = 'danger';
           this.alert.msg = 'Compile failed';
         } else if (result.status == 200) {
-          console.log('Compiled successfully,', result.status);
+          // console.log('Compiled successfully,', result.status);
           this.alert.type = 'success';
           this.alert.msg = 'Compiled successfully';
         }
@@ -203,6 +206,10 @@ export default {
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
       this.ide.input = '';
+    },
+    clearEditorOutput: function () {
+      console.log('Clearing output...', this.ide);
+      this.ide.output = null;
     }
   }
 };
@@ -211,5 +218,9 @@ export default {
 <style scoped>
   .ide {
     margin-top: 2rem;
+  }
+  span.clear {
+    text-decoration: underline;
+    cursor: pointer;
   }
 </style>

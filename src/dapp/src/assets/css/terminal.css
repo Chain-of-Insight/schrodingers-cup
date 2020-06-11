@@ -3,6 +3,7 @@
 .term-container {
   background: #282a36;
   /* border-radius: 5px; */
+  border: 1px solid #eee;
   color: white;
   word-break: break-word;
   overflow-wrap: break-word;
