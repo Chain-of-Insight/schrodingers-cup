@@ -62,7 +62,8 @@
 import { 
   Tezos,
   mountProvider,
-  getBalance
+  getBalance,
+  signMessage
 } from '../../services/tezProvider';
 
 import { 
@@ -91,7 +92,9 @@ export default {
       value: null
     }, 
     chatChannel: null,
-    mountProvider: mountProvider
+    mountProvider: mountProvider,
+    signMessage: signMessage,
+    loginSigned: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -117,6 +120,9 @@ export default {
         // Auth failed
         console.log('Error requesting Twilio Auth Token', e);
       }
+
+      // Sign login auth message for API
+      await this.doLoginMessageSigning();
     }
   },
   methods: {
@@ -153,8 +159,17 @@ export default {
             // Auth failed
             console.log('Error requesting Twilio Auth Token', e);
           }
+
+          // Sign login auth message for API
+          await this.doLoginMessageSigning();
         }
       }
+    },
+    doLoginMessageSigning: async function () {
+      let timestamp = new Date().getTime();
+      let signedMsg = await this.signMessage(timestamp);
+      this.loginSigned = signedMsg
+      console.log('Signed message result', this.loginSigned);
     },
     // Player chat connector
     connectChat: function () {
