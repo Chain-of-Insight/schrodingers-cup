@@ -1,5 +1,12 @@
 <template>
+
   <div>
+    <!-- Notifications -->
+    <Notification 
+      :type="alert.type" 
+      :msg="alert.msg" 
+      v-on:reset="alert = {type: null, msg: null}"
+    ></Notification>
 
     <!-- Not Connected -->
     <div class="container" v-if="!connected">
@@ -58,6 +65,9 @@ import {
 // API
 import { testNomic } from '../../services/apiProvider';
 
+// Child components
+import Notification from '../common/Notifications.vue';
+
 // IDE
 //import 'codemirror/mode/lua/lua';
 import 'codemirror/mode/shell/shell';
@@ -86,6 +96,7 @@ test that ($my_var == 101)
 say("OK!")`;
 
 export default {
+  components: { Notification },
   data: () => ({
     title: "Practice Zone",
     subtitle: "Familiarize yourself with creating and editing Nomic rules",
@@ -95,6 +106,10 @@ export default {
     connected: false,
     Tezos: Tezos,
     mountProvider: mountProvider,
+    alert: {
+      type: null,
+      msg: null
+    },
     ide: {
       input: DEMO_CODE,
       output: null,
@@ -114,7 +129,7 @@ export default {
   }),
   mounted: async function () {
     await this.mountProvider();
-    console.log('Home mounted', this.network);
+    console.log('Practice mounted', this.network);
     let returningUser = sessionStorage.getItem('tzAddress');
     if (returningUser) {
       this.connected = true;
@@ -153,6 +168,18 @@ export default {
       }
 
       console.log('Result', result);
+
+      if (result.status) {
+        if (result.status == 500) {
+          console.log('Compile failed', result.status);
+          this.alert.type = 'danger';
+          this.alert.msg = 'Compile failed';
+        } else if (result.status == 200) {
+          console.log('Compiled successfully,', result.status);
+          this.alert.type = 'success';
+          this.alert.msg = 'Compiled successfully';
+        }
+      }
 
       // Show compiler feedback
       let output;
