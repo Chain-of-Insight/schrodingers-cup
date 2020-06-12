@@ -20,7 +20,7 @@ const getContractInstance = async (contract) => {
   return contractInstance;
 };
 
-const _longToByteArray = function(long) {
+const _longToByteArray = function (long) {
   // Represent input as 8-bit array
   let byteArray = [0, 0, 0, 0, 0, 0, 0, 0];
   for (let index = 0; index < byteArray.length; index ++) {
