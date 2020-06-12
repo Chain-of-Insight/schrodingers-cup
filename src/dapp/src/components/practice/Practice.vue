@@ -19,7 +19,7 @@
         <div class="col">
       
           <!-- Not Connected -->
-          <div class="container-fluid" v-if="!connected">
+          <div class="container-fluid p-0" v-if="!connected">
             <ul class="list-unstyled">
               <li @click="connectUser()">
                 <button class="btn btn-primary btn-connect">Login With Tezos</button>
@@ -29,7 +29,7 @@
           </div>
       
           <!-- Connected -->
-          <div class="ide container-fluid" v-else>
+          <div class="ide container-fluid p-0" v-else>
             <div class="row no-gutters">
               <!-- IDE Saved Rulesets -->
               <div id="ide-saved" class="ide-pane col">
@@ -78,19 +78,40 @@
     <div class="modal fade" id="save-modal" tabindex="-1" role="dialog" aria-labelledby="save-modal-label" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="save-modal-label">Save Ruleset</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            ...
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success">Save</button>
-          </div>
+          <form v-on:submit.prevent="saveRuleSet()">
+            <div class="modal-header">
+              <h5 class="modal-title" id="save-modal-label">Save Ruleset</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="ruleset-name">Give your ruleset a name:</label>
+                <div class="input-group">
+                  <input
+                    v-model="ide.ruleSetName"
+                    type="text"
+                    id="ruleset-name"
+                    class="form-control"
+                    placeholder="my-awesome-ruleset"
+                    required
+                  >
+                  <div class="input-group-append">
+                    <span class="input-group-text">.nom</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button v-if="ide.state.loading" type="button" class="btn btn-success" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class="sr-only">Saving...</span>
+              </button>
+              <button v-else type="submit" class="btn btn-success">Save</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -116,6 +137,8 @@ import Notification from '../common/Notifications.vue';
 //import 'codemirror/mode/lua/lua';
 import 'codemirror/mode/shell/shell';
 import 'codemirror/theme/dracula.css';
+
+const $ = window.jQuery;
 
 const DEMO_CODE = `### In Nomsu, variables have a "$" prefix, and you can just assign to them
 ### without declaring them first:
@@ -157,6 +180,7 @@ export default {
     ide: {
       input: DEMO_CODE,
       output: null,
+      ruleSetName: '',
       options: {
         // IDE Options
         // mode: 'text/x-lua',
@@ -238,8 +262,25 @@ export default {
         this.ide.output = "Error: compiler failed for unknown reasons 😅";
       }
     },
-    saveRuleSet: function () {
-      // TODO: this
+    saveRuleSet: async function () {
+      const ruleSet = {
+        name: this.ide.ruleSetName,
+        code: this.ide.input
+      }
+
+      this.ide.state.loading = true;
+      console.log('Ruleset to be saved:', ruleSet);
+
+      const itemKey = localStorage.length; // For easy ordering later
+      const itemContent = JSON.stringify(ruleSet);
+      localStorage.setItem(itemKey, itemContent);
+
+      this.alert.type = 'success';
+      this.alert.msg = `Ruleset '${this.ide.ruleSetName}'' saved!`;
+
+      $('#save-modal').modal('hide');
+      this.ide.state.loading = false;
+      this.ide.ruleSetName = '';
     },
     loadRuleSet: function () {
       // TODO: this
