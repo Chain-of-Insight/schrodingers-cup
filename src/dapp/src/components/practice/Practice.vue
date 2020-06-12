@@ -8,52 +8,71 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <!-- Not Connected -->
-    <div class="container" v-if="!connected">
-      <h1>{{ title }}</h1>
-      <h5>{{ subtitle }}</h5>
-      <ul class="list-unstyled" v-if="!connected">
-        <li @click="connectUser()">
-          <button class="btn btn-primary btn-connect">Login With Tezos</button>
-        </li>
-      </ul>
-      <p>Connect your Tezos wallet to get started</p>
-    </div>
-    
-    <!-- Connected -->
-    <div class="container" v-else>
-      <h1>{{ title }}</h1>
-      <h5>{{ subtitle }}</h5>
-
-      <!-- IDE Input -->
-      <div id="ide" class="ide input">
-        <label>
-          <strong>Input New Rule:</strong>
-        </label>
-        <codemirror 
-          v-model="ide.input"
-          :options="ide.options"
-        ></codemirror>
-        <div class="execute">
-          <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-          <button class="btn btn-danger" @click="clearEditor()">
-            <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
-          </button>
+    <div class="container-xl main">
+      <div class="row">
+        <div class="col">
+          <h1>{{ title }}</h1>
+          <h5>{{ subtitle }}</h5>
         </div>
       </div>
-
-      <!-- IDE Output -->
-      <div class="ide output" v-if="ide.output">
-        <label>
-          <strong>Output:</strong>
-        </label>
-        <div class="term-container" v-html="ide.output"></div>
-        <div class="executed">
-          <span class="clear" @click="clearEditorOutput()">clear output</span>
+      <div class="row">
+        <div class="col">
+      
+          <!-- Not Connected -->
+          <div class="container-fluid" v-if="!connected">
+            <ul class="list-unstyled">
+              <li @click="connectUser()">
+                <button class="btn btn-primary btn-connect">Login With Tezos</button>
+              </li>
+            </ul>
+            <p>Connect your Tezos wallet to get started</p>
+          </div>
+      
+          <!-- Connected -->
+          <div class="ide container-fluid" v-else>
+            <div class="row no-gutters">
+              <!-- IDE Saved Rules -->
+              <div id="ide-saved" class="ide-pane col">
+                <label>
+                  <strong>Saved Rules:</strong>
+                </label>
+              </div>
+              <!-- IDE Input -->
+              <div id="ide-input" class="ide-pane col">
+                <label>
+                  <strong>Input New Rule:</strong>
+                </label>
+                <codemirror 
+                  v-model="ide.input"
+                  :options="ide.options"
+                ></codemirror>
+                <div class="execute">
+                  <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
+                  <button class="btn btn-success">Save</button>
+                  <button class="btn btn-danger" @click="clearEditor()">
+                    <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="row no-gutters">
+              <!-- IDE Output -->
+              <div id="ide-output" class="ide-pane col">
+                <label>
+                  <strong>Output:</strong>
+                </label>
+                <div v-if="ide.output">
+                  <div class="term-container" v-html="ide.output"></div>
+                  <div class="executed">
+                    <span class="clear" @click="clearEditorOutput()">clear output</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
