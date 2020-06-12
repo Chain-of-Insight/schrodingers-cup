@@ -25,6 +25,43 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth": {
+            "post": {
+                "description": "Authenticate a user with a signed tezos message",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "description": "Signed message",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AuthInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT token",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AuthResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/game/settle": {
+            "post": {
+                "description": "Settle game window"
+            }
+        },
+        "/game/vote": {
+            "post": {
+                "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled"
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Ping/Health Check",
@@ -39,11 +76,6 @@ var doc = `{
                         }
                     }
                 }
-            }
-        },
-        "/settle": {
-            "post": {
-                "description": "Settle game window"
             }
         },
         "/test": {
@@ -72,14 +104,31 @@ var doc = `{
                     }
                 }
             }
-        },
-        "/vote": {
-            "post": {
-                "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled"
-            }
         }
     },
     "definitions": {
+        "handlers.AuthInput": {
+            "type": "object",
+            "properties": {
+                "msg": {
+                    "type": "string"
+                },
+                "pubKey": {
+                    "type": "string"
+                },
+                "sig": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AuthResult": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.TestInput": {
             "type": "object",
             "properties": {

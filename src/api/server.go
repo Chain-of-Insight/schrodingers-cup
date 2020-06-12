@@ -29,6 +29,7 @@ func main() {
 	// set some defaults
 	viper.SetDefault("PORT", "1323")
 	viper.SetDefault("NOMSU", "nomsu")
+	viper.SetDefault("JWT_SECRET", "secret")
 
 	e := echo.New()
 
@@ -44,8 +45,13 @@ func main() {
 	e.GET("/", handlers.HelloWorld)
 	e.GET("/ping", handlers.Ping)
 	e.POST("/test", handlers.TestNomsu)
-	e.POST("/vote", handlers.CastVote)
-	e.POST("/settle", handlers.SettleGame)
+	e.POST("/auth", handlers.Auth)
+
+	// Game requires auth
+	g := e.Group("/game")
+	g.Use(middleware.JWT([]byte(viper.GetString("JWT_SECRET"))))
+	g.POST("/vote", handlers.CastVote)
+	g.POST("/settle", handlers.SettleGame)
 
 	// swagger docs
 	e.GET("/swagger/*", echoSwagger.WrapHandler)

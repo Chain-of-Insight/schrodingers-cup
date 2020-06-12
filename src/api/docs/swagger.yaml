@@ -1,5 +1,19 @@
 basePath: /
 definitions:
+  handlers.AuthInput:
+    properties:
+      msg:
+        type: string
+      pubKey:
+        type: string
+      sig:
+        type: string
+    type: object
+  handlers.AuthResult:
+    properties:
+      token:
+        type: string
+    type: object
   handlers.TestInput:
     properties:
       code:
@@ -19,6 +33,29 @@ info:
   title: Schrodinger's Cup API
   version: "1.0"
 paths:
+  /auth:
+    post:
+      description: Authenticate a user with a signed tezos message
+      parameters:
+      - description: Signed message
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AuthInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            $ref: '#/definitions/handlers.AuthResult'
+  /game/settle:
+    post:
+      description: Settle game window
+  /game/vote:
+    post:
+      description: Receive and tabulate votes, stage vote outcome to be processed when game window is settled
   /ping:
     get:
       description: Ping/Health Check
@@ -29,9 +66,6 @@ paths:
           description: pong
           schema:
             type: string
-  /settle:
-    post:
-      description: Settle game window
   /test:
     post:
       description: Run some arbitrary nomsu code
@@ -49,7 +83,4 @@ paths:
           description: Nomsu execution result
           schema:
             $ref: '#/definitions/handlers.TestResult'
-  /vote:
-    post:
-      description: Receive and tabulate votes, stage vote outcome to be processed when game window is settled
 swagger: "2.0"
