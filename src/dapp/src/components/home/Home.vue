@@ -217,20 +217,6 @@ export default {
       // Seconds
       seconds = (this.nextGamePlayStartOffset / 1000);
       seconds = seconds - (hours * 3600) - (minutes * 60);
-      // console.log(seconds);
-
-      // Subtract / Add user UTC offset
-      let userOffsetUTC = this.userOffsetUTC;
-      let isPositiveOffset = Math.sign(this.userOffsetUTC);
-      if (isPositiveOffset) {
-        hours = hours - userOffsetUTC;
-        if (hours < 0) {
-          hours = 0;
-        }
-      } else {
-        hours = hours + (userOffsetUTC);
-      }
-      // console.log([hours, userOffsetUTC]);
       
       // Zero prefixing and decimal safety
       if (hours < 10) {
