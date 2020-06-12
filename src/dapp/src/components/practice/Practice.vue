@@ -31,10 +31,10 @@
           <!-- Connected -->
           <div class="ide container-fluid" v-else>
             <div class="row no-gutters">
-              <!-- IDE Saved Rules -->
+              <!-- IDE Saved Rulesets -->
               <div id="ide-saved" class="ide-pane col">
                 <label>
-                  <strong>Saved Rules:</strong>
+                  <strong>Saved Rulesets:</strong>
                 </label>
               </div>
               <!-- IDE Input -->
@@ -48,7 +48,7 @@
                 ></codemirror>
                 <div class="execute">
                   <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-                  <button class="btn btn-success">Save</button>
+                  <button class="btn btn-success" data-toggle="modal" data-target="#save-modal">Save</button>
                   <button class="btn btn-danger" @click="clearEditor()">
                     <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
                   </button>
@@ -73,6 +73,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Save Ruleset Modal -->
+    <div class="modal fade" id="save-modal" tabindex="-1" role="dialog" aria-labelledby="save-modal-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="save-modal-label">Save Ruleset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
