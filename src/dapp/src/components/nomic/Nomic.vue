@@ -71,6 +71,9 @@ import {
   Twilio 
 } from '../../services/twilioProvider';
 
+// API
+import { PerformAuth } from '../../services/apiProvider';
+
 // Child components
 import Notification from '../common/Notifications.vue';
 import RuleProposal from '../common/RuleProposal.vue';
@@ -98,7 +101,8 @@ export default {
     chatChannel: null,
     mountProvider: mountProvider,
     signMessage: signMessage,
-    loginSigned: null
+    loginSigned: null,
+    jwtToken: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -173,6 +177,29 @@ export default {
       let signedMsg = await this.signMessage(timestamp);
       this.loginSigned = signedMsg
       console.log('Signed message result', this.loginSigned);
+
+      // get pubkey
+      pubKey = await Tezos.rpc.getManagerKey(this.address);
+      console.log('Pubkey', pubKey);
+
+      // address not revealed
+      if (pubKey == this.address) {
+          //@todo what do here?
+      }
+
+      // auth and get JWT token
+      let result;
+      try {
+        result = await PerformAuth(this.loginSigned.bytes, this.loginSigned.prefixSig, pubKey);
+      } catch(e) {
+        // unauthorized if we are here
+        result = e.response;
+      }
+
+      if (result.data && result.data.token) {
+        this.jwtToken = result.data.token;
+      }
+      console.log("JWT token", this.jwtToken);
     },
     // Player chat connector
     connectChat: function () {

@@ -13,10 +13,33 @@ async function testNomic(code) {
 
   let apiEndpoint = API_URL + 'test';
   const res = await axios.post(apiEndpoint, {code: code});
-  
+
+  return res;
+};
+
+/**
+ * Authorize user in nomsu backend
+ */
+async function auth(msg, sig, pubKey) {
+  if (typeof msg !== 'string') {
+    return 'msg rejected. String required, got ' + typeof msg;
+  }
+
+  if (typeof sig !== 'string') {
+    return 'sig rejected. String required, got ' + typeof sig;
+  }
+
+  if (typeof pubKey !== 'string') {
+    return 'pubKey rejected. String required, got ' + typeof pubKey;
+  }
+
+  let apiEndpoint = API_URL + 'auth';
+  const res = await axios.post(apiEndpoint, {msg: msg, sig: sig, pubKey: pubKey});
+
   return res;
 };
 
 module.exports = {
-  testNomic: testNomic
+  testNomic: testNomic,
+  PerformAuth: auth
 };
