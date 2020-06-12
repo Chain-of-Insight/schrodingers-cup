@@ -71,10 +71,14 @@ import {
   Twilio 
 } from '../../services/twilioProvider';
 
+// Child components
+import Notification from '../common/Notifications.vue';
+import RuleProposal from '../common/RuleProposal.vue';
+
 export default {
   data: () => ({
     title: "Nomic Battlegrounds",
-    subtitle: "Pwned or be pwned: the choice is yours",
+    subtitle: "Pwned or be pwned, the choice is yours",
     network: (process.env.hasOwnProperty('CURRENT_NETWORK')) ? process.env.CURRENT_NETWORK : 'carthagenet',
     address: null,
     getBalance: getBalance,
@@ -159,7 +163,6 @@ export default {
             // Auth failed
             console.log('Error requesting Twilio Auth Token', e);
           }
-
           // Sign login auth message for API
           await this.doLoginMessageSigning();
         }
@@ -248,7 +251,7 @@ export default {
       });
     },
     // Subscribe to chat message websockets
-    setupChatChannel: function () {//here
+    setupChatChannel: function () {
       console.log("Setting up chat channel", this.chatChannel);
 
       /**
