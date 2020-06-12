@@ -2,7 +2,7 @@
   <div>
 
     <!-- Not Connected -->
-    <div class="container" v-if="!connected">
+    <div class="container main" v-if="!connected">
       <h1>{{ title }}</h1>
       <h5>{{ subtitle }}</h5>
       <ul class="list-unstyled" v-if="!connected">
@@ -14,7 +14,7 @@
     </div>
     
     <!-- Connected -->
-    <div class="container" v-else>
+    <div class="container main" v-else>
       <h1>{{ title }}</h1>
       <h5>{{ subtitle }}</h5>
 
