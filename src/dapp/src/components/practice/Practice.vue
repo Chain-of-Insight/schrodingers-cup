@@ -274,7 +274,7 @@ export default {
       localStorage.setItem(this.ide.ruleSetName, itemContent);
 
       this.alert.type = 'success';
-      this.alert.msg = `Ruleset '${this.ide.ruleSetName}'' saved!`;
+      this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
 
       $('#save-modal').modal('hide');
       this.ide.state.loading = false;
