@@ -41,8 +41,8 @@
                     href="#"
                     class="list-group-item list-group-item-action"
                     v-for="ruleSet in ide.savedRuleSets"
-                    :key="ruleSet"
-                  >{{ ruleSet }}</a>
+                    :key="ruleSet.name"
+                  >{{ ruleSet.name }}</a>
                 </div>
               </div>
               <!-- IDE Input -->
@@ -274,19 +274,24 @@ export default {
       }
     },
     getSavedRuleSets: function () {
-      this.ide.savedRuleSets = Object.keys(localStorage).map(ruleSet => ruleSet);
+      this.ide.savedRuleSets = Object.keys(localStorage).map(name => {
+        return JSON.parse(localStorage.getItem(name));
+      }).sort((a, b) => a.sortOrder - b.sortOrder);
+
       console.log('Saved rulesets:', this.ide.savedRuleSets);
     },
     saveRuleSet: async function () {
       const ruleSet = {
-        code: this.ide.input
+        name: this.ide.ruleSetName,
+        code: this.ide.input,
+        sortOrder: localStorage.length
       }
 
       this.ide.state.loading = true;
       console.log('Ruleset to be saved:', ruleSet);
 
       const itemContent = JSON.stringify(ruleSet);
-      localStorage.setItem(this.ide.ruleSetName, itemContent);
+      localStorage.setItem(ruleSet.name, itemContent);
       this.getSavedRuleSets();
 
       this.alert.type = 'success';
