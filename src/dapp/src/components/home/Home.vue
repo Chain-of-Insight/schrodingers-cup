@@ -217,7 +217,7 @@ export default {
       // Seconds
       seconds = (this.nextGamePlayStartOffset / 1000);
       seconds = seconds - (hours * 3600) - (minutes * 60);
-      
+
       // Zero prefixing and decimal safety
       if (hours < 10) {
         hours = String('0' + parseInt(hours));

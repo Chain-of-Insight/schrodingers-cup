@@ -37,13 +37,19 @@
                   <strong>Saved Rulesets:</strong>
                 </label>
                 <div class="list-group">
+                  
+                  <!-- Saved Rule Sets -->
                   <a
                     href="#"
-                    class="list-group-item list-group-item-action"
-                    v-for="ruleSet in ide.savedRuleSets"
-                    :key="ruleSet.name"
-                    v-on:click="loadRuleSet(ruleSet.name)"
-                  >{{ ruleSet.name }}.nom</a>
+                    class="'list-group-item list-group-item-action'"
+                    v-bind:key="index"
+                    v-for="(ruleSet, index) in ide.savedRuleSets.player"
+                    v-on:click="loadRuleSet(index, ruleSet.name)"
+                  >
+                    <span v-if="!ruleSet.hasOwnProperty('active')">{{index + 1}}. {{ ruleSet.name }}.nom</span>
+                    <span v-else class="success active">{{index + 1}}. {{ ruleSet.name }}.nom</span>
+                  </a>
+
                 </div>
               </div>
               <!-- IDE Input -->
@@ -280,45 +286,83 @@ export default {
       }
     },
     getSavedRuleSets: function () {
-      this.ide.savedRuleSets = Object.entries(localStorage)
-        .map(([name, data]) => {
-          const ruleSet = JSON.parse(data);
-          ruleSet.name = name;
-          return ruleSet;
-        })
-        .sort((a, b) => a.sortOrder - b.sortOrder);
+      // Load rule sets if exists
+      let storedRuleSets = localStorage.getItem('ruleSets');
+      let playerSavedRuleSets = null;
+      if (storedRuleSets) {
+        storedRuleSets = JSON.parse(storedRuleSets);
+        playerSavedRuleSets = {
+          player: storedRuleSets,
+          nomic: []
+        }
+      }
+      this.ide.savedRuleSets = (playerSavedRuleSets) ? playerSavedRuleSets : {
+        player: [],
+        nomic: []
+      };
+      console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
     },
     saveRuleSet: async function () {
-      // Check if ruleset name already exists
-      if (localStorage.hasOwnProperty(this.ide.ruleSetName)) {
-        this.ide.nameError = true;
+      let ruleSets = localStorage.getItem('ruleSets');
+      let hasRuleSets;
+
+      // Create new collection / Add to existing collection
+      if (ruleSets) {
+        hasRuleSets = true;
+        ruleSets = JSON.parse(ruleSets);
       } else {
-        this.ide.state.loading = true;
-        const ruleSet = {
-          code: this.ide.input,
-          sortOrder: localStorage.length
-        }
-        console.log('Ruleset to be saved:', ruleSet);
-        localStorage.setItem(this.ide.ruleSetName, JSON.stringify(ruleSet));
-        this.getSavedRuleSets();
-        this.alert.type = 'success';
-        this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
-        $('#save-modal').modal('hide');
-        this.ide.state.loading = false;
-        this.ide.ruleSetName = '';
+        hasRuleSets = false;
+        ruleSets = [];
       }
+
+      // Loading
+      this.ide.state.loading = true;
+      
+      const ruleSet = {
+        code: this.ide.input,
+        name: this.ide.ruleSetName
+      };
+
+      console.log('Rule set to be saved:', ruleSet);
+
+      // Prepare rule set
+      ruleSets.push(ruleSet);
+      ruleSets = JSON.stringify(ruleSets)
+
+      // Save rule set
+      localStorage.setItem('ruleSets', ruleSets);
+
+      // Update rule sets
+      this.getSavedRuleSets();
+
+      // Reset app state
+      this.alert.type = 'success';
+      this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
+      $('#save-modal').modal('hide');
+      this.ide.state.loading = false;
+      this.ide.ruleSetName = '';
     },
     cancelSave: function () {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRuleSet: function (name) {
-      console.log('Loading ruleset:', name);
-      const loadedRuleSet = JSON.parse(localStorage.getItem(name));
-      this.ide.input = loadedRuleSet.code;
+    loadRuleSet: function (index, name) {
+      let ruleSet = this.ide.savedRuleSets.player[index];
+      console.log('Loading rule set =>', ruleSet);
 
-      this.alert.type = 'success';
-      this.alert.msg = `Loaded ruleset '${name}'.`;
+      if (ruleSet.hasOwnProperty('code')); {
+        
+        try {
+          // Set IDE state
+          this.ide.input = ruleSet.code;
+          // Set UI state
+          this.ide.savedRuleSets.player[index].active = true;
+        } catch(e) {
+          console.log('Error loading ruleset =>', [e, ruleSet])
+          this.alert.type = 'danger';
+          this.alert.msg = `Error loading ruleset '${JSON.stringify(ruleSet)}'`;
+        }
+      }
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
