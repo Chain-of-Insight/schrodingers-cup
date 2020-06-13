@@ -41,13 +41,13 @@
                   <!-- Saved Rule Sets -->
                   <a
                     href="#"
-                    class="'list-group-item list-group-item-action'"
+                    class="ruleset"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
                     v-on:click="loadRuleSet(index, ruleSet.name)"
                   >
-                    <span v-if="!ruleSet.hasOwnProperty('active')">{{index + 1}}. {{ ruleSet.name }}.nom</span>
-                    <span v-else class="success active">{{index + 1}}. {{ ruleSet.name }}.nom</span>
+                    <span class="ruleset success bg-success active list-group-item" v-if="ruleSet.active">{{index + 1}}. {{ ruleSet.name }}.nom  {{ruleSet.active}}</span>
+                    <span v-else class="ruleset list-group-item">{{index + 1}}. {{ ruleSet.name }}.nom</span>
                   </a>
 
                 </div>
@@ -131,6 +131,31 @@
               <button v-else type="submit" class="btn btn-success">Save</button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Ruleset Modal -->
+    <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="delete-modal-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="delete-modal-label">Delete Ruleset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Are you sure you want to delete ruleset '{{ this.ide.selectedRuleSet }}'?</strong></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cancelDelete()" data-dismiss="modal">Cancel</button>
+            <button v-if="ide.state.loading" type="button" class="btn btn-danger" disabled>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span class="sr-only">Deleting...</span>
+            </button>
+            <button v-else type="button" class="btn btn-danger" @click="deleteRuleSet()">Delete</button>
+          </div>
         </div>
       </div>
     </div>
@@ -357,6 +382,16 @@ export default {
           this.ide.input = ruleSet.code;
           // Set UI state
           this.ide.savedRuleSets.player[index].active = true;
+          for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
+            if (i !== index) {
+              if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
+                this.ide.savedRuleSets.player[i].active = false;
+              }
+              
+            }
+          }
+          // Force update cycle
+          this.$forceUpdate();
         } catch(e) {
           console.log('Error loading ruleset =>', [e, ruleSet])
           this.alert.type = 'danger';
@@ -383,5 +418,19 @@ export default {
   span.clear {
     text-decoration: underline;
     cursor: pointer;
+  }
+  a.ruleset {
+    text-decoration: none;
+  }
+  span.ruleset,
+  span.ruleset:hover {
+    color: black;
+    border: none;
+  }
+
+  span.ruleset.active,
+  span.ruleset.active:hover {
+    color: white;
+    border: none;
   }
 </style>
