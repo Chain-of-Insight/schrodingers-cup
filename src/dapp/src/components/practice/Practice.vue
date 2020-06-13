@@ -96,12 +96,13 @@
             <div class="modal-body">
               <div class="form-group">
                 <label for="ruleset-name">Give your ruleset a name:</label>
-                <div class="input-group">
+                <div class="input-group" v-bind:class="{ 'is-invalid': ide.nameError }">
                   <input
                     v-model="ide.ruleSetName"
                     type="text"
                     id="ruleset-name"
                     class="form-control"
+                    v-bind:class="{ 'is-invalid': ide.nameError }"
                     placeholder="my-awesome-ruleset"
                     required
                   >
@@ -109,10 +110,13 @@
                     <span class="input-group-text">.nom</span>
                   </div>
                 </div>
+                <div class="invalid-feedback">
+                  You already have a saved ruleset with that name!
+                </div>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="cancelSave()" data-dismiss="modal">Cancel</button>
               <button v-if="ide.state.loading" type="button" class="btn btn-success" disabled>
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <span class="sr-only">Saving...</span>
@@ -190,6 +194,7 @@ export default {
       output: null,
       savedRuleSets: [],
       ruleSetName: '',
+      nameError: false,
       options: {
         // IDE Options
         // mode: 'text/x-lua',
@@ -281,25 +286,34 @@ export default {
       console.log('Saved rulesets:', this.ide.savedRuleSets);
     },
     saveRuleSet: async function () {
-      const ruleSet = {
-        name: this.ide.ruleSetName,
-        code: this.ide.input,
-        sortOrder: localStorage.length
+      // Check if ruleset name already exists
+      if (Object.keys(localStorage).indexOf(this.ide.ruleSetName) !== -1) {
+        this.ide.nameError = true;
+      } else {
+        const ruleSet = {
+          name: this.ide.ruleSetName,
+          code: this.ide.input,
+          sortOrder: localStorage.length
+        }
+
+        this.ide.state.loading = true;
+        console.log('Ruleset to be saved:', ruleSet);
+
+        const itemContent = JSON.stringify(ruleSet);
+        localStorage.setItem(ruleSet.name, itemContent);
+        this.getSavedRuleSets();
+
+        this.alert.type = 'success';
+        this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
+
+        $('#save-modal').modal('hide');
+        this.ide.state.loading = false;
+        this.ide.ruleSetName = '';
       }
-
-      this.ide.state.loading = true;
-      console.log('Ruleset to be saved:', ruleSet);
-
-      const itemContent = JSON.stringify(ruleSet);
-      localStorage.setItem(ruleSet.name, itemContent);
-      this.getSavedRuleSets();
-
-      this.alert.type = 'success';
-      this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
-
-      $('#save-modal').modal('hide');
-      this.ide.state.loading = false;
+    },
+    cancelSave: function () {
       this.ide.ruleSetName = '';
+      this.ide.nameError = false;
     },
     loadRuleSet: function () {
       // TODO: this
