@@ -36,6 +36,14 @@
                 <label>
                   <strong>Saved Rulesets:</strong>
                 </label>
+                <div class="list-group">
+                  <a
+                    href="#"
+                    class="list-group-item list-group-item-action"
+                    v-for="ruleSet in ide.savedRuleSets"
+                    :key="ruleSet"
+                  >{{ ruleSet }}</a>
+                </div>
               </div>
               <!-- IDE Input -->
               <div id="ide-input" class="ide-pane col">
@@ -180,6 +188,7 @@ export default {
     ide: {
       input: DEMO_CODE,
       output: null,
+      savedRuleSets: [],
       ruleSetName: '',
       options: {
         // IDE Options
@@ -203,6 +212,8 @@ export default {
       this.connected = true;
       this.address = returningUser;
     }
+    // Get list of saved ruleset names from localStorage
+    this.getSavedRuleSets();
   },
   methods: {
     connectUser: async function () {
@@ -262,6 +273,10 @@ export default {
         this.ide.output = "Error: compiler failed for unknown reasons 😅";
       }
     },
+    getSavedRuleSets: function () {
+      this.ide.savedRuleSets = Object.keys(localStorage).map(ruleSet => ruleSet);
+      console.log('Saved rulesets:', this.ide.savedRuleSets);
+    },
     saveRuleSet: async function () {
       const ruleSet = {
         code: this.ide.input
@@ -272,6 +287,7 @@ export default {
 
       const itemContent = JSON.stringify(ruleSet);
       localStorage.setItem(this.ide.ruleSetName, itemContent);
+      this.getSavedRuleSets();
 
       this.alert.type = 'success';
       this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
