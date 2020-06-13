@@ -36,15 +36,26 @@
                 <label>
                   <strong>Saved Rulesets:</strong>
                 </label>
-                <div class="list-group">
-                  <a
+                <ul class="list-group">
+                  <li
                     href="#"
-                    class="list-group-item list-group-item-action"
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                     v-for="ruleSet in ide.savedRuleSets"
                     :key="ruleSet.name"
-                    v-on:click="loadRuleSet(ruleSet.name)"
-                  >{{ ruleSet.name }}.nom</a>
-                </div>
+                  >{{ ruleSet.name }}.nom
+                    <div class="btn-group">
+                      <button class="btn btn-primary" @click="loadRuleSet(ruleSet.name)">Load</button>
+                      <button
+                        class="btn btn-danger"
+                        data-toggle="modal"
+                        data-target="#delete-modal"
+                        @click="ide.selectedRuleSet = ruleSet.name;"
+                      >
+                        <span class="oi oi-trash" title="Delete ruleset" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </li>
+                </ul>
               </div>
               <!-- IDE Input -->
               <div id="ide-input" class="ide-pane col">
@@ -129,6 +140,31 @@
       </div>
     </div>
 
+    <!-- Delete Ruleset Modal -->
+    <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="delete-modal-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="delete-modal-label">Delete Ruleset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Are you sure you want to delete ruleset '{{ this.ide.selectedRuleSet }}'?</strong></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cancelDelete()" data-dismiss="modal">Cancel</button>
+            <button v-if="ide.state.loading" type="button" class="btn btn-danger" disabled>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span class="sr-only">Deleting...</span>
+            </button>
+            <button v-else type="button" class="btn btn-danger" @click="deleteRuleSet()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -194,7 +230,8 @@ export default {
       input: DEMO_CODE,
       output: null,
       savedRuleSets: [],
-      ruleSetName: '',
+      ruleSetName: null,
+      selectedRuleSet: null,
       nameError: false,
       options: {
         // IDE Options
@@ -298,19 +335,18 @@ export default {
           code: this.ide.input,
           sortOrder: localStorage.length
         }
+
         console.log('Ruleset to be saved:', ruleSet);
         localStorage.setItem(this.ide.ruleSetName, JSON.stringify(ruleSet));
         this.getSavedRuleSets();
+
         this.alert.type = 'success';
         this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
+
         $('#save-modal').modal('hide');
         this.ide.state.loading = false;
         this.ide.ruleSetName = '';
       }
-    },
-    cancelSave: function () {
-      this.ide.ruleSetName = '';
-      this.ide.nameError = false;
     },
     loadRuleSet: function (name) {
       console.log('Loading ruleset:', name);
@@ -319,6 +355,26 @@ export default {
 
       this.alert.type = 'success';
       this.alert.msg = `Loaded ruleset '${name}'.`;
+    },
+    deleteRuleSet: function () {
+      console.log('Ruleset to be deleted:', this.ide.selectedRuleSet);
+      localStorage.removeItem(this.ide.selectedRuleSet);
+      this.getSavedRuleSets();
+
+      this.alert.type = 'info';
+      this.alert.msg = `Ruleset '${this.ide.selectedRuleSet}' deleted.`;
+
+      $('#delete-modal').modal('hide');
+      this.ide.selectedRuleSet = ''
+    },
+    cancelSave: function () {
+      // Quick and dirty solution to handle modal close (jQuery doesn't play nice with vue).
+      this.ide.ruleSetName = '';
+      this.ide.nameError = false;
+    },
+    cancelDelete: function () {
+      // Ditto.
+      this.ide.selectedRuleSet = ''
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
