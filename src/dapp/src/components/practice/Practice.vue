@@ -40,14 +40,14 @@
                   
                   <!-- Saved Rule Sets -->
                   <a
-                    href="#"
                     class="ruleset"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
-                    v-on:click="loadRuleSet(index, ruleSet.name)"
+                    v-on:click="loadRuleSet(index)"
+                    style="cursor:pointer;"
                   >
-                    <span class="ruleset success bg-success active list-group-item" v-if="ruleSet.active">{{index + 1}}. {{ ruleSet.name }}.nom  {{ruleSet.active}}</span>
-                    <span v-else class="ruleset list-group-item">{{index + 1}}. {{ ruleSet.name }}.nom</span>
+                    <span class="ruleset success bg-success active list-group-item" v-if="ruleSet.active">{{index + 1}}. {{ ruleSet.name }}</span>
+                    <span v-else class="ruleset list-group-item">{{index + 1}}. {{ ruleSet.name }}</span>
                   </a>
 
                 </div>
@@ -60,10 +60,29 @@
                 <codemirror 
                   v-model="ide.input"
                   :options="ide.options"
+                  @change="clearEditorOutput()"
                 ></codemirror>
                 <div class="execute">
+                  <!-- Compile Nomic -->
                   <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-                  <button class="btn btn-success" data-toggle="modal" data-target="#save-modal">Save</button>
+                  
+                  <!-- Save Rule Set -->
+                  <button 
+                    class="btn btn-success" 
+                    data-toggle="modal" 
+                    data-target="#save-modal"
+                    v-if="typeof selectedRuleSet !== 'number'"
+                    :disabled="!ide.output"
+                  >Save</button>
+
+                  <button 
+                    class="btn btn-success" 
+                    v-if="typeof selectedRuleSet == 'number'"
+                    @click="saveRuleSet(selectedRuleSet)"
+                    :disabled="!ide.output"
+                  >Save</button>
+
+                  <!-- Clear Editor -->
                   <button class="btn btn-danger" @click="clearEditor()">
                     <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
                   </button>
@@ -93,44 +112,39 @@
     <div class="modal fade" id="save-modal" tabindex="-1" role="dialog" aria-labelledby="save-modal-label" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <form v-on:submit.prevent="saveRuleSet()">
-            <div class="modal-header">
-              <h5 class="modal-title" id="save-modal-label">Save Ruleset</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <label for="ruleset-name">Give your ruleset a name:</label>
-                <div class="input-group" v-bind:class="{ 'is-invalid': ide.nameError }">
-                  <input
-                    v-model="ide.ruleSetName"
-                    type="text"
-                    id="ruleset-name"
-                    class="form-control"
-                    v-bind:class="{ 'is-invalid': ide.nameError }"
-                    placeholder="my-awesome-ruleset"
-                    required
-                  >
-                  <div class="input-group-append">
-                    <span class="input-group-text">.nom</span>
-                  </div>
-                </div>
-                <div class="invalid-feedback">
-                  You already have a saved ruleset with that name!
-                </div>
+          <div class="modal-header">
+            <h5 class="modal-title" id="save-modal-label">Save Ruleset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="ruleset-name">Give your ruleset a name:</label>
+              <div class="input-group" v-bind:class="{ 'is-invalid': ide.nameError }">
+                <input
+                  v-model="ide.ruleSetName"
+                  type="text"
+                  id="ruleset-name"
+                  class="form-control"
+                  v-bind:class="{ 'is-invalid': ide.nameError }"
+                  placeholder="my-awesome-ruleset"
+                  required
+                >
+              </div>
+              <div class="invalid-feedback">
+                You already have a saved ruleset with that name!
               </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="cancelSave()" data-dismiss="modal">Cancel</button>
-              <button v-if="ide.state.loading" type="button" class="btn btn-success" disabled>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span class="sr-only">Saving...</span>
-              </button>
-              <button v-else type="submit" class="btn btn-success">Save</button>
-            </div>
-          </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cancelSave()" data-dismiss="modal">Cancel</button>
+            <button v-if="ide.state.loading" type="button" class="btn btn-success" disabled>
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span class="sr-only">Saving...</span>
+            </button>
+            <button v-else class="btn btn-success" @click="saveRuleSetHandler()">Save</button>
+          </div>
         </div>
       </div>
     </div>
@@ -239,7 +253,8 @@ export default {
         loading: false
       },
       execute: testNomic
-    }
+    },
+    selectedRuleSet: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -307,27 +322,39 @@ export default {
       if (output) {
         this.ide.output = output;
       } else {
-        this.ide.output = "Error: compiler failed for unknown reasons 😅";
+        this.ide.output = "Warning: compilation passed but compiler output was empty 😅";
       }
     },
-    getSavedRuleSets: function () {
+    getSavedRuleSets: async function (index = false) {
       // Load rule sets if exists
-      let storedRuleSets = localStorage.getItem('ruleSets');
+      let storedRuleSets = await localStorage.getItem('ruleSets');
       let playerSavedRuleSets = null;
       if (storedRuleSets) {
-        storedRuleSets = JSON.parse(storedRuleSets);
+        storedRuleSets = await JSON.parse(storedRuleSets);
         playerSavedRuleSets = {
           player: storedRuleSets,
           nomic: []
-        }
+        };
       }
-      this.ide.savedRuleSets = (playerSavedRuleSets) ? playerSavedRuleSets : {
+      this.ide.savedRuleSets = await (playerSavedRuleSets) ? playerSavedRuleSets : {
         player: [],
         nomic: []
       };
       console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
+      if (typeof index == 'number') {
+        this.loadRuleSet(index);
+      }
     },
-    saveRuleSet: async function () {
+    saveRuleSetHandler: function () {
+      let index = false;
+      if (typeof this.selectedRuleSet == 'number') {
+        this.saveRuleSet(this.selectedRuleSet);
+      } else {
+        this.saveRuleSet();
+      }
+
+    },
+    saveRuleSet: async function (index = false) {
       let ruleSets = localStorage.getItem('ruleSets');
       let hasRuleSets;
 
@@ -335,6 +362,7 @@ export default {
       if (ruleSets) {
         hasRuleSets = true;
         ruleSets = JSON.parse(ruleSets);
+        console.log(ruleSets)
       } else {
         hasRuleSets = false;
         ruleSets = [];
@@ -351,14 +379,31 @@ export default {
       console.log('Rule set to be saved:', ruleSet);
 
       // Prepare rule set
-      ruleSets.push(ruleSet);
+      if (hasRuleSets && index) {
+        let rName = ruleSets[index].name;
+        ruleSet.name = rName;
+        ruleSets[index] = ruleSet;
+      } else {
+        ruleSets.push(ruleSet);
+      }
       ruleSets = JSON.stringify(ruleSets)
 
       // Save rule set
-      localStorage.setItem('ruleSets', ruleSets);
+      await localStorage.setItem('ruleSets', ruleSets);
 
       // Update rule sets
-      this.getSavedRuleSets();
+      if (!index) {
+        if (this.ide.savedRuleSets.player) {
+          if (this.ide.savedRuleSets.player.length) {
+            index = this.ide.savedRuleSets.player.length;
+          } else {
+            index = 0;
+          }
+        } else {
+          index = 0;
+        }
+      }
+      this.getSavedRuleSets(index);
 
       // Reset app state
       this.alert.type = 'success';
@@ -371,9 +416,16 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRuleSet: function (index, name) {
+    loadRuleSet: function (index) {
       let ruleSet = this.ide.savedRuleSets.player[index];
-      console.log('Loading rule set =>', ruleSet);
+      console.log('Loading rule set =>', [ruleSet, index]);
+
+      if (!ruleSet) {
+        // setTimeout(() => {
+        //   this.loadRuleSet(index);
+        // }, 500);
+        return;
+      }
 
       if (ruleSet.hasOwnProperty('code')); {
         
@@ -382,6 +434,7 @@ export default {
           this.ide.input = ruleSet.code;
           // Set UI state
           this.ide.savedRuleSets.player[index].active = true;
+          this.selectedRuleSet = Number(index);
           for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
             if (i !== index) {
               if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
@@ -402,8 +455,26 @@ export default {
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
       this.ide.input = '';
+      this.ide.output = null;
+      this.selectedRuleSet = null;
+      
+      if (this.ide.savedRuleSets.player) {
+        if (this.ide.savedRuleSets.player.length) {
+          // Remove active file edit
+          for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
+            if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
+              if (this.ide.savedRuleSets.player[i].active) {
+                this.ide.savedRuleSets.player[i].active = false;
+              }
+            }
+          }
+        }
+      }
     },
     clearEditorOutput: function () {
+      if (!this.ide.output) {
+        return;
+      }
       console.log('Clearing output...', this.ide);
       this.ide.output = null;
     }
