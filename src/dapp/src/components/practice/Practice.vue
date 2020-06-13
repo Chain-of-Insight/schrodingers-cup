@@ -264,16 +264,14 @@ export default {
     },
     saveRuleSet: async function () {
       const ruleSet = {
-        name: this.ide.ruleSetName,
         code: this.ide.input
       }
 
       this.ide.state.loading = true;
       console.log('Ruleset to be saved:', ruleSet);
 
-      const itemKey = localStorage.length; // For easy ordering later
       const itemContent = JSON.stringify(ruleSet);
-      localStorage.setItem(itemKey, itemContent);
+      localStorage.setItem(this.ide.ruleSetName, itemContent);
 
       this.alert.type = 'success';
       this.alert.msg = `Ruleset '${this.ide.ruleSetName}'' saved!`;
