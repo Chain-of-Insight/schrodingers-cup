@@ -42,7 +42,8 @@
                     class="list-group-item list-group-item-action"
                     v-for="ruleSet in ide.savedRuleSets"
                     :key="ruleSet.name"
-                  >{{ ruleSet.name }}</a>
+                    v-on:click="loadRuleSet(ruleSet.name)"
+                  >{{ ruleSet.name }}.nom</a>
                 </div>
               </div>
               <!-- IDE Input -->
@@ -279,33 +280,29 @@ export default {
       }
     },
     getSavedRuleSets: function () {
-      this.ide.savedRuleSets = Object.keys(localStorage).map(name => {
-        return JSON.parse(localStorage.getItem(name));
-      }).sort((a, b) => a.sortOrder - b.sortOrder);
-
-      console.log('Saved rulesets:', this.ide.savedRuleSets);
+      this.ide.savedRuleSets = Object.entries(localStorage)
+        .map(([name, data]) => {
+          const ruleSet = JSON.parse(data);
+          ruleSet.name = name;
+          return ruleSet;
+        })
+        .sort((a, b) => a.sortOrder - b.sortOrder);
     },
     saveRuleSet: async function () {
       // Check if ruleset name already exists
-      if (Object.keys(localStorage).indexOf(this.ide.ruleSetName) !== -1) {
+      if (localStorage.hasOwnProperty(this.ide.ruleSetName)) {
         this.ide.nameError = true;
       } else {
+        this.ide.state.loading = true;
         const ruleSet = {
-          name: this.ide.ruleSetName,
           code: this.ide.input,
           sortOrder: localStorage.length
         }
-
-        this.ide.state.loading = true;
         console.log('Ruleset to be saved:', ruleSet);
-
-        const itemContent = JSON.stringify(ruleSet);
-        localStorage.setItem(ruleSet.name, itemContent);
+        localStorage.setItem(this.ide.ruleSetName, JSON.stringify(ruleSet));
         this.getSavedRuleSets();
-
         this.alert.type = 'success';
         this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
-
         $('#save-modal').modal('hide');
         this.ide.state.loading = false;
         this.ide.ruleSetName = '';
@@ -315,8 +312,13 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRuleSet: function () {
-      // TODO: this
+    loadRuleSet: function (name) {
+      console.log('Loading ruleset:', name);
+      const loadedRuleSet = JSON.parse(localStorage.getItem(name));
+      this.ide.input = loadedRuleSet.code;
+
+      this.alert.type = 'success';
+      this.alert.msg = `Loaded ruleset '${name}'.`;
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
