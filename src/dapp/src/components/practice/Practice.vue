@@ -167,16 +167,7 @@
                   <!-- Save Rule Set -->
                   <button 
                     class="btn btn-success" 
-                    data-toggle="modal" 
-                    data-target="#save-modal"
-                    v-if="typeof selectedRuleSet.index !== 'number'"
-                    :disabled="!ide.output || compilerError"
-                  >Save</button>
-
-                  <button 
-                    class="btn btn-success" 
-                    v-if="typeof selectedRuleSet.index == 'number'"
-                    @click="saveRuleSet(selectedRuleSet)"
+                    @click="saveRuleSetHandler()"
                     :disabled="!ide.output || compilerError"
                   >Save</button>
 
@@ -241,7 +232,7 @@
               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               <span class="sr-only">Saving...</span>
             </button>
-            <button v-else class="btn btn-success" @click="saveRuleSetHandler()">Save</button>
+            <button v-else class="btn btn-success" @click="saveRuleSet()">Save</button>
           </div>
         </div>
       </div>
@@ -476,15 +467,16 @@ export default {
       }
     },
     saveRuleSetHandler: function () {
-      let index = false;
-      if (typeof this.selectedRuleSet.index == 'number') {
-        this.saveRuleSet(this.selectedRuleSet);
+      if (
+        this.selectedRuleSet.type === ruleSetTypes.CURRENT ||
+        typeof(this.selectedRuleSet.index) !== 'number'
+      ) {
+        $('#save-modal').modal('show');
       } else {
-        this.saveRuleSet();
+        this.saveRuleSet(this.selectedRuleSet.index);
       }
-
     },
-    saveRuleSet: async function (index = false) {
+    saveRuleSet: async function (index = null) {
       if (this.compilerError) {
         this.alert.type = 'danger';
         this.alert.msg = 'Error saving rule, compilation failed';
@@ -509,29 +501,32 @@ export default {
 
       // Loading
       this.ide.state.loading = true;
-      
-      const ruleSet = {
-        code: this.ide.input,
-        name: this.ide.ruleSetName
-      };
 
-      console.log('Rule set to be saved:', ruleSet);
+      let ruleSet = null;
 
       // Prepare rule set
-      if (hasRuleSets && index) {
-        let rName = ruleSets[index].name;
-        ruleSet.name = rName;
-        ruleSets[index] = ruleSet;
+      if (hasRuleSets && index !== null) {
+        console.log(42, index);
+        ruleSets[index].code = this.ide.input;
+        ruleSet = ruleSets[index];
+        console.log(1);
       } else {
+        console.log(2, index);
+        ruleSet = {
+          code: this.ide.input,
+          name: this.ide.ruleSetName
+        };
         ruleSets.push(ruleSet);
       }
-      ruleSets = JSON.stringify(ruleSets)
+      ruleSets = JSON.stringify(ruleSets);
+
+      console.log('Rule set to be saved:', ruleSet);
 
       // Save rule set
       await localStorage.setItem('ruleSets', ruleSets);
 
       // Update rule sets
-      if (!index) {
+      if (index === null) {
         if (this.ide.savedRuleSets.player) {
           if (this.ide.savedRuleSets.player.length) {
             index = this.ide.savedRuleSets.player.length;
@@ -546,7 +541,7 @@ export default {
 
       // Reset app state
       this.alert.type = 'success';
-      this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
+      this.alert.msg = `Ruleset '${ruleSet.name}' saved!`;
       setTimeout(() => {
         this._retireNotification();
       }, 5000);
@@ -622,19 +617,6 @@ export default {
       this.selectedRuleSet.type = null;
       this.selectedRuleSet.index = null;
       this.compilerError = false;
-      
-      // if (this.ide.savedRuleSets.player) {
-      //   if (this.ide.savedRuleSets.player.length) {
-      //     // Remove active file edit
-      //     for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
-      //       if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
-      //         if (this.ide.savedRuleSets.player[i].active) {
-      //           this.ide.savedRuleSets.player[i].active = false;
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
     },
     clearEditorOutput: function () {
       if (!this.ide.output) {
