@@ -198,6 +198,8 @@ import 'codemirror/theme/dracula.css';
 
 const $ = window.jQuery;
 
+const CURRENT_RULES = require('./rules/currentRules.json');
+
 const DEMO_CODE = `### In Nomsu, variables have a "$" prefix, and you can just assign to them
 ### without declaring them first:
 $x = 1
@@ -244,7 +246,10 @@ export default {
     ide: {
       input: DEMO_CODE,
       output: null,
-      savedRuleSets: [],
+      savedRuleSets: {
+        player: [],
+        nomic: []
+      },
       ruleSetName: '',
       nameError: false,
       options: {
@@ -273,6 +278,7 @@ export default {
     }
     // Get list of saved ruleset names from localStorage
     this.getSavedRuleSets();
+    this.getCurrentRuleSets();
   },
   methods: {
     connectUser: async function () {
@@ -340,21 +346,16 @@ export default {
         this.ide.output = "Warning: compilation passed but compiler output was empty 😅";
       }
     },
+    getCurrentRuleSets: async function () {
+      this.ide.savedRuleSets.nomic = CURRENT_RULES;
+    },
     getSavedRuleSets: async function (index = false) {
       // Load rule sets if exists
       let storedRuleSets = await localStorage.getItem('ruleSets');
-      let playerSavedRuleSets = null;
       if (storedRuleSets) {
         storedRuleSets = await JSON.parse(storedRuleSets);
-        playerSavedRuleSets = {
-          player: storedRuleSets,
-          nomic: []
-        };
+        this.ide.savedRuleSets.player = storedRuleSets;
       }
-      this.ide.savedRuleSets = await (playerSavedRuleSets) ? playerSavedRuleSets : {
-        player: [],
-        nomic: []
-      };
       console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
       if (typeof index == 'number') {
         this.loadRuleSet(index);
