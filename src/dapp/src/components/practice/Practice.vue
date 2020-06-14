@@ -8,7 +8,7 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <div class="container-xl main">
+    <div class="container-fluid main">
       <div class="row" v-if="!activeGame">
         <div class="col">
           <h1>{{ title }}</h1>
@@ -32,10 +32,27 @@
           <div class="ide container-fluid p-0" v-else>
             <div class="row no-gutters">
               <!-- IDE Saved Rule Sets -->
-              <div id="ide-saved" class="ide-pane col">
+              <div id="ide-saved" class="ide-pane col-3">
                 <label>
-                  <strong>Saved Rules:</strong>
+                  <strong>Rule Sets:</strong>
                 </label>
+                <nav class="nav nav-tabs">
+                  <a
+                    class="nav-link active"
+                    href="#"
+                    @click="ide.ruleSetPane = ruleSetViews.CURRENT"
+                  >Current</a>
+                  <a
+                    class="nav-link"
+                    href="#"
+                    @click="ide.ruleSetPane = ruleSetViews.SAVED"
+                  >Saved</a>
+                  <a
+                    class="nav-link disabled"
+                    href="#"
+                    @click="ide.ruleSetPane = ruleSetViews.QUEUED"
+                  >Queued</a>
+                </nav>
                 <div class="list-group">
                   
                   <!-- Saved Rule Sets -->
@@ -53,7 +70,7 @@
                 </div>
               </div>
               <!-- IDE Input -->
-              <div id="ide-input" class="ide-pane col">
+              <div id="ide-input" class="ide-pane col-9">
                 <label>
                   <strong>Input New Rule:</strong>
                 </label>
@@ -197,6 +214,12 @@ import 'codemirror/mode/shell/shell';
 import 'codemirror/theme/dracula.css';
 
 const $ = window.jQuery;
+
+const ruleSetViews = {
+  SAVED: 'ACTIVE',
+  CURRENT: 'CURRENT',
+  QUEUED: 'QUEUED'
+}
 
 const CURRENT_RULES = require('./rules/currentRules.json');
 
