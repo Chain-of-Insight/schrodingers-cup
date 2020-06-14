@@ -370,7 +370,7 @@ export default {
   },
   computed: {
     queuedRuleSets: function () {
-      return [];
+      return this.ide.savedRuleSets.player.filter(ruleSet => ruleSet.queued);
     }
   },
   methods: {
