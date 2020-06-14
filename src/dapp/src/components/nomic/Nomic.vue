@@ -1,6 +1,13 @@
 <template>
   <div>
 
+    <!-- Notifications -->
+    <Notification 
+      :type="alert.type" 
+      :msg="alert.msg" 
+      v-on:reset="alert = {type: null, msg: null}"
+    ></Notification>
+
     <!-- Not Connected -->
     <div class="container main" v-if="!connected">
       <h1>{{ title }}</h1>
@@ -51,7 +58,14 @@
         </div>
       </section>
 
-
+      <!-- IDE -->
+      <div class="editor-toggle">
+        <!-- IDE Shown -->
+        <button class="btn btn-inverse toggle-rules-editor" v-if="showEditor" @click="showEditor = false">Hide Rules Editor</button>
+        <Practice :activeGame="true" v-if="showEditor"></Practice>
+        <!-- IDE Hidden -->
+        <button class="btn btn-inverse toggle-rules-editor" v-if="!showEditor" @click="showEditor = true">Show Rules Editor</button>
+      </div>
     </div>
 
   </div>
@@ -77,11 +91,18 @@ import { PerformAuth } from '../../services/apiProvider';
 // Child components
 import Notification from '../common/Notifications.vue';
 import RuleProposal from '../common/RuleProposal.vue';
+// IDE Component
+import Practice from '../practice/Practice.vue';
 
 export default {
+  components: { Notification, Practice },
   data: () => ({
     title: "Nomic Battlegrounds",
     subtitle: "Pwned or be pwned, the choice is yours",
+    alert: {
+      type: null,
+      msg: null
+    },
     network: (process.env.hasOwnProperty('CURRENT_NETWORK')) ? process.env.CURRENT_NETWORK : 'carthagenet',
     address: null,
     getBalance: getBalance,
@@ -102,7 +123,8 @@ export default {
     mountProvider: mountProvider,
     signMessage: signMessage,
     loginSigned: null,
-    jwtToken: null
+    jwtToken: null,
+    showEditor: false
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -123,7 +145,6 @@ export default {
           console.log('TwilioChat', this.TwilioChat);
           // Connect to chat room
           this.connectChat();
-          // Sign login auth message for API
           await this.doLoginMessageSigning();
         }
       } catch (e) {
@@ -359,6 +380,12 @@ export default {
         // Send chat message to all recipients
         this.submitChatMessage();
       }
+    },
+    _retireNotification: function () {
+      this.alert = {
+        type: null,
+        msg: null
+      };
     }
   }
 };
@@ -368,5 +395,10 @@ export default {
   /* Chat */
   .input-group.chat-controls {
     width: 80vw;
+  }
+  button.toggle-rules-editor {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #333333;
   }
 </style>

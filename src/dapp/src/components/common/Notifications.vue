@@ -2,7 +2,7 @@
   <div class="notification">
     <!-- Notification Display -->
     <div v-if="type && msg" :class="'alert alert-' + type" role="alert">{{ msg }}</div>
-    <span class="close close-x" @click="$emit('reset')">&times;</span>
+    <span v-if="type && msg" class="close close-x" @click="$emit('reset')">&times;</span>
   </div>
 </template>
 

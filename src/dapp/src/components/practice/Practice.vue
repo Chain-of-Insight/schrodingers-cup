@@ -9,7 +9,7 @@
     ></Notification>
 
     <div class="container-xl main">
-      <div class="row">
+      <div class="row" v-if="!activeGame">
         <div class="col">
           <h1>{{ title }}</h1>
           <h5>{{ subtitle }}</h5>
@@ -222,6 +222,12 @@ say("OK!")`;
 
 export default {
   components: { Notification },
+  props: {
+    activeGame: {
+      default: false,
+      type: Boolean
+    }
+  },
   data: () => ({
     title: "Practice Zone",
     subtitle: "Familiarize yourself with creating and editing Nomic rules",
