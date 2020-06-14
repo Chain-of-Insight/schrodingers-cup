@@ -95,7 +95,7 @@ import RuleProposal from '../common/RuleProposal.vue';
 import Practice from '../practice/Practice.vue';
 
 export default {
-  components: { Notification, Practice },
+  components: { Notification, Practice, RuleProposal },
   data: () => ({
     title: "Nomic Battlegrounds",
     subtitle: "Pwned or be pwned, the choice is yours",
