@@ -38,35 +38,98 @@
                 </label>
                 <nav class="nav nav-tabs">
                   <a
-                    class="nav-link active"
+                    class="nav-link"
                     href="#"
                     @click="ide.ruleSetPane = ruleSetViews.CURRENT"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.CURRENT }"
                   >Current</a>
                   <a
                     class="nav-link"
                     href="#"
                     @click="ide.ruleSetPane = ruleSetViews.SAVED"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.SAVED }"
                   >Saved</a>
                   <a
-                    class="nav-link disabled"
+                    class="nav-link"
                     href="#"
                     @click="ide.ruleSetPane = ruleSetViews.QUEUED"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.QUEUED }"
                   >Queued</a>
                 </nav>
-                <div class="list-group">
-                  
+                <div
+                  id="rules-current"
+                  class="list-group"
+                  v-if="ide.ruleSetPane === ruleSetViews.CURRENT"
+                >
+                  <p
+                    class="list-group-item border-0"
+                    v-if="ide.savedRuleSets.nomic.length === 0"
+                  >No current rule sets loaded...</p>
+                  <!-- Current Rule Sets -->
+                  <a
+                    class="ruleset list-group-item list-group-item-action"
+                    v-bind:class="{
+                      'active': ruleSet.active,
+                      'list-group-item-success': ruleSet.active,
+                      'bg-success': ruleSet.active
+                    }"
+                    v-bind:key="index"
+                    v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
+                    v-on:click="loadRuleSet(index)"
+                    style="cursor:pointer;"
+                  >
+                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
+                  </a>
+                </div>
+                <div
+                  id="rules-saved"
+                  class="list-group"
+                  v-if="ide.ruleSetPane === ruleSetViews.SAVED"
+                >
+                <p
+                  class="list-group-item border-0"
+                  v-if="ide.savedRuleSets.player.length === 0"
+                >No saved rule sets...</p>
                   <!-- Saved Rule Sets -->
                   <a
-                    class="ruleset"
+                    class="ruleset list-group-item list-group-item-action"
+                    v-bind:class="{
+                      'active': ruleSet.active,
+                      'list-group-item-success': ruleSet.active,
+                      'bg-success': ruleSet.active
+                    }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
                     v-on:click="loadRuleSet(index)"
                     style="cursor:pointer;"
                   >
-                    <span class="ruleset success bg-success active list-group-item" v-if="ruleSet.active">{{index + 1}}. {{ ruleSet.name }}</span>
-                    <span v-else class="ruleset list-group-item">{{index + 1}}. {{ ruleSet.name }}</span>
+                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
                   </a>
-
+                </div>
+                <div
+                  id="rules-current"
+                  class="list-group"
+                  v-if="ide.ruleSetPane === ruleSetViews.QUEUED"
+                >
+                  <!-- Queued Rule Sets -->
+                  <p
+                    class="list-group-item border-0"
+                    v-if="queuedRuleSets.length === 0"
+                  >No queued rule sets...</p>
+                  <a
+                    class="ruleset list-group-item list-group-item-action"
+                    v-bind:class="{
+                      'active': ruleSet.active,
+                      'list-group-item-success': ruleSet.active,
+                      'bg-success': ruleSet.active
+                    }"
+                    v-bind:key="index"
+                    v-for="(ruleSet, index) in queuedRuleSets"
+                    v-on:click="loadRuleSet(index)"
+                    style="cursor:pointer;"
+                  >
+                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
+                  </a>
                 </div>
               </div>
               <!-- IDE Input -->
@@ -266,9 +329,11 @@ export default {
       type: null,
       msg: null
     },
+    ruleSetViews: ruleSetViews,
     ide: {
       input: DEMO_CODE,
       output: null,
+      ruleSetPane: ruleSetViews.CURRENT,
       savedRuleSets: {
         player: [],
         nomic: []
@@ -302,6 +367,11 @@ export default {
     // Get list of saved ruleset names from localStorage
     this.getSavedRuleSets();
     this.getCurrentRuleSets();
+  },
+  computed: {
+    queuedRuleSets: function () {
+      return [];
+    }
   },
   methods: {
     connectUser: async function () {
