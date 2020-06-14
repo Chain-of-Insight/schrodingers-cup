@@ -40,26 +40,26 @@
                   <a
                     class="nav-link"
                     href="#"
-                    @click="ide.ruleSetPane = ruleSetViews.CURRENT"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.CURRENT }"
+                    @click="ide.ruleSetPane = ruleSetTypes.CURRENT"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.CURRENT }"
                   >Current</a>
                   <a
                     class="nav-link"
                     href="#"
-                    @click="ide.ruleSetPane = ruleSetViews.SAVED"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.SAVED }"
+                    @click="ide.ruleSetPane = ruleSetTypes.SAVED"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.SAVED }"
                   >Saved</a>
                   <a
                     class="nav-link"
                     href="#"
-                    @click="ide.ruleSetPane = ruleSetViews.QUEUED"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetViews.QUEUED }"
+                    @click="ide.ruleSetPane = ruleSetTypes.QUEUED"
+                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.QUEUED }"
                   >Queued</a>
                 </nav>
                 <div
                   id="rules-current"
                   class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetViews.CURRENT"
+                  v-if="ide.ruleSetPane === ruleSetTypes.CURRENT"
                 >
                   <p
                     class="list-group-item border-0"
@@ -69,13 +69,19 @@
                   <a
                     class="ruleset list-group-item list-group-item-action"
                     v-bind:class="{
-                      'active': ruleSet.active,
-                      'list-group-item-success': ruleSet.active,
-                      'bg-success': ruleSet.active
+                      'active':
+                        selectedRuleSet.type === ruleSetTypes.CURRENT &&
+                        selectedRuleSet.index === index,
+                      'list-group-item-success':
+                        selectedRuleSet.type === ruleSetTypes.CURRENT &&
+                        selectedRuleSet.index === index,
+                      'bg-success':
+                      selectedRuleSet.type === ruleSetTypes.CURRENT &&
+                      selectedRuleSet.index === index
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
-                    v-on:click="loadRuleSet(index, ide.savedRuleSets.nomic)"
+                    v-on:click="loadRuleSet(index, ruleSetTypes.CURRENT)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -84,7 +90,7 @@
                 <div
                   id="rules-saved"
                   class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetViews.SAVED"
+                  v-if="ide.ruleSetPane === ruleSetTypes.SAVED"
                 >
                 <p
                   class="list-group-item border-0"
@@ -94,13 +100,19 @@
                   <a
                     class="ruleset list-group-item list-group-item-action"
                     v-bind:class="{
-                      'active': ruleSet.active,
-                      'list-group-item-success': ruleSet.active,
-                      'bg-success': ruleSet.active
+                      'active':
+                        selectedRuleSet.type === ruleSetTypes.SAVED &&
+                        selectedRuleSet.index === index,
+                      'list-group-item-success':
+                        selectedRuleSet.type === ruleSetTypes.SAVED &&
+                        selectedRuleSet.index === index,
+                      'bg-success':
+                        selectedRuleSet.type === ruleSetTypes.SAVED &&
+                        selectedRuleSet.index === index
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
-                    v-on:click="loadRuleSet(index, ide.savedRuleSets.player)"
+                    v-on:click="loadRuleSet(index, ruleSetTypes.SAVED)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -109,7 +121,7 @@
                 <div
                   id="rules-current"
                   class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetViews.QUEUED"
+                  v-if="ide.ruleSetPane === ruleSetTypes.QUEUED"
                 >
                   <!-- Queued Rule Sets -->
                   <p
@@ -119,13 +131,19 @@
                   <a
                     class="ruleset list-group-item list-group-item-action"
                     v-bind:class="{
-                      'active': ruleSet.active,
-                      'list-group-item-success': ruleSet.active,
-                      'bg-success': ruleSet.active
-                    }"
+                      'active':
+                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
+                        selectedRuleSet.index === index,
+                      'list-group-item-success':
+                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
+                        selectedRuleSet.index === index,
+                      'bg-success':
+                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
+                        selectedRuleSet.index === index
+                      }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in queuedRuleSets"
-                    v-on:click="loadRuleSet(index, queuedRuleSets)"
+                    v-on:click="loadRuleSet(index, ruleSetTypes.QUEUED)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -151,13 +169,13 @@
                     class="btn btn-success" 
                     data-toggle="modal" 
                     data-target="#save-modal"
-                    v-if="typeof selectedRuleSet !== 'number'"
+                    v-if="typeof selectedRuleSet.index !== 'number'"
                     :disabled="!ide.output || compilerError"
                   >Save</button>
 
                   <button 
                     class="btn btn-success" 
-                    v-if="typeof selectedRuleSet == 'number'"
+                    v-if="typeof selectedRuleSet.index == 'number'"
                     @click="saveRuleSet(selectedRuleSet)"
                     :disabled="!ide.output || compilerError"
                   >Save</button>
@@ -278,7 +296,7 @@ import 'codemirror/theme/dracula.css';
 
 const $ = window.jQuery;
 
-const ruleSetViews = {
+const ruleSetTypes = {
   SAVED: 'ACTIVE',
   CURRENT: 'CURRENT',
   QUEUED: 'QUEUED'
@@ -329,11 +347,11 @@ export default {
       type: null,
       msg: null
     },
-    ruleSetViews: ruleSetViews,
+    ruleSetTypes: ruleSetTypes,
     ide: {
       input: DEMO_CODE,
       output: null,
-      ruleSetPane: ruleSetViews.CURRENT,
+      ruleSetPane: ruleSetTypes.CURRENT,
       savedRuleSets: {
         player: [],
         nomic: []
@@ -354,7 +372,10 @@ export default {
       execute: testNomic
     },
     compilerError: false,
-    selectedRuleSet: null
+    selectedRuleSet: {
+      type: null,
+      index: null
+    }
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -456,7 +477,7 @@ export default {
     },
     saveRuleSetHandler: function () {
       let index = false;
-      if (typeof this.selectedRuleSet == 'number') {
+      if (typeof this.selectedRuleSet.index == 'number') {
         this.saveRuleSet(this.selectedRuleSet);
       } else {
         this.saveRuleSet();
@@ -537,7 +558,24 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRuleSet: function (index, ruleSetList) {
+    loadRuleSet: function (index, type) {
+      let ruleSetList = null;
+
+      switch (type) {
+        case ruleSetTypes.CURRENT:
+          ruleSetList = this.ide.savedRuleSets.nomic;
+          break;
+        case ruleSetTypes.SAVED:
+          ruleSetList = this.ide.savedRuleSets.player;
+          break;
+        case ruleSetTypes.QUEUED:
+          ruleSetList = this.queuedRuleSets;
+          break;
+        default:
+          ruleSetList = this.ide.savedRuleSets.nomic;
+          break;
+      }
+
       let ruleSet = ruleSetList[index];
       console.log('Loading rule set =>', [ruleSet, index]);
 
@@ -554,16 +592,17 @@ export default {
           // Set IDE state
           this.ide.input = ruleSet.code;
           // Set UI state
-          ruleSetList[index].active = true;
-          this.selectedRuleSet = Number(index);
-          for (let i = 0; i < ruleSetList.length; i++) {
-            if (i !== index) {
-              if (ruleSetList[i].hasOwnProperty('active')) {
-                ruleSetList[i].active = false;
-              }
+          // ruleSetList[index].active = true;
+          this.selectedRuleSet.type = type;
+          this.selectedRuleSet.index = Number(index);
+          // for (let i = 0; i < ruleSetList.length; i++) {
+          //   if (i !== index) {
+          //     if (ruleSetList[i].hasOwnProperty('active')) {
+          //       ruleSetList[i].active = false;
+          //     }
               
-            }
-          }
+          //   }
+          // }
           // Force update cycle
           this.$forceUpdate();
         } catch(e) {
@@ -580,21 +619,22 @@ export default {
       console.log('Clearing editor...', this.ide);
       this.ide.input = '';
       this.ide.output = null;
-      this.selectedRuleSet = null;
+      this.selectedRuleSet.type = null;
+      this.selectedRuleSet.index = null;
       this.compilerError = false;
       
-      if (this.ide.savedRuleSets.player) {
-        if (this.ide.savedRuleSets.player.length) {
-          // Remove active file edit
-          for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
-            if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
-              if (this.ide.savedRuleSets.player[i].active) {
-                this.ide.savedRuleSets.player[i].active = false;
-              }
-            }
-          }
-        }
-      }
+      // if (this.ide.savedRuleSets.player) {
+      //   if (this.ide.savedRuleSets.player.length) {
+      //     // Remove active file edit
+      //     for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
+      //       if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
+      //         if (this.ide.savedRuleSets.player[i].active) {
+      //           this.ide.savedRuleSets.player[i].active = false;
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
     },
     clearEditorOutput: function () {
       if (!this.ide.output) {
