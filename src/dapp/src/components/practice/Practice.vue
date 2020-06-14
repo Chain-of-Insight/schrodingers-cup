@@ -462,9 +462,9 @@ export default {
         this.ide.savedRuleSets.player = storedRuleSets;
       }
       console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
-      if (typeof index == 'number') {
-        this.loadRuleSet(index);
-      }
+      // if (typeof index == 'number') {
+      //   this.loadRuleSet(index);
+      // }
     },
     saveRuleSetHandler: function () {
       if (
@@ -537,7 +537,10 @@ export default {
           index = 0;
         }
       }
-      this.getSavedRuleSets(index);
+
+      await this.getSavedRuleSets();
+      this.loadRuleSet(index, ruleSetTypes.SAVED);
+      this.ide.ruleSetPane = ruleSetTypes.SAVED;
 
       // Reset app state
       this.alert.type = 'success';
