@@ -75,7 +75,7 @@
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
-                    v-on:click="loadRuleSet(index)"
+                    v-on:click="loadRuleSet(index, ide.savedRuleSets.nomic)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -100,7 +100,7 @@
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
-                    v-on:click="loadRuleSet(index)"
+                    v-on:click="loadRuleSet(index, ide.savedRuleSets.player)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -125,7 +125,7 @@
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in queuedRuleSets"
-                    v-on:click="loadRuleSet(index)"
+                    v-on:click="loadRuleSet(index, queuedRuleSets)"
                     style="cursor:pointer;"
                   >
                     <span>{{index + 1}}. {{ ruleSet.name }}</span>
@@ -537,8 +537,8 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRuleSet: function (index) {
-      let ruleSet = this.ide.savedRuleSets.player[index];
+    loadRuleSet: function (index, ruleSetList) {
+      let ruleSet = ruleSetList[index];
       console.log('Loading rule set =>', [ruleSet, index]);
 
       if (!ruleSet) {
@@ -554,12 +554,12 @@ export default {
           // Set IDE state
           this.ide.input = ruleSet.code;
           // Set UI state
-          this.ide.savedRuleSets.player[index].active = true;
+          ruleSetList[index].active = true;
           this.selectedRuleSet = Number(index);
-          for (let i = 0; i < this.ide.savedRuleSets.player.length; i++) {
+          for (let i = 0; i < ruleSetList.length; i++) {
             if (i !== index) {
-              if (this.ide.savedRuleSets.player[i].hasOwnProperty('active')) {
-                this.ide.savedRuleSets.player[i].active = false;
+              if (ruleSetList[i].hasOwnProperty('active')) {
+                ruleSetList[i].active = false;
               }
               
             }
