@@ -123,14 +123,13 @@ export default {
           console.log('TwilioChat', this.TwilioChat);
           // Connect to chat room
           this.connectChat();
+          // Sign login auth message for API
+          await this.doLoginMessageSigning();
         }
       } catch (e) {
         // Auth failed
         console.log('Error requesting Twilio Auth Token', e);
       }
-
-      // Sign login auth message for API
-      await this.doLoginMessageSigning();
     }
   },
   methods: {
@@ -162,13 +161,14 @@ export default {
               console.log('TwilioChat', this.TwilioChat);
               // Connect to chat room
               this.connectChat();
+
+              // Sign login auth message for API
+              await this.doLoginMessageSigning();
             }
           } catch (e) {
             // Auth failed
             console.log('Error requesting Twilio Auth Token', e);
           }
-          // Sign login auth message for API
-          await this.doLoginMessageSigning();
         }
       }
     },
@@ -185,6 +185,7 @@ export default {
       // address not revealed
       if (pubKey == this.address) {
           //@todo what do here?
+          console.warn('Warning: Address not revealed. Message signing will fail.');
       }
 
       // auth and get JWT token
