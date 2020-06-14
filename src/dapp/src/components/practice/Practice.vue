@@ -72,14 +72,14 @@
                     data-toggle="modal" 
                     data-target="#save-modal"
                     v-if="typeof selectedRuleSet !== 'number'"
-                    :disabled="!ide.output"
+                    :disabled="!ide.output || compilerError"
                   >Save</button>
 
                   <button 
                     class="btn btn-success" 
                     v-if="typeof selectedRuleSet == 'number'"
                     @click="saveRuleSet(selectedRuleSet)"
-                    :disabled="!ide.output"
+                    :disabled="!ide.output || compilerError"
                   >Save</button>
 
                   <!-- Clear Editor -->
@@ -254,6 +254,7 @@ export default {
       },
       execute: testNomic
     },
+    compilerError: false,
     selectedRuleSet: null
   }),
   mounted: async function () {
@@ -290,7 +291,7 @@ export default {
     testRuleSet: async function () {
       console.log('Preparing to test rule', this.ide.input);
       
-      // Fetch compiler result\
+      // Fetch compiler result
       let result;
       try {
         result = await this.ide.execute(this.ide.input);
@@ -305,6 +306,7 @@ export default {
           // console.log('Compile failed', result.status);
           this.alert.type = 'danger';
           this.alert.msg = 'Compile failed';
+          this.compilerError = true;
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
@@ -312,6 +314,7 @@ export default {
           // console.log('Compiled successfully,', result.status);
           this.alert.type = 'success';
           this.alert.msg = 'Compiled successfully';
+          this.compilerError = false;
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
@@ -361,6 +364,15 @@ export default {
 
     },
     saveRuleSet: async function (index = false) {
+      if (this.compilerError) {
+        this.alert.type = 'danger';
+        this.alert.msg = 'Error saving rule, compilation failed';
+        setTimeout(() => {
+          this._retireNotification();
+        }, 5000);
+        return;
+      }
+
       let ruleSets = localStorage.getItem('ruleSets');
       let hasRuleSets;
 
@@ -469,6 +481,7 @@ export default {
       this.ide.input = '';
       this.ide.output = null;
       this.selectedRuleSet = null;
+      this.compilerError = false;
       
       if (this.ide.savedRuleSets.player) {
         if (this.ide.savedRuleSets.player.length) {
@@ -489,6 +502,7 @@ export default {
       }
       console.log('Clearing output...', this.ide);
       this.ide.output = null;
+      this.compilerError = false;
     },
     _retireNotification: function () {
       this.alert = {
