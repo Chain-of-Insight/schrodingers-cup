@@ -1,0 +1,66 @@
+[
+  {
+    "name": "rule01",
+    "code": "### In Nomsu, variables have a \"$\" prefix, and you can just assign to them\n    without declaring them first:\n$x = 1\ntest that ($x == 1)\n\n### Variables which have not yet been set have the value (nil)\ntest that ($not_yet_set == (nil))\n\n### Variables can be nameless:\n$ = 99\n\n### Or have spaces, if surrounded with parentheses:\n$(my favorite number) = 23\n\n### Figure out what value $my_var should have:\n$my_var = 100\n$my_favourite_number = 1\n$x = 0\n$my_var = ($my_var + $x + $my_favourite_number)\ntest that ($my_var == 101)\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule02",
+    "code": "### in Nomsu, actions are bits of code that run to produce a value or\n### do something. They have flexible syntax, so the values passed to\n### them can be interspersed with the action's name in any order.\n\n### Fix this action so the tests pass:\n($x doubled) means ($x * 2)\n\n### Tests:\ntest that ((2 doubled) == 4)\ntest that ((-5 doubled) == -10)\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule03",
+    "code": "### When you need to do multiple things inside an action, use a block.\n### Blocks are written with a colon followed by some indented code:\n($x doubled then squared) means:\n    $x = (2 * $x)\n    $x = ($x * $x)\n    return $x\n\n### Blocks are also used for loops and conditionals:\nfor $num in [0, -1, 10, 4]:\n    $correct_answer = (4 * ($num * $num))\n    if (($num doubled then squared) != $correct_answer):\n        fail \"Wrong answer for \\($num)!\"\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule04",
+    "code": "### Nomsu text is enclosed in double quotation marks:\n$text = \"Hello\"\n\n### You can insert values into text using a backslash:\ntest that ((5) == (5))\n\n### Variables don't require parentheses, but other expressions do:\n$x = 99\ntest that ((99) == (99))\n\n### This can be used to convert values to text:\ntest that (\"\\$x\" == (\"99\"))\n\n### Longer strings use '(\"' followed by an indented region:\n$long = (\"\n    line one\n      line two with spaces at the front\n\")\n\ntest that\n    $long == (\"\n        line one\n          line two with spaces at the front\n    \")\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule05",
+    "code": "### Make this action return \"big\" if its argument is bigger\n    than 99, otherwise return \"small\"\n(the size of $n) means:\n    if ($n > 99):\n        return \"big\"\n    ..else:\n        return \"smal\"\n\n### Tests:\nfor $big_number in [9999, 100]:\n    test that ((the size of $big_number) == \"big\")\n\nfor $small_number in [0, 1, -5, -999, 99]:\n    test that ((the size of $small_number) == \"smal\")\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule06",
+    "code": "### Fix this action so the tests pass:\n(the sum of $numbers) means:\n    $sum = 0\n    \n    ### You can loop over the values in a list like this:\n    for $number in $numbers:\n        ### Hint: math expressions may need parentheses\n        ($sum += $number)\n    return $sum\n\n### Tests:\ntest that ((the sum of [1, 2, 3, 4, 5]) == 15)\ntest that ((the sum of [100, 200]) == 300)\n\n### You can also loop over a number range like this:\n$total = 0\nfor $i in (1 to 3):\n    $total = ($total + $i)\ntest that ($total == (6))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule07",
+    "code": "### Nomsu's variables are local by default, and actions have their own scopes:\n$x = 1\n$y = 2\n\n### Define an action that sets a variable:\n(do something) means:\n    ### The variable $y is never set in this action, so it has the same value\n        it has outside this action.\n    test that ($y == ($y))\n    \n    ### $x is set inside this action, and actions have their own scopes.\n    $x = $y\n    \n    ### What number should $x be here?\n    test that ($x == ($y))\n\n### After running the action, what value should $x have?\ndo something\ntest that ($x == ($x))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule08",
+    "code": "### Loops and conditionals do *not* have their own scopes:\n$z = 1\nif (1 == 1):\n    ### Set $z inside a conditional:\n    $z = 2\n\n### After assigning in a conditional, what should $z be?\ntest that ($z == (2))\nfor $ in (1 to 1):\n    ### Set $z inside a loop:\n    $z = 3\n\n### After assigning in a loop, what should $z be?\ntest that ($z == (3))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule09",
+    "code": "### The 'external' block lets you modify variables outside an action:\n$x = 1\n(do something) means:\n    external: $x = 2\ndo something\n\n### After running the action that sets $x in an 'external' block, what should $x be?\ntest that ($x == 2)\n\nsay(\"OK!\")\n"
+  },
+  {
+    "name": "rule10",
+    "code": "### The 'with' block lets you create a local scope for the variables you list:\n$y = 1\n$z = 1\nwith [$y]:\n    $y = 2\n    $z = 2\n\n### After setting $y and $z in the 'with [$y]' block, what should $y and $z be?\ntest that ($y == (1))\ntest that ($z == (2))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule11",
+    "code": "$what_happened = \"nothing\"\n\n### In Nomsu, sometimes things fail, but you can recover from failures with 'try':\ntry:\n    ### The 'fail' action triggers failure\n    fail \"Oh no!\"\n..if it fails:\n    $what_happened = \"failure\"\n..if it succeeds:\n    $what_happened = \"success\"\n\n### What do you think happened?\ntest that ($what_happened == (\"failure\"))\n\n### Note: a 'try' block will silence failures, so this has no effect:\ntry: fail\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule12",
+    "code": "### Nomsu uses the \".\" operator to access things inside an object:\n$dictionary = {.dog = \"A lovable doofus\", .cat = \"An internet superstar\"}\ntest that ($dictionary.dog == \"A lovable doofus\")\ntest that ($dictionary.cat == (\"An internet superstar\"))\n\n### If you try to access a key that's not in an object, the result is (nil):\ntest that ($dictionary.mimsy == (nil))\n\n### $dictionary.dog is just a shorthand for $dictionary.\"dog\".\n    You may need to use the longer form for strings with spaces:\n$dictionary.\"guinea pig\" = \"A real-life tribble\"\n\n### Dictionaries are created with curly braces ({}) and can have\n    anything as a key or value, including numbers or other dictionaries:\n$dictionary.5 = \"The number five\"\n$dictionary.five = 5\n$dictionary.myself = $dictionary\ntest that ($dictionary.myself == ($dictionary))\n\n### Lists are similar, but use square brackets ([])\n    and can only have numbers as keys, starting at 1:\n$list = [\"first\", \"second\", 999]\ntest that ($list.1 == \"first\")\ntest that ($list.2 == (\"second\"))\ntest that ($list.3 == ($list.3))\n\n### Hint: 4 should be a missing key\ntest that ($list.4 == (nil))\ntest that ($list.foobar == (nil))\n\n### The \"#\" action gets the number of items inside something:\ntest that (#$list == (3))\ntest that (#{.x = 10, .y = 20} == (2))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule13",
+    "code": "### The \",\" is used for method calls, which means calling an action\n    that's stored on an object (with the object as the first argument).\n### Lists have an \"add\" method that puts new items at the end:\n$list = [-4, -6, 5]\n$list, add 3\ntest that ($list == [-4, -6, 5, 3])\n$list, add 7\ntest that ($list == [-4, -6, 5, 3, 7])\n\n### Text also has some methods like:\n$name = \"Harry Tuttle\"\ntest that (($name, from 7 to 12) == \"Tuttle\")\ntest that (($name, with \"Tuttle\" -> \"Buttle\") == (\"Harry Buttle\"))\n\n### Methods can be chained too:\ntest that (($name, with \"Tuttle\" -> \"Buttle\", from 7 to 12) == (\"Buttle\"))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule14",
+    "code": "### Object Oriented Programming deals with things that have\n    associated values and behaviors.\n### Here, we define a Buffer to be a thing that has a .bits value:\n(a Buffer) is (a thing) with [$bits]:\n    ### And some methods:\n    ($self, set up) means:\n        ### This method runs when a new buffer is created\n        $bits = []\n    \n    ### This method is used to add to a buffer\n    ($self, add $bit) means:\n        $bits, add $bit\n    \n    ### ($list, joined) is a list method that concatenates the list items:\n    ($self, as text) means ($bits, joined)\n    \n    ### Write a method called ($self, length) that returns the sum\n        of the lengths of each bit in the buffer:\n    ($self, length) means:\n        $sum = 0\n        for $bit in $bits:\n            ($sum += (#$bit))\n        return $sum\n        \n### Create an instance of a Buffer:\n$b = (a Buffer)\ntest that ($b is \"a Buffer\")\n$b, add \"xx\"\n$b, add \"yyy\"\ntest that (($b, as text) == \"xxyyy\")\ntest that (($b, length) == 5)\n\n### You can define a thing that inherits the behaviors of another thing like this:\n(a Backwards Buffer) is (a Buffer) with [$bits]:\n    ### ($list, reversed) is a method that returns a copy of $list with\n        the order of the items reversed.\n    ($self, as text) means ($bits, reversed, joined)\n$bb = (a Backwards Buffer)\n$bb, add \"one\"\n$bb, add \"two\"\ntest that (($bb, length) == (6))\ntest that (($bb, as text) == (\"twoone\"))\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule15",
+    "code": "### Define an external action here:\nexternal:\n    ### These will be used in the next lesson\n    $global_var = 23\n    ($x tripled) means:\n        return ($x * 3)\n\ntest that ((5 tripled) == 15)\ntest that ((2 tripled) == 6)\n\nsay(\"OK!\")"
+  },
+  {
+    "name": "rule16",
+    "code": "### 'use' is the action for importing from other files.\n### It takes the path to the file (without the .nom extension):\nuse \"nomsu_tutorial/lesson15\"\ntest that ((10 tripled) == (30))\ntest that ($global_var == ($global_var))\n\nsay(\"OK!\")"
+  }
+]
