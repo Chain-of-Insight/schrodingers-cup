@@ -60,7 +60,7 @@
                 <codemirror 
                   v-model="ide.input"
                   :options="ide.options"
-                  @change="clearEditorOutput()"
+                  @input="clearEditorOutput()"
                 ></codemirror>
                 <div class="execute">
                   <!-- Compile Nomic -->
@@ -516,6 +516,7 @@ export default {
   span.ruleset:hover {
     color: black;
     border: none;
+    margin-right: 1em;
   }
 
   span.ruleset.active,
