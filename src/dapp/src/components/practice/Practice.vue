@@ -305,10 +305,16 @@ export default {
           // console.log('Compile failed', result.status);
           this.alert.type = 'danger';
           this.alert.msg = 'Compile failed';
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
         } else if (result.status == 200) {
           // console.log('Compiled successfully,', result.status);
           this.alert.type = 'success';
           this.alert.msg = 'Compiled successfully';
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
         }
       }
 
@@ -408,6 +414,9 @@ export default {
       // Reset app state
       this.alert.type = 'success';
       this.alert.msg = `Ruleset '${this.ide.ruleSetName}' saved!`;
+      setTimeout(() => {
+        this._retireNotification();
+      }, 5000);
       $('#save-modal').modal('hide');
       this.ide.state.loading = false;
       this.ide.ruleSetName = '';
@@ -449,6 +458,9 @@ export default {
           console.log('Error loading ruleset =>', [e, ruleSet])
           this.alert.type = 'danger';
           this.alert.msg = `Error loading ruleset '${JSON.stringify(ruleSet)}'`;
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
         }
       }
     },
@@ -477,6 +489,12 @@ export default {
       }
       console.log('Clearing output...', this.ide);
       this.ide.output = null;
+    },
+    _retireNotification: function () {
+      this.alert = {
+        type: null,
+        msg: null
+      };
     }
   }
 };
@@ -489,6 +507,7 @@ export default {
   span.clear {
     text-decoration: underline;
     cursor: pointer;
+    clear: both;
   }
   a.ruleset {
     text-decoration: none;

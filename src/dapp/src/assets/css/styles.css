@@ -124,6 +124,7 @@ section.chat input {
   border: 1px solid #eee;
   height: auto;
   min-height: 50vh;
+  min-width: 770px;
 }
 .CodeMirror-code,
 .CodeMirror-line {
