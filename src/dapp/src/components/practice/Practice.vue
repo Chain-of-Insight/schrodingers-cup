@@ -31,10 +31,10 @@
           <!-- Connected -->
           <div class="ide container-fluid p-0" v-else>
             <div class="row no-gutters">
-              <!-- IDE Saved Rulesets -->
+              <!-- IDE Saved Rule Sets -->
               <div id="ide-saved" class="ide-pane col">
                 <label>
-                  <strong>Saved Rulesets:</strong>
+                  <strong>Saved Rules:</strong>
                 </label>
                 <div class="list-group">
                   
