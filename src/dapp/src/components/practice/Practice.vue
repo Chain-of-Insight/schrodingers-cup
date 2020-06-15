@@ -485,9 +485,6 @@ export default {
         this.ide.savedRuleSets.player = storedRuleSets;
       }
       console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
-      // if (typeof index == 'number') {
-      //   this.loadRuleSet(index);
-      // }
     },
     saveRuleSetHandler: function () {
       if (
@@ -589,40 +586,26 @@ export default {
         case ruleSetTypes.SAVED || ruleSetTypes.QUEUED:
           ruleSetList = this.ide.savedRuleSets.player;
           break;
-        // case ruleSetTypes.QUEUED:
-        //   ruleSetList = this.queuedRuleSets;
-        //   break;
         default:
           ruleSetList = this.ide.savedRuleSets.nomic;
           break;
       }
 
       let ruleSet = ruleSetList[index];
-      console.log('Loading rule set =>', [ruleSet, index]);
 
       if (!ruleSet) {
-        // setTimeout(() => {
-        //   this.loadRuleSet(index);
-        // }, 500);
         return;
       }
+
+      console.log('Loading rule set =>', [ruleSet, index]);
 
       if (ruleSet.hasOwnProperty('code')) {
         try {
           // Set IDE state
           this.ide.input = ruleSet.code;
           // Set UI state
-          // ruleSetList[index].active = true;
           this.selectedRuleSet.type = type;
           this.selectedRuleSet.index = Number(index);
-          // for (let i = 0; i < ruleSetList.length; i++) {
-          //   if (i !== index) {
-          //     if (ruleSetList[i].hasOwnProperty('active')) {
-          //       ruleSetList[i].active = false;
-          //     }
-              
-          //   }
-          // }
           // Force update cycle
           this.$forceUpdate();
         } catch(e) {
