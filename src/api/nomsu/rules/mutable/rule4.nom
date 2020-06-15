@@ -1,2 +1,2 @@
 use "vars"
-external: $bl_voteWindowDuration = 7200
+external: $bl_gameWindowDuration = 7200

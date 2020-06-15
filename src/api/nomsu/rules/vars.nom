@@ -3,6 +3,6 @@ external: $bl_winPoints = 25
 external: $bl_rulePassPts = 5
 external: $bl_voteAgainstPts = 1
 external: $bl_voteOrder = "alphabetical"
-external: $bl_voteWindowDuration = 7200
+external: $bl_gameWindowDuration = 7200
 external: $bl_turnWindowDuration = 300
 external: $bl_voteRatioRequired = 100
