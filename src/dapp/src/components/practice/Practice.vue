@@ -64,17 +64,13 @@
                   >No current rule sets loaded...</p>
                   <!-- Current Rule Sets -->
                   <a
-                    class="ruleset list-group-item list-group-item-action"
+                    class="ruleset btn btn-outline-success list-group-item list-group-item-action"
+                    role="button"
+                    tabindex="0"
                     v-bind:class="{
                       'active':
                         selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                      selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                      selectedRuleSet.index === index
+                        selectedRuleSet.index === index
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
@@ -89,31 +85,33 @@
                   class="list-group"
                   v-if="ide.ruleSetPane === ruleSetTypes.SAVED"
                 >
-                <p
-                  class="list-group-item border-0"
-                  v-if="ide.savedRuleSets.player.length === 0"
-                >No saved rule sets...</p>
+                  <p
+                    class="list-group-item border-0"
+                    v-if="ide.savedRuleSets.player.length === 0"
+                  >No saved rule sets...</p>
                   <!-- Saved Rule Sets -->
-                  <a
-                    class="ruleset list-group-item list-group-item-action"
-                    v-bind:class="{
-                      'active':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index
-                    }"
+                  <div
+                    class="ruleset btn-group"
+                    role="group"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.player"
                     v-on:click="loadRuleSet(index, ruleSetTypes.SAVED)"
-                    style="cursor:pointer;"
                   >
-                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
-                  </a>
+                    <a
+                      class="btn btn-outline-success list-group-item list-group-item-action"
+                      role="button"
+                      tabindex="0"
+                      v-bind:class="{
+                        'active':
+                          selectedRuleSet.type === ruleSetTypes.SAVED &&
+                          selectedRuleSet.index === index
+                      }"
+                      style="cursor:pointer;"
+                    >
+                      <span>{{index + 1}}. {{ ruleSet.name }}</span>
+                    </a>
+                    <button class="btn btn-outline-warning">Queue</button>
+                  </div>
                 </div>
                 <div
                   id="rules-current"
@@ -126,18 +124,12 @@
                     v-if="queuedRuleSets.length === 0"
                   >No queued rule sets...</p>
                   <a
-                    class="ruleset list-group-item list-group-item-action"
+                    class="ruleset btn btn-outline-success list-group-item list-group-item-action"
                     v-bind:class="{
                       'active':
                         selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
                         selectedRuleSet.index === index
-                      }"
+                    }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in queuedRuleSets"
                     v-on:click="loadRuleSet(index, ruleSetTypes.QUEUED)"
