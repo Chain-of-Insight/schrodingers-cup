@@ -39,19 +39,16 @@
                 <nav class="nav nav-tabs">
                   <a
                     class="nav-link"
-                    href="#"
                     @click="ide.ruleSetPane = ruleSetTypes.CURRENT"
                     v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.CURRENT }"
                   >Current</a>
                   <a
                     class="nav-link"
-                    href="#"
                     @click="ide.ruleSetPane = ruleSetTypes.SAVED"
                     v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.SAVED }"
                   >Saved</a>
                   <a
                     class="nav-link"
-                    href="#"
                     @click="ide.ruleSetPane = ruleSetTypes.QUEUED"
                     v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.QUEUED }"
                   >Queued</a>
@@ -650,8 +647,16 @@ export default {
     cursor: pointer;
     clear: both;
   }
-  a.ruleset {
+  a.ruleset,
+  a.nav-link {
     text-decoration: none;
+  }
+  a.nav-link {
+    cursor: pointer;
+  }
+  a.nav-link.active {
+    color: #17a2b8;
+    background-color: aliceblue;
   }
   span.ruleset,
   span.ruleset:hover {
