@@ -672,6 +672,7 @@ export default {
   .container-fluid.main {
     margin: auto;
     margin-top: 2rem;
+    margin-bottom: 2rem;
     max-width: 1175px;
   }
 </style>
