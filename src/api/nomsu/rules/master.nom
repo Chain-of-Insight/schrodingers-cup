@@ -1,0 +1,27 @@
+### Global variables stored on the blockchain
+    They get initialized in the rules
+### $bl_rulePassPts
+### $bl_winPoints
+### $bl_startPoints
+### $bl_voteAgainstPts
+
+$bl_nImmutable=1
+$bl_nMutable=4
+
+### Parse the immutable rules
+for $ctr in [0,$bl_nImmutable-1]:
+    try:
+        use ("immutable/rule"+$ctr)
+    ..if it fails:
+        say("Error parsing immutable/rule"+($ctr)+".nom")
+
+### Parse the mutable rules
+for $ctr in [0,$bl_nMutable-1]:
+    try:
+        use ("mutable/rule"+$ctr)
+    ..if it fails:
+        say("Error parsing mutable/rule"+($ctr)+".nom")
+
+say("Master run finished.")
+say("Loaded "+$bl_nImmutable+" immutable rules and "+$bl_nMutable+" mutable rules.")
+say("Next vote order is " + $bl_voteOrder)
