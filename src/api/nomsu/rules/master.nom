@@ -24,6 +24,12 @@ for $ctr in [0,$bl_nMutable-1]:
     ..if it fails:
         say("Error parsing mutable/rule"+($ctr)+".nom")
 
-say("Master run finished.")
+say("Player starting points " + $bl_startPoints)
+say("Points required to win the game " + $bl_winPoints)
+say("Points gained for passing a rule " + $bl_rulePassPts)
+say("Points gained for voting against a passed rule " + $bl_voteAgainstPts)
+say("Voting duration " + $bl_voteWindowDuration)
+say("Percentage of votes required to pass a rule " + $bl_voteRatioRequired)
+
+say("Settle game window finished.")
 say("Loaded "+$bl_nImmutable+" immutable rules and "+$bl_nMutable+" mutable rules.")
-say("Next vote order is " + $bl_voteOrder)
