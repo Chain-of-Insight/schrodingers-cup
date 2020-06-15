@@ -5,8 +5,10 @@
 ### $bl_startPoints
 ### $bl_voteAgainstPts
 
+use "vars"
+
 $bl_nImmutable=1
-$bl_nMutable=4
+$bl_nMutable=7
 
 ### Parse the immutable rules
 for $ctr in [0,$bl_nImmutable-1]:

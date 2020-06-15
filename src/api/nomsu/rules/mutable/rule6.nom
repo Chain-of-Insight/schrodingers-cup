@@ -1,1 +1,2 @@
+use "vars"
 external: $bl_voteRatioRequired = 100

@@ -1,1 +1,2 @@
-external: $bl_startPoints = 10
+use "vars"
+external: $bl_startPoints = 5
