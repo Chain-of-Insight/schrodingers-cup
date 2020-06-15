@@ -134,11 +134,11 @@
                         selectedRuleSet.index === index
                     }"
                     v-bind:key="index"
-                    v-for="(ruleSet, index) in queuedRuleSets"
+                    v-for="index in queuedRuleSets"
                     v-on:click="loadRuleSet(index, ruleSetTypes.QUEUED)"
                     style="cursor:pointer;"
                   >
-                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
+                    <span>{{index + 1}}. {{ ide.savedRuleSets.player[index].name }}</span>
                   </a>
                 </div>
               </div>
@@ -376,7 +376,14 @@ export default {
   },
   computed: {
     queuedRuleSets: function () {
-      return this.ide.savedRuleSets.player.filter(ruleSet => ruleSet.queued);
+      // Store indexes of queued rules
+      const queuedIndexes = [];
+      this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
+        if (ruleSet.queued) {
+          queuedIndexes.push(index);
+        }
+      });
+      return queuedIndexes;
     }
   },
   methods: {
@@ -557,12 +564,12 @@ export default {
         case ruleSetTypes.CURRENT:
           ruleSetList = this.ide.savedRuleSets.nomic;
           break;
-        case ruleSetTypes.SAVED:
+        case ruleSetTypes.SAVED || ruleSetTypes.QUEUED:
           ruleSetList = this.ide.savedRuleSets.player;
           break;
-        case ruleSetTypes.QUEUED:
-          ruleSetList = this.queuedRuleSets;
-          break;
+        // case ruleSetTypes.QUEUED:
+        //   ruleSetList = this.queuedRuleSets;
+        //   break;
         default:
           ruleSetList = this.ide.savedRuleSets.nomic;
           break;
@@ -578,8 +585,7 @@ export default {
         return;
       }
 
-      if (ruleSet.hasOwnProperty('code')); {
-        
+      if (ruleSet.hasOwnProperty('code')) {
         try {
           // Set IDE state
           this.ide.input = ruleSet.code;
