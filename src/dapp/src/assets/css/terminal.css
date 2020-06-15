@@ -17,7 +17,8 @@
   white-space: pre-wrap;
   text-size-adjust: 100%;
   width: 770px;
-  float: right;
+  max-width: 770px;
+  /* display: inline-block; */
 }
 
 .term-container img { max-width: 100%; }

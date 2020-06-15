@@ -153,7 +153,7 @@
               <!-- IDE Input -->
               <div id="ide-input" class="ide-pane col-9">
                 <label>
-                  <strong>Input New Rule:</strong>
+                  <strong>Rule Editor:</strong>
                 </label>
                 <codemirror 
                   v-model="ide.input"
@@ -180,14 +180,16 @@
             </div>
             <div class="row no-gutters">
               <!-- IDE Output -->
-              <div id="ide-output" class="ide-pane col">
+              <div id="ide-output" class="ide-pane-b col">
                 <label>
                   <strong>Output:</strong>
                 </label>
-                <div v-if="ide.output">
-                  <div class="term-container" v-html="ide.output"></div>
-                  <div class="executed">
+                <div class="ide-output-wrapper row no-gutters" v-if="ide.output">
+                  <div class="executed clear-output">
                     <span class="clear" @click="clearEditorOutput()">clear output</span>
+                  </div>
+                  <div class="term-container-wrapper">
+                    <div class="term-container" v-html="ide.output"></div>
                   </div>
                 </div>
               </div>
@@ -657,10 +659,14 @@ export default {
     border: none;
     margin-right: 1em;
   }
-
   span.ruleset.active,
   span.ruleset.active:hover {
     color: white;
     border: none;
+  }
+  .container-fluid.main {
+    margin: auto;
+    margin-top: 2rem;
+    max-width: 1175px;
   }
 </style>

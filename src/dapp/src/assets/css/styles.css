@@ -2,6 +2,9 @@
 .hidden {
   display: none;
 }
+.m-auto {
+  margin: auto;
+}
 
 /* Main Content Pane */
 .main {
@@ -123,6 +126,7 @@ section.chat input {
 .vue-codemirror {
   border: 1px solid #eee;
   height: auto;
+  height: 50vh;
   min-height: 50vh;
   min-width: 770px;
 }
@@ -130,4 +134,39 @@ section.chat input {
 .CodeMirror-line {
   line-height: 1.25em;
   font-size: 18px;
+}
+#rules-current,
+#rules-saved {
+  height: calc(50vh + 0.5rem);
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+.execute {
+  margin: 0.5rem;
+  margin-left: 0;
+}
+#ide-saved,
+.executed.clear-output {
+  width: 300px;
+  max-width: 300px;
+  margin: 0;
+}
+.executed.clear-output {
+  display: inline-block;
+}
+.ide-pane {
+  max-width: 770px;
+}
+.term-container-wrapper {
+  display: block;
+  width: calc(100% - 300px);
+  float: right;
+}
+.term-container, 
+.ide-pane {
+  margin: auto;
+}
+.term-container {
+  position: relative;
+  left: -5.5px;
 }
