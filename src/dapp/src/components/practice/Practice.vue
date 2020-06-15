@@ -64,17 +64,13 @@
                   >No current rule sets loaded...</p>
                   <!-- Current Rule Sets -->
                   <a
-                    class="ruleset list-group-item list-group-item-action"
+                    class="ruleset btn btn-outline-success list-group-item list-group-item-action"
+                    role="button"
+                    tabindex="0"
                     v-bind:class="{
                       'active':
                         selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                      selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                      selectedRuleSet.index === index
+                        selectedRuleSet.index === index
                     }"
                     v-bind:key="index"
                     v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
@@ -89,34 +85,39 @@
                   class="list-group"
                   v-if="ide.ruleSetPane === ruleSetTypes.SAVED"
                 >
-                <p
-                  class="list-group-item border-0"
-                  v-if="ide.savedRuleSets.player.length === 0"
-                >No saved rule sets...</p>
+                  <p
+                    class="list-group-item border-0"
+                    v-if="ide.savedRuleSets.player.length === 0"
+                  >No saved rule sets...</p>
                   <!-- Saved Rule Sets -->
-                  <a
-                    class="ruleset list-group-item list-group-item-action"
-                    v-bind:class="{
-                      'active':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                        selectedRuleSet.type === ruleSetTypes.SAVED &&
-                        selectedRuleSet.index === index
-                    }"
+                  <div
+                    class="ruleset btn-group"
+                    role="group"
                     v-bind:key="index"
-                    v-for="(ruleSet, index) in ide.savedRuleSets.player"
-                    v-on:click="loadRuleSet(index, ruleSetTypes.SAVED)"
-                    style="cursor:pointer;"
+                    v-for="(savedIndex, index) in playerRuleSets"
+                    v-on:click="loadRuleSet(savedIndex, ruleSetTypes.SAVED)"
                   >
-                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
-                  </a>
+                    <a
+                      class="btn btn-outline-success list-group-item list-group-item-action"
+                      role="button"
+                      tabindex="0"
+                      v-bind:class="{
+                        'active':
+                          selectedRuleSet.type === ruleSetTypes.SAVED &&
+                          selectedRuleSet.index === savedIndex
+                      }"
+                      style="cursor:pointer;"
+                    >
+                      <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
+                    </a>
+                    <button
+                      class="btn btn-outline-warning"
+                      @click="queueRuleSet(savedIndex)"
+                    ><small>Queue</small></button>
+                  </div>
                 </div>
                 <div
-                  id="rules-current"
+                  id="rules-queued"
                   class="list-group"
                   v-if="ide.ruleSetPane === ruleSetTypes.QUEUED"
                 >
@@ -125,26 +126,32 @@
                     class="list-group-item border-0"
                     v-if="queuedRuleSets.length === 0"
                   >No queued rule sets...</p>
-                  <a
-                    class="ruleset list-group-item list-group-item-action"
-                    v-bind:class="{
-                      'active':
-                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                        selectedRuleSet.index === index,
-                      'list-group-item-success':
-                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                        selectedRuleSet.index === index,
-                      'bg-success':
-                        selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                        selectedRuleSet.index === index
-                      }"
+                  <div
+                    class="ruleset btn-group"
+                    role="group"
                     v-bind:key="index"
-                    v-for="(ruleSet, index) in queuedRuleSets"
-                    v-on:click="loadRuleSet(index, ruleSetTypes.QUEUED)"
-                    style="cursor:pointer;"
+                    v-for="(savedIndex, index) in queuedRuleSets"
+                    v-on:click="loadRuleSet(savedIndex, ruleSetTypes.QUEUED)"
                   >
-                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
-                  </a>
+                    <a
+                      class="btn btn-outline-success list-group-item list-group-item-action"
+                      role="button"
+                      tabindex="0"
+                      v-bind:class="{
+                        'active':
+                          selectedRuleSet.type === ruleSetTypes.QUEUED &&
+                          selectedRuleSet.index === savedIndex
+                      }"
+                      style="cursor:pointer;"
+                    >
+                      <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
+                    </a>
+                    <button
+                      class="btn btn-outline-warning"
+                      @click="unQueueRuleSet(savedIndex)"
+                      style="word-break: keep-all;"
+                    ><small>Un&#8209;queue</small></button>
+                  </div>
                 </div>
               </div>
               <!-- IDE Input -->
@@ -380,8 +387,25 @@ export default {
     this.getCurrentRuleSets();
   },
   computed: {
+    playerRuleSets: function () {
+      // Store indexes of saved, unqueued rule sets
+      const unqueuedIndexes = [];
+      this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
+        if (!ruleSet.queued) {
+          unqueuedIndexes.push(index);
+        }
+      });
+      return unqueuedIndexes;
+    },
     queuedRuleSets: function () {
-      return this.ide.savedRuleSets.player.filter(ruleSet => ruleSet.queued);
+      // Store indexes of saved, queued rule sets
+      const queuedIndexes = [];
+      this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
+        if (ruleSet.queued) {
+          queuedIndexes.push(index);
+        }
+      });
+      return queuedIndexes;
     }
   },
   methods: {
@@ -562,12 +586,12 @@ export default {
         case ruleSetTypes.CURRENT:
           ruleSetList = this.ide.savedRuleSets.nomic;
           break;
-        case ruleSetTypes.SAVED:
+        case ruleSetTypes.SAVED || ruleSetTypes.QUEUED:
           ruleSetList = this.ide.savedRuleSets.player;
           break;
-        case ruleSetTypes.QUEUED:
-          ruleSetList = this.queuedRuleSets;
-          break;
+        // case ruleSetTypes.QUEUED:
+        //   ruleSetList = this.queuedRuleSets;
+        //   break;
         default:
           ruleSetList = this.ide.savedRuleSets.nomic;
           break;
@@ -583,8 +607,7 @@ export default {
         return;
       }
 
-      if (ruleSet.hasOwnProperty('code')); {
-        
+      if (ruleSet.hasOwnProperty('code')) {
         try {
           // Set IDE state
           this.ide.input = ruleSet.code;
@@ -605,12 +628,42 @@ export default {
         } catch(e) {
           console.log('Error loading ruleset =>', [e, ruleSet])
           this.alert.type = 'danger';
-          this.alert.msg = `Error loading ruleset '${JSON.stringify(ruleSet)}'`;
+          this.alert.msg = `Error loading rule set '${JSON.stringify(ruleSet)}'`;
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
         }
       }
+    },
+    updateRuleSet: async function (index, data) {
+      Object.assign(this.ide.savedRuleSets.player[index], data);
+      // Update rule set in localStorage and refresh
+      await localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
+      await this.getSavedRuleSets();
+    },
+    queueRuleSet: async function (index) {
+      const ruleSet = this.ide.savedRuleSets.player[index];
+      console.log('Queuing rule set:', ruleSet);
+
+      await this.updateRuleSet(index, { queued: true });     
+
+      this.alert.type = 'info';
+      this.alert.msg = `Queued ruleset '${ruleSet.name}'`;
+      setTimeout(() => {
+        this._retireNotification();
+      }, 5000);
+    },
+    unQueueRuleSet: async function (index) {
+      const ruleSet = this.ide.savedRuleSets.player[index];
+      console.log('Un-queuing rule set:', ruleSet);
+      
+      await this.updateRuleSet(index, { queued: false });     
+
+      this.alert.type = 'info';
+      this.alert.msg = `Un-queued rule set '${ruleSet.name}'`;
+      setTimeout(() => {
+        this._retireNotification();
+      }, 5000);
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
