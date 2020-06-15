@@ -628,26 +628,42 @@ export default {
         } catch(e) {
           console.log('Error loading ruleset =>', [e, ruleSet])
           this.alert.type = 'danger';
-          this.alert.msg = `Error loading ruleset '${JSON.stringify(ruleSet)}'`;
+          this.alert.msg = `Error loading rule set '${JSON.stringify(ruleSet)}'`;
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
         }
       }
     },
-    queueRuleSet: function (index) {
-      console.log('Queuing rule set:', this.ide.savedRuleSets.player[index].queued);
-      this.ide.savedRuleSets.player[index].queued = true;
+    updateRuleSet: async function (index, data) {
+      Object.assign(this.ide.savedRuleSets.player[index], data);
       // Update rule set in localStorage and refresh
-      localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
-      this.getSavedRuleSets();
+      await localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
+      await this.getSavedRuleSets();
     },
-    unQueueRuleSet: function (index) {
-      console.log('Un-queuing rule set:', this.ide.savedRuleSets.player[index].queued);
-      this.ide.savedRuleSets.player[index].queued = false;
-      // Update rule set in localStorage and refresh
-      localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
-      this.getSavedRuleSets();
+    queueRuleSet: async function (index) {
+      const ruleSet = this.ide.savedRuleSets.player[index];
+      console.log('Queuing rule set:', ruleSet);
+
+      await this.updateRuleSet(index, { queued: true });     
+
+      this.alert.type = 'info';
+      this.alert.msg = `Queued ruleset '${ruleSet.name}'`;
+      setTimeout(() => {
+        this._retireNotification();
+      }, 5000);
+    },
+    unQueueRuleSet: async function (index) {
+      const ruleSet = this.ide.savedRuleSets.player[index];
+      console.log('Un-queuing rule set:', ruleSet);
+      
+      await this.updateRuleSet(index, { queued: false });     
+
+      this.alert.type = 'info';
+      this.alert.msg = `Un-queued rule set '${ruleSet.name}'`;
+      setTimeout(() => {
+        this._retireNotification();
+      }, 5000);
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
