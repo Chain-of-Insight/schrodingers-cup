@@ -110,7 +110,10 @@
                     >
                       <span>{{index + 1}}. {{ ruleSet.name }}</span>
                     </a>
-                    <button class="btn btn-outline-warning">Queue</button>
+                    <button
+                      class="btn btn-outline-warning"
+                      @click="queueRuleSet(index)"
+                    >Queue</button>
                   </div>
                 </div>
                 <div
@@ -603,6 +606,13 @@ export default {
           }, 5000);
         }
       }
+    },
+    queueRuleSet: function (index) {
+      console.log('Queuing rule set:', index);
+      this.ide.savedRuleSets.player[index].queued = true;
+      // Update rule set in localStorage and refresh
+      localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
+      this.getSavedRuleSets();
     },
     clearEditor: function () {
       console.log('Clearing editor...', this.ide);
