@@ -8,8 +8,6 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <Voting></Voting>
-
     <!-- Not Connected -->
     <div class="container-fluid main" v-if="!connected">
       <h1>{{ title }}</h1>
@@ -63,10 +61,9 @@
       <!-- IDE -->
       <div class="editor-toggle">
         <!-- IDE Shown -->
-        <button class="btn btn-inverse toggle-rules-editor" v-if="showEditor" @click="showEditor = false">Hide Rules Editor</button>
+        <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
+        <Voting class="d-inline"></Voting>
         <Practice :activeGame="true" v-if="showEditor"></Practice>
-        <!-- IDE Hidden -->
-        <button class="btn btn-inverse toggle-rules-editor" v-if="!showEditor" @click="showEditor = true">Show Rules Editor</button>
       </div>
     </div>
 
@@ -389,6 +386,9 @@ export default {
         type: null,
         msg: null
       };
+    },
+    toggleEditor: function () {
+      this.showEditor = this.showEditor ? false : true;
     }
   }
 };

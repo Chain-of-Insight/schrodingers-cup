@@ -1,15 +1,9 @@
 <template>
   <div>
-    <div class="container-fluid voting">
-      <div class="row">
-        <div class="col">
-          <!-- Button trigger modal -->
-          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#voting-modal">
-            Voting Test
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#voting-modal">
+      Voting Test
+    </button>
   
     <!-- Modal -->
     <div class="modal fade" id="voting-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="voting-modal-label" aria-hidden="true">
@@ -19,7 +13,10 @@
             <h5 class="modal-title" id="voting-modal-label">Time to vote!</h5>
           </div>
           <div class="modal-body">
-            ...
+            <pre class="term-container">
+$test_string = "this is test code"
+say($test_string)
+            </pre>
           </div>
           <div class="modal-footer">
             <div class="btn-group btn-block">
