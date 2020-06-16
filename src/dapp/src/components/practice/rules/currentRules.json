@@ -1,1 +1,30 @@
-[{"name":"rule00","code":"use \"vars\"\nexternal: $bl_winPoints = 25"},{"name":"rule01","code":"use \"vars\"\nexternal: $bl_rulePassPts = 5"},{"name":"rule02","code":"use \"vars\"\nexternal: $bl_voteAgainstPts = 1"},{"name":"rule03","code":"use \"vars\"\nexternal: $bl_voteOrder = \"alphabetical\""},{"name":"rule04","code":"use \"vars\"\nexternal: $bl_gameWindowDuration = 7200"},{"name":"rule05","code":"use \"vars\"\nexternal: $bl_turnWindowDuration = 300"},{"name":"rule06","code":"use \"vars\"\nexternal: $bl_voteRatioRequired = 100"}]
+[
+  {
+    "name": "rule00",
+    "code": "external: $bl_winPoints = 25"
+  },
+  {
+    "name": "rule01",
+    "code": "external: $bl_rulePassPts = 5"
+  },
+  {
+    "name": "rule02",
+    "code": "external: $bl_voteAgainstPts = 1"
+  },
+  {
+    "name": "rule03",
+    "code": "external: $bl_voteOrder = \"alphabetical\""
+  },
+  {
+    "name": "rule04",
+    "code": "external: $bl_gameWindowDuration = 7200"
+  },
+  {
+    "name": "rule05",
+    "code": "external: $bl_turnWindowDuration = 300"
+  },
+  {
+    "name": "rule06",
+    "code": "external: $bl_voteRatioRequired = 100"
+  }
+]
