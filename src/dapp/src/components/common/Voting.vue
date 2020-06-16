@@ -10,7 +10,11 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="voting-modal-label">Time to vote!</h5>
+            <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
+            <div>
+              <h5 class="d-inline">Time remaining:</h5>
+              <h5 class="d-inline h4 border border-dark rounded ml-2 p-2 text-monospace">00:00</h5>
+            </div>
           </div>
           <div class="modal-body">
             <pre class="term-container">
