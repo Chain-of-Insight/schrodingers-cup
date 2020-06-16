@@ -18,14 +18,23 @@ $test_string = "this is test code"
 say($test_string)
             </pre>
           </div>
-          <div class="modal-footer">
-            <div class="btn-group btn-block">
-              <button type="button" class="btn btn-lg btn-danger" data-dismiss="modal">
-                <span class="oi mirrored oi-thumb-down" title="Vote down"></span>
-              </button>
-              <button type="button" class="btn btn-lg btn-success" data-dismiss="modal">
-                <span class="oi oi-thumb-up" title="Vote up"></span>
-              </button>
+          <div class="modal-footer container-fluid">
+            <div class="container-fluid p-0">
+              <div class="row">
+                <div class="col-3">
+                  <button type="button" class="btn btn-block btn-lg btn-secondary" data-dismiss="modal">Abstain</button>
+                </div>
+                <div class="col-9">
+                  <div class="btn-group btn-block">
+                    <button type="button" class="btn btn-lg btn-danger" data-dismiss="modal">
+                      <span class="oi mirrored oi-thumb-down" title="Vote down"></span>
+                    </button>
+                    <button type="button" class="btn btn-lg btn-success" data-dismiss="modal">
+                      <span class="oi oi-thumb-up" title="Vote up"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
