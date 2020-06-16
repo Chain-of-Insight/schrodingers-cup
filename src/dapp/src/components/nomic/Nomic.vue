@@ -8,6 +8,8 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
+    <Voting></Voting>
+
     <!-- Not Connected -->
     <div class="container-fluid main" v-if="!connected">
       <h1>{{ title }}</h1>
@@ -91,11 +93,12 @@ import { PerformAuth } from '../../services/apiProvider';
 // Child components
 import Notification from '../common/Notifications.vue';
 import RuleProposal from '../common/RuleProposal.vue';
+import Voting from '../common/Voting.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
 export default {
-  components: { Notification, Practice, RuleProposal },
+  components: { Notification, Practice, RuleProposal, Voting },
   data: () => ({
     title: "Nomic Battlegrounds",
     subtitle: "Pwned or be pwned, the choice is yours",
