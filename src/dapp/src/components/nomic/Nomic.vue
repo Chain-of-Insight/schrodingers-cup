@@ -129,7 +129,7 @@ export default {
     loginSigned: null,
     jwtToken: null,
     showEditor: false,
-    votingDuration: 15, // from rule 'external: $bl_turnWindowDuration = 300'
+    votingDuration: 300, // from rule 'external: $bl_turnWindowDuration = 300'
     round: 1
   }),
   mounted: async function () {

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#voting-modal">
+    <!-- For testing... -->
+    <button type="button" class="btn btn-primary" @click="openVotingPrompt()">
       Voting Test
     </button>
   
@@ -40,6 +40,8 @@ say($test_string)
                     class="btn btn-block btn-lg btn-secondary"
                     data-dismiss="modal"
                     @click="vote('abstain')"
+                    :class="{ 'disabled': votingWindowClosed } "
+                    :disabled="votingWindowClosed"
                   >Abstain</button>
                 </div>
                 <div class="col-9">
@@ -47,16 +49,18 @@ say($test_string)
                     <button
                       type="button"
                       class="btn btn-lg btn-danger"
-                      data-dismiss="modal"
                       @click="vote('no')"
+                      :class="{ 'disabled': votingWindowClosed } "
+                      :disabled="votingWindowClosed"
                     >
                       <span class="oi mirrored oi-thumb-down" title="Vote down"></span>
                     </button>
                     <button
                       type="button"
                       class="btn btn-lg btn-success"
-                      data-dismiss="modal"
                       @click="vote('yes')"
+                      :class="{ 'disabled': votingWindowClosed } "
+                      :disabled="votingWindowClosed"
                     >
                       <span class="oi oi-thumb-up" title="Vote up"></span>
                     </button>
@@ -98,19 +102,40 @@ say($test_string)
     },
     computed: {
       hours: function () {
-        const hours = Math.floor(this.secondsLeft / 3600);
+        let hours = null;
+        if (this.votingWindowClosed) {
+          hours = 0 
+        } else {
+          hours = Math.floor(this.secondsLeft / 3600);
+        }
         return hours.toString().padStart(2, '0');
       },
       minutes: function () {
-        const minutes = Math.floor((this.secondsLeft % 3600) / 60);
+        let minutes = null;
+        if (this.votingWindowClosed) {
+          minutes = 0 
+        } else {
+          minutes = Math.floor((this.secondsLeft % 3600) / 60);
+        }
         return minutes.toString().padStart(2, '0');
       },
       seconds: function () {
-        const seconds = this.secondsLeft % 60;
+        let seconds = null;
+        if (this.votingWindowClosed) {
+          seconds = 0 
+        } else {
+          seconds = this.secondsLeft % 60;
+        }
         return seconds.toString().padStart(2, '0');
+      },
+      votingWindowClosed: function () {
+        return this.secondsLeft <= 0;
       }
     },
     methods: {
+      openVotingPrompt: function () {
+        $('#voting-modal').modal('show');
+      },
       startTimer: function () {
         this.secondsLeft = this.votingDuration;
         this.timer = setInterval(this.timerDecrement, 1000);
@@ -120,8 +145,12 @@ say($test_string)
         this.secondsLeft = this.votingDuration;
       },
       timerDecrement: function () {
-        if (this.secondsLeft > 0) {
+        if (this.secondsLeft > -2) {
           this.secondsLeft -= 1;
+        } else {
+          $('#voting-modal').modal('hide');
+          // Register vote as abstained if no action when time runs out
+          this.$emit('vote-cast', 'abstain');
         }
       },
       vote: function (type) {
@@ -141,6 +170,7 @@ say($test_string)
         }
 
         this.$emit('vote-cast', type);
+        $('#voting-modal').modal('hide');
       }
     }
   }
