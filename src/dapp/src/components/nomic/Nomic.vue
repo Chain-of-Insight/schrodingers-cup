@@ -62,7 +62,11 @@
       <div class="editor-toggle">
         <!-- IDE Shown -->
         <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
-        <Voting class="d-inline"></Voting>
+        <Voting
+          v-bind:voting-duration="votingDuration"
+          class="d-inline"
+          v-on:vote-cast="handleVote"
+        ></Voting>
         <Practice :activeGame="true" v-if="showEditor"></Practice>
       </div>
     </div>
@@ -124,7 +128,9 @@ export default {
     signMessage: signMessage,
     loginSigned: null,
     jwtToken: null,
-    showEditor: false
+    showEditor: false,
+    votingDuration: 15, // from rule 'external: $bl_turnWindowDuration = 300'
+    round: 1
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -389,6 +395,28 @@ export default {
     },
     toggleEditor: function () {
       this.showEditor = this.showEditor ? false : true;
+    },
+    handleVote: function (voteType) {
+      let chatMsg = null;
+
+      switch (voteType) {
+          case 'yes':
+          case 'no':
+            chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
+            break;
+          case 'abstain':
+            chatMsg = `${this.TwilioIdentity} abstained in round ${this.round}.`;
+            break;
+          default:
+            return;
+      }
+
+      // this.chatChannel.sendMessage(chatMsg);
+
+      this.chatMessages.push({
+        type: 'info',
+        msg: chatMsg
+      });
     }
   }
 };

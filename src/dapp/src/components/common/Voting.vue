@@ -13,7 +13,16 @@
             <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
             <div>
               <h5 class="d-inline">Time remaining:</h5>
-              <h5 class="d-inline h4 border border-dark rounded ml-2 p-2 text-monospace">{{ hours }}:{{ minutes }}:{{ seconds }}</h5>
+              <h5
+                class="countdown d-inline h4 border rounded ml-2 p-2 text-monospace"
+                :class="[
+                  secondsLeft <= 10 ? [
+                    'critical',
+                    'text-danger',
+                    'border-danger'
+                  ] : 'border-dark'
+                ]"
+              >{{ hours }}:{{ minutes }}:{{ seconds }}</h5>
             </div>
           </div>
           <div class="modal-body">
@@ -26,14 +35,29 @@ say($test_string)
             <div class="container-fluid p-0">
               <div class="row">
                 <div class="col-3">
-                  <button type="button" class="btn btn-block btn-lg btn-secondary" data-dismiss="modal">Abstain</button>
+                  <button
+                    type="button"
+                    class="btn btn-block btn-lg btn-secondary"
+                    data-dismiss="modal"
+                    @click="vote('abstain')"
+                  >Abstain</button>
                 </div>
                 <div class="col-9">
                   <div class="btn-group btn-block">
-                    <button type="button" class="btn btn-lg btn-danger" data-dismiss="modal">
+                    <button
+                      type="button"
+                      class="btn btn-lg btn-danger"
+                      data-dismiss="modal"
+                      @click="vote('no')"
+                    >
                       <span class="oi mirrored oi-thumb-down" title="Vote down"></span>
                     </button>
-                    <button type="button" class="btn btn-lg btn-success" data-dismiss="modal">
+                    <button
+                      type="button"
+                      class="btn btn-lg btn-success"
+                      data-dismiss="modal"
+                      @click="vote('yes')"
+                    >
                       <span class="oi oi-thumb-up" title="Vote up"></span>
                     </button>
                   </div>
@@ -52,23 +76,25 @@ say($test_string)
 
   export default {
     components: {},
-    props: {},
+    props: {
+      votingDuration: {
+        required: true,
+        type: Number
+      }
+    },
     data: function () {
       return {
-        votingDuration: 300,
-        secondsLeft: 300,
+        secondsLeft: null,
         timer: null
       }
     },
     mounted: function () {
       // Start timer
-      // TODO: move this to modal open
-      console.log('timer', this.timer);
       $('#voting-modal').on('shown.bs.modal', this.startTimer.bind(this));
       $('#voting-modal').on('hidden.bs.modal', this.resetTimer.bind(this));
     },
     destroyed: function () {
-      // clearInterval(this.timer);
+      clearInterval(this.timer);
     },
     computed: {
       hours: function () {
@@ -86,6 +112,7 @@ say($test_string)
     },
     methods: {
       startTimer: function () {
+        this.secondsLeft = this.votingDuration;
         this.timer = setInterval(this.timerDecrement, 1000);
       },
       resetTimer: function () {
@@ -96,6 +123,24 @@ say($test_string)
         if (this.secondsLeft > 0) {
           this.secondsLeft -= 1;
         }
+      },
+      vote: function (type) {
+        switch (type) {
+          case 'yes':
+            // Do something on 'yes' vote
+            break;
+          case 'no':
+            // Do something on 'no' vote
+            break;
+          case 'abstain':
+            // Do something on 'abstain'
+            break;
+          default:
+            console.error("No vote type specified (must be 'yes', 'no' or 'abstain')");
+            return;
+        }
+
+        this.$emit('vote-cast', type);
       }
     }
   }
@@ -108,5 +153,18 @@ say($test_string)
     -ms-transform: scale(-1, 1);
     -o-transform: scale(-1, 1);
     transform: scale(-1, 1);
+  }
+
+  .countdown.critical {
+    -webkit-animation: blink 1s steps(1) infinite;
+    -moz-animation: blink 1s steps(1) infinite;
+    -o-animation: blink 1s steps(1) infinite;
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    75% {
+      opacity: 0;
+    }
   }
 </style>
