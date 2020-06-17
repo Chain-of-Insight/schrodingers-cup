@@ -1,28 +1,37 @@
 ### Global variables stored on the blockchain
-    They get initialized in the rules
-### $bl_rulePassPts
-### $bl_winPoints
-### $bl_startPoints
-### $bl_voteAgainstPts
+    They get initialized in the def.nom and overridden by the ruleset
 
 use "vars"
 
-$bl_nImmutable=1
-$bl_nMutable=7
-
-### Parse the immutable rules
-for $ctr in [0,$bl_nImmutable-1]:
+$bl_nImmutable=0
+repeat:
     try:
-        use ("immutable/rule"+$ctr)
+        use ("immutable/rule"+$bl_nImmutable)
+        $bl_nImmutable += 1
     ..if it fails:
-        say("Error parsing immutable/rule"+($ctr)+".nom")
+        stop
 
-### Parse the mutable rules
-for $ctr in [0,$bl_nMutable-1]:
+$bl_nMutable=0
+repeat:
+    try:
+        use ("mutable/rule"+$bl_nMutable)
+        $bl_nMutable += 1
+    ..if it fails:
+        stop
+
+### Parse the mutable rules first - ascending, to ensure rule amendment 
+for $ctr in (($bl_nMutable-1) to 0 by -1):
     try:
         use ("mutable/rule"+$ctr)
     ..if it fails:
         say("Error parsing mutable/rule"+($ctr)+".nom")
+
+### Parse the immutable rules last - descending, to ensure rule immutability
+for $ctr in (($bl_nImmutable-1) to 0 by -1):
+    try:
+        use ("immutable/rule"+$ctr)
+    ..if it fails:
+        say("Error parsing immutable/rule"+($ctr)+".nom")
 
 say("Player starting points " + $bl_startPoints)
 say("Points required to win the game " + $bl_winPoints)
