@@ -62,11 +62,20 @@
       <div class="editor-toggle">
         <!-- IDE Shown -->
         <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
+        
+        <!-- Voting -->
+        <!-- For testing: -->
+        <button type="button" class="btn btn-primary" @click="votingHandler()">
+          Voting Test
+        </button>
         <Voting
           v-bind:voting-duration="votingDuration"
           class="d-inline"
-          v-on:vote-cast="handleVote"
+          v-on:vote-cast="onVoteCast"
+          ref="voting"
+          v-bind:voting-candidate="votingCandidate"
         ></Voting>
+
         <Practice :activeGame="true" v-if="showEditor"></Practice>
       </div>
     </div>
@@ -130,7 +139,8 @@ export default {
     jwtToken: null,
     showEditor: false,
     votingDuration: 300, // from rule 'external: $bl_turnWindowDuration = 300'
-    round: 1
+    round: 1,
+    votingCandidate: null
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -178,9 +188,9 @@ export default {
           console.log("User balance =>", balance);
           // Request Twilio token
           try {
-            // Request auth
+            // Request authvotingHandler()
             let tokenResponse = await this.getToken(this.address);
-            if (tokenResponse) {
+            if (tokenResponse) {votingHandler()
               // Valid auth
               this.TwilioToken = tokenResponse.token
               this.TwilioIdentity = tokenResponse.identity;
@@ -396,7 +406,18 @@ export default {
     toggleEditor: function () {
       this.showEditor = this.showEditor ? false : true;
     },
-    handleVote: function (voteType) {
+    votingHandler: function () {
+      // On button click for now, but will fire on websocket event
+
+      // Placeholder rule candidate
+      this.votingCandidate = {
+        name: 'testRule',
+        code: '$test_string = "this is test code"\nsay($test_string)'
+      }
+
+      this.$refs.voting.promptForVote(this.votingCandidate);
+    },
+    onVoteCast: function (voteType) {
       let chatMsg = null;
 
       switch (voteType) {
@@ -417,6 +438,8 @@ export default {
         type: 'info',
         msg: chatMsg
       });
+
+      this.votingCandidate = null;
     }
   }
 };

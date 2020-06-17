@@ -1,10 +1,5 @@
 <template>
-  <div>
-    <!-- For testing... -->
-    <button type="button" class="btn btn-primary" @click="openVotingPrompt()">
-      Voting Test
-    </button>
-  
+  <div>  
     <!-- Modal -->
     <div class="modal fade" id="voting-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="voting-modal-label" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -26,10 +21,7 @@
             </div>
           </div>
           <div class="modal-body">
-            <pre class="term-container">
-$test_string = "this is test code"
-say($test_string)
-            </pre>
+            <pre v-if="votingCandidate" class="term-container">{{ votingCandidate.code }}</pre>
           </div>
           <div class="modal-footer container-fluid">
             <div class="container-fluid p-0">
@@ -89,7 +81,8 @@ say($test_string)
     data: function () {
       return {
         secondsLeft: null,
-        timer: null
+        timer: null,
+        votingCandidate: null
       }
     },
     mounted: function () {
@@ -133,7 +126,12 @@ say($test_string)
       }
     },
     methods: {
-      openVotingPrompt: function () {
+      promptForVote: function (votingCandidate) {
+        if (!votingCandidate.code) {
+          return;
+        }
+
+        this.votingCandidate = votingCandidate
         $('#voting-modal').modal('show');
       },
       startTimer: function () {
@@ -143,6 +141,7 @@ say($test_string)
       resetTimer: function () {
         clearInterval(this.timer);
         this.secondsLeft = this.votingDuration;
+        this.votingCandidate = null;
       },
       timerDecrement: function () {
         if (this.secondsLeft > -2) {
