@@ -13,7 +13,7 @@
             <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
             <div>
               <h5 class="d-inline">Time remaining:</h5>
-              <h5 class="d-inline h4 border border-dark rounded ml-2 p-2 text-monospace">00:00</h5>
+              <h5 class="d-inline h4 border border-dark rounded ml-2 p-2 text-monospace">{{ hours }}:{{ minutes }}:{{ seconds }}</h5>
             </div>
           </div>
           <div class="modal-body">
@@ -48,12 +48,56 @@ say($test_string)
 </template>
 
 <script>
+  const $ = window.jQuery;
+
   export default {
     components: {},
     props: {},
-    data: () => ({}),
-    mounted: () => {},
-    methods: {}
+    data: function () {
+      return {
+        votingDuration: 300,
+        secondsLeft: 300,
+        timer: null
+      }
+    },
+    mounted: function () {
+      // Start timer
+      // TODO: move this to modal open
+      console.log('timer', this.timer);
+      $('#voting-modal').on('shown.bs.modal', this.startTimer.bind(this));
+      $('#voting-modal').on('hidden.bs.modal', this.resetTimer.bind(this));
+    },
+    destroyed: function () {
+      // clearInterval(this.timer);
+    },
+    computed: {
+      hours: function () {
+        const hours = Math.floor(this.secondsLeft / 3600);
+        return hours.toString().padStart(2, '0');
+      },
+      minutes: function () {
+        const minutes = Math.floor((this.secondsLeft % 3600) / 60);
+        return minutes.toString().padStart(2, '0');
+      },
+      seconds: function () {
+        const seconds = this.secondsLeft % 60;
+        return seconds.toString().padStart(2, '0');
+      }
+    },
+    methods: {
+      startTimer: function () {
+        this.timer = setInterval(this.timerDecrement, 1000);
+      },
+      resetTimer: function () {
+        clearInterval(this.timer);
+        this.secondsLeft = this.votingDuration;
+      },
+      timerDecrement: function () {
+        if (this.secondsLeft > 0) {
+          this.secondsLeft -= 1;
+        }
+      }
+    }
   }
 </script>
 
