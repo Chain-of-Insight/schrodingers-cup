@@ -8,7 +8,7 @@
 
 /* Main Content Pane */
 .main {
-  width: 90vw;
+  width: 100%;
   margin: 2rem auto;
 }
 
@@ -67,7 +67,7 @@ section.chat input {
   padding:10px;
   height:100%;
   min-height: 35vh;
-  width: 80vw;
+  width: 100%;
   margin: 0 auto;
   overflow-y: auto;
 }
@@ -118,17 +118,17 @@ section.chat input {
 }
 
 .input-group.chat-controls {
-  min-width: 80vw;
+  min-width: 100%;
 }
 
 /* IDE */
 .CodeMirror,
 .vue-codemirror {
   border: 1px solid #eee;
-  height: auto;
-  height: 50vh;
-  min-height: 50vh;
-  min-width: 770px;
+  /* height: auto; */
+  /* height: 50vh; */
+  /* min-height: 50vh; */
+  /* min-width: 770px; */
 }
 .CodeMirror-code,
 .CodeMirror-line {
@@ -154,18 +154,15 @@ section.chat input {
 .executed.clear-output {
   display: inline-block;
 }
-.ide-pane {
-  max-width: 770px;
-}
 .term-container-wrapper {
   display: block;
   width: calc(100% - 300px);
   float: right;
 }
-.term-container, 
+/* .term-container, 
 .ide-pane {
   margin: auto;
-}
+} */
 .term-container {
   position: relative;
   left: -5.5px;

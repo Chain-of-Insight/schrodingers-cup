@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -8,66 +7,82 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <!-- Not Connected -->
-    <div class="container-fluid main" v-if="!connected">
+    <div class="container main">
       <h1>{{ title }}</h1>
-      <h5>{{ subtitle }}</h5>
-      <ul class="list-unstyled" v-if="!connected">
-        <li @click="connectUser()">
-          <button class="btn btn-primary btn-connect">Login With Tezos</button>
-        </li>
-      </ul>
-      <p>Connect your Tezos wallet to get started</p>
-    </div>
-    
-    <!-- Connected -->
-    <div class="container-fluid main" v-else>
-      <h1>{{ title }}</h1>
-      <h5>{{ subtitle }}</h5>
+      <h5 class="mb-4">{{ subtitle }}</h5>
 
-      <!-- Player Chat -->
-      <section>
-        <div id="messages" class="message-container">
-          <!-- Chat Messages -->
-          <div v-for="(message, index) in chatMessages" v-bind:key="index">
-            <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
-              <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
-              <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
-            </p>
+      <!-- Not Connected -->
+      <template v-if="!connected">
+        <ul class="list-unstyled">
+          <li @click="connectUser()">
+            <button class="btn btn-primary btn-connect">Login With Tezos</button>
+          </li>
+        </ul>
+        <p>Connect your Tezos wallet to get started</p>
+      </template>
+
+      <!-- Connected -->
+      <template v-else>
+        <!-- Round totals -->
+        <section>
+          <Totals v-bind:round="currentRound" v-bind="currentTotals"></Totals>
+        </section>
+
+        <!-- Player Chat -->
+        <section>
+          <div id="messages" class="message-container">
+            <!-- Chat Messages -->
+            <div v-for="(message, index) in chatMessages" v-bind:key="index">
+              <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
+                <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
+                <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
+              </p>
+            </div>
           </div>
-        </div>
 
-        <!-- Chat Form Input -->
-        <div class="input-group chat-controls">
-          <input 
-            id="chat-input" 
-            type="text" 
-            class="form-control"
-            aria-label="Send a chat message..."
-            aria-describedby="Nomic player chat"
-            placeholder="Send a chat message..." 
-            v-model="chatInput.value"
-            @focus="chatInput.focused = true"
-            @blur="chatInput.focused = false"
-            v-on:keyup="chatKeyListener($event)"
-          />
-          <!-- Send Message -->
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+          <!-- Chat Form Input -->
+          <div class="input-group chat-controls">
+            <input 
+              id="chat-input" 
+              type="text" 
+              class="form-control"
+              aria-label="Send a chat message..."
+              aria-describedby="Nomic player chat"
+              placeholder="Send a chat message..." 
+              v-model="chatInput.value"
+              @focus="chatInput.focused = true"
+              @blur="chatInput.focused = false"
+              v-on:keyup="chatKeyListener($event)"
+            />
+            <!-- Send Message -->
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+            </div>
           </div>
+        </section>
+
+        <!-- IDE -->
+        <div class="editor-toggle">
+          <!-- IDE Shown -->
+          <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
+          
+          <!-- Voting -->
+          <!-- For testing: -->
+          <button type="button" class="btn btn-primary" @click="votingHandler()">
+            Voting Test
+          </button>
+          <Voting
+            v-bind:voting-duration="votingDuration"
+            class="d-inline"
+            v-on:vote-cast="onVoteCast"
+            ref="voting"
+            v-bind:voting-candidate="votingCandidate"
+          ></Voting>
+
+          <Practice :activeGame="true" v-if="showEditor"></Practice>
         </div>
-      </section>
-
-      <!-- IDE -->
-      <div class="editor-toggle">
-        <!-- IDE Shown -->
-        <button class="btn btn-inverse toggle-rules-editor" v-if="showEditor" @click="showEditor = false">Hide Rules Editor</button>
-        <Practice :activeGame="true" v-if="showEditor"></Practice>
-        <!-- IDE Hidden -->
-        <button class="btn btn-inverse toggle-rules-editor" v-if="!showEditor" @click="showEditor = true">Show Rules Editor</button>
-      </div>
+      </template>
     </div>
-
   </div>
 </template>
 
@@ -91,11 +106,19 @@ import { PerformAuth } from '../../services/apiProvider';
 // Child components
 import Notification from '../common/Notifications.vue';
 import RuleProposal from '../common/RuleProposal.vue';
+import Voting from '../common/Voting.vue';
+import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
 export default {
-  components: { Notification, Practice, RuleProposal },
+  components: {
+    Notification,
+    Practice,
+    RuleProposal,
+    Voting,
+    Totals
+  },
   data: () => ({
     title: "Nomic Battlegrounds",
     subtitle: "Pwned or be pwned, the choice is yours",
@@ -124,7 +147,15 @@ export default {
     signMessage: signMessage,
     loginSigned: null,
     jwtToken: null,
-    showEditor: false
+    showEditor: false,
+    votingDuration: 300, // from rule 'external: $bl_turnWindowDuration = 300'
+    votingCandidate: null,
+    currentRound: 1,
+    currentTotals: {
+      yesTotals: 0,
+      noTotals: 0,
+      abstainTotals: 0
+    }
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -172,9 +203,9 @@ export default {
           console.log("User balance =>", balance);
           // Request Twilio token
           try {
-            // Request auth
+            // Request authvotingHandler()
             let tokenResponse = await this.getToken(this.address);
-            if (tokenResponse) {
+            if (tokenResponse) {votingHandler()
               // Valid auth
               this.TwilioToken = tokenResponse.token
               this.TwilioIdentity = tokenResponse.identity;
@@ -386,6 +417,48 @@ export default {
         type: null,
         msg: null
       };
+    },
+    toggleEditor: function () {
+      this.showEditor = this.showEditor ? false : true;
+    },
+    votingHandler: function () {
+      // On button click for now, but will fire on websocket event
+
+      // Placeholder rule candidate
+      this.votingCandidate = {
+        name: 'testRule',
+        code: '$test_string = "this is test code"\nsay($test_string)'
+      }
+
+      this.$refs.voting.promptForVote(this.votingCandidate);
+    },
+    onVoteCast: function (voteType) {
+      let chatMsg = null;
+
+      switch (voteType) {
+        case 'yes':
+          this.currentTotals.yesTotals += 1;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
+          break;
+        case 'no':
+          this.currentTotals.noTotals += 1;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
+          break;
+        case 'abstain':
+          this.currentTotals.abstainTotals += 1;
+          chatMsg = `${this.TwilioIdentity} abstained in round ${this.currentRound}.`;
+          break;
+        default:
+          return;
+      }
+
+      // this.chatChannel.sendMessage(chatMsg);
+      this.chatMessages.push({
+        type: 'info',
+        msg: chatMsg
+      });
+
+      this.votingCandidate = null;
     }
   }
 };
@@ -394,7 +467,7 @@ export default {
 <style scoped>
   /* Chat */
   .input-group.chat-controls {
-    width: 80vw;
+    width: 100%;
   }
   button.toggle-rules-editor {
     margin-top: 1rem;
