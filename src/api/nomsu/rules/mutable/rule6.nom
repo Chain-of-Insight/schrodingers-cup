@@ -1,1 +1,5 @@
 use "vars"
+
+### The duration of player turns is n seconds, as defined in this rule
+
+external: $bl_turnWindowDuration = 300

@@ -1,1 +1,10 @@
 use "vars"
+
+### The winner is the first player to achieve 100 (positive) points. In the case of 
+    multiple players achieving this threshold at the same time, the player with highest
+    points is the winner. In the case there a multiple players with the exact same
+    highest score, the player who first reached that score is the winner. While the 
+    aforementioned logic is super-immutable, the value of the threshold can be changed
+    by ammendments to this rule.
+
+external: $bl_winPoints = 100

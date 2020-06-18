@@ -1,1 +1,6 @@
 use "vars"
+
+### Upon successfully passing a rule the player who made the proposal is awarded
+    n points as defined by this rule.
+
+external: $bl_rulePassPts = 10

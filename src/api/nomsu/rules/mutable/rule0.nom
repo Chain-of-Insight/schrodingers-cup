@@ -1,1 +1,5 @@
 use "vars"
+
+### A rule-change is adopted if and only if the vote is unanimous among the eligible voters. 
+
+external: $bl_voteRatioRequired = 100

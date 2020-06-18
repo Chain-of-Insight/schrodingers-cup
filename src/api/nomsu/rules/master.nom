@@ -1,8 +1,14 @@
 ### Global variables stored on the blockchain
-    They get initialized in the def.nom and overridden by the ruleset
+    They get initialized in the `vars.nom` and overridden by the ruleset.
+    At the end of each rule computation, the API will update their vaules in 
+    `vars.nom`, and after all rules have updated the vars file, the API will 
+    run this file to tabulate their updated tallys and update those vaules
+    on Tezos in addition to storing the latest set of rule files
 
+use "vars"
 
 $bl_nImmutable=0
+
 repeat:
     try:
         use ("immutable/rule"+$bl_nImmutable)
@@ -39,6 +45,7 @@ say("Points gained for voting against a passed rule " + $bl_voteAgainstPts)
 say("Daily game window duration " + $bl_gameWindowDuration)
 say("Player turn duration " + $bl_turnWindowDuration)
 say("Percentage of votes required to pass a rule " + $bl_voteRatioRequired)
+say("Percentage of votes required to transmutate a rule " + $bl_transmutationVoteRatioRequired)
 
 say("Settle game window finished.")
 say("Loaded "+$bl_nImmutable+" immutable rules and "+$bl_nMutable+" mutable rules.")

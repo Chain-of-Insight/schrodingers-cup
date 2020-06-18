@@ -1,1 +1,9 @@
 use "vars"
+
+### The game window duration is n seconds long, as defined in this rule
+
+external: $bl_gameWindowDuration = 7200
+
+### And occurs daily at UTC hour
+
+external: $bl_gameWindowHourUTC = 4

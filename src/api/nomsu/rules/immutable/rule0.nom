@@ -1,14 +1,75 @@
 use "vars"
 
-### The following rules of Nomic are expressly encoded in the game's 
-    core architechture. For this electronic version of Nomic you won't 
-    be able to change them, but they're included here to help get you 
-    acquainted with the bounds of the system you are dealing with :)
+### The following rules of Nomic are expressly encoded in the game's core architechture. 
+    For this electronic version of Nomic you won't be able to change them. However, a 
+    reference is included and explained here to help get you acquainted with the bounds 
+    of the system you are dealing with and to let you know which default Nomic rules
+    from Peter Suber are being respected in this version :)
 
-### IMMUTABLE:
+### We might think of these rules as 'super-immutable' as they represent the unchageability
+    of the game and framework itself.
 
 ### 1. All players must always abide by all the rules then in effect, in the form in 
     which they are then in effect. The rules in the Initial Set are in effect whenever a 
     game begins.
 
-### 2. 
+### 2. A rule-change is any of the following: 
+    (1) the enactment, repeal, or amendment of a mutable rule; 
+    (2) the enactment, repeal, or amendment of an amendment of a mutable rule; or 
+    (3) the transmutation of an immutable rule into a mutable rule or vice versa.
+    (Note: This definition implies that all newly added rules are mutable; 
+    immutable rules, as long as they are immutable, may not be amended or repealed; 
+    mutable rules, as long as they are mutable, may be amended or repealed; any rule of any 
+    status may be transmuted; no rule is absolutely immune to change.)
+
+### 3. All rule-changes proposed in the proper way shall be voted on. They will be adopted 
+    if and only if they receive the required number of votes.
+
+### 4. Every player in an active game window is an eligible voter. Every eligible voter 
+    can participate in every vote on rule-changes. If the choose to abstain or miss their
+    timed opportunity to cast their vote due to negligence or being AFK, their missed vote
+    will not be included in the percentage of voters required to make a quorum
+
+### 5. All proposed rule-changes are collected by the API server then stored on the Tezos
+    blockchain at the end of that day's active game session. While Tezos storage keeps
+    references for both passed and failed rule proposals, only successfully passed rules can 
+    be ammended by players.
+
+### 6. No rule-change may take active effect on players' leaderboard position or game 
+    standing before it's been reflected on Tezos. Changes to the Tezos storage of
+    game data can only be made at the end of the active game window by the Tezos wallet 
+    that exists on the API server.
+    (Note: the exact time of the game window itself can still be changed by players)
+
+### 7. In a conflict between a mutable and an immutable rule, the immutable rule takes 
+    precedence and the mutable rule shall be entirely void. For the purposes of this rule a 
+    proposal to transmute an immutable rule does not "conflict" with that immutable rule.
+
+### 9. The state of affairs that constitutes winning may not be altered from achieving n 
+    points to any other state of affairs. The magnitude of n and the means of earning points 
+    may be changed. Additionally, if a player's rule proposal causes the API server to crash
+    during it's computation no further rules will be computed and, since the game has now
+    entered a state of paradox, previous rules of that day will be updated on a Tezos
+    and the game will be declared over, the winner of which will default to the Tezos
+    address of the individual who last successfully passed a rule update. 
+    (Note: While slightly modified for electronic play, this `super-immuatable` is not 
+    dissimilar and should be functionally identical to Peter Suber's initial rule No. 112
+
+### 10. Whatever is not prohibited or regulated by a rule is permitted and unregulated, 
+    with the sole exception of changing the rules, which is permitted only when a rule or 
+    set of rules explicitly or implicitly permits it.
+
+### 11. Players turn order is dictated by the order in which they arrive to the game lobby.
+    This is determined in the API by having the player sign a message with their Tezos wallet.
+
+### 12. Each player (wallet address) always has exactly one vote per rule proposed.
+
+### 13. The winner is the first player to achieve n (positive) points. In the case of 
+    multiple players achieving this threshold at the same time, the player with highest
+    points is the winner. In the case there a multiple players with the exact same
+    highest score, the player who first reached that score is the winner
+
+### 14. If two or more mutable rules conflict with one another, or if two or more immutable 
+    rules conflict with one another, then the rule with the lowest ordinal number takes 
+    precedence. This is determined by the API having pre-selected the order in which to
+    compute the rules which are indexed by their number.
