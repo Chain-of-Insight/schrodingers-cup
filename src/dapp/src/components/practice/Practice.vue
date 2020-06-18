@@ -8,199 +8,198 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <div class="container-fluid main">
-      <div class="row" v-if="!activeGame">
-        <div class="col">
-          <h1>{{ title }}</h1>
-          <h5>{{ subtitle }}</h5>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-      
-          <!-- Not Connected -->
-          <div class="container-fluid p-0" v-if="!connected">
-            <ul class="list-unstyled">
-              <li @click="connectUser()">
-                <button class="btn btn-primary btn-connect">Login With Tezos</button>
-              </li>
-            </ul>
-            <p>Connect your Tezos wallet to get started</p>
-          </div>
-      
-          <!-- Connected -->
-          <div class="ide container-fluid p-0" v-else>
-            <div class="row no-gutters">
-              <!-- IDE Saved Rule Sets -->
-              <div id="ide-saved" class="ide-pane col-3">
-                <label>
-                  <strong>Rule Sets:</strong>
-                </label>
-                <nav class="nav nav-tabs">
-                  <a
-                    class="nav-link"
-                    @click="ide.ruleSetPane = ruleSetTypes.CURRENT"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.CURRENT }"
-                  >Current</a>
-                  <a
-                    class="nav-link"
-                    @click="ide.ruleSetPane = ruleSetTypes.SAVED"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.SAVED }"
-                  >Saved</a>
-                  <a
-                    class="nav-link"
-                    @click="ide.ruleSetPane = ruleSetTypes.QUEUED"
-                    v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.QUEUED }"
-                  >Queued</a>
-                </nav>
-                <div
-                  id="rules-current"
-                  class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetTypes.CURRENT"
+    <div :class="{ 'p-0': activeGame }" class="container main">
+      <template v-if="!activeGame">
+        <h1>{{ title }}</h1>
+        <h5 class="mb-4">{{ subtitle }}</h5>
+      </template>
+
+      <!-- Not Connected -->
+      <template v-if="!connected">
+        <ul class="list-unstyled">
+          <li @click="connectUser()">
+            <button class="btn btn-primary btn-connect">Login With Tezos</button>
+          </li>
+        </ul>
+        <p>Connect your Tezos wallet to get started</p>
+      </template>
+
+      <!-- Connected -->
+      <template v-else>
+        <div class="row">
+          <!-- IDE Saved Rule Sets -->
+          <div id="ide-saved" class="ide-pane col-auto">
+            <label>
+              <strong>Rule Sets:</strong>
+            </label>
+            <nav class="nav nav-tabs">
+              <a
+                class="nav-link"
+                @click="ide.ruleSetPane = ruleSetTypes.CURRENT"
+                v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.CURRENT }"
+              >Current</a>
+              <a
+                class="nav-link"
+                @click="ide.ruleSetPane = ruleSetTypes.SAVED"
+                v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.SAVED }"
+              >Saved</a>
+              <a
+                class="nav-link"
+                @click="ide.ruleSetPane = ruleSetTypes.QUEUED"
+                v-bind:class="{ active: ide.ruleSetPane === ruleSetTypes.QUEUED }"
+              >Queued</a>
+            </nav>
+            <div
+              id="rules-current"
+              class="list-group"
+              v-if="ide.ruleSetPane === ruleSetTypes.CURRENT"
+            >
+              <p
+                class="list-group-item border-0"
+                v-if="ide.savedRuleSets.nomic.length === 0"
+              >No current rule sets loaded...</p>
+              <!-- Current Rule Sets -->
+              <a
+                class="ruleset btn btn-outline-success list-group-item list-group-item-action"
+                role="button"
+                tabindex="0"
+                v-bind:class="{
+                  'active':
+                    selectedRuleSet.type === ruleSetTypes.CURRENT &&
+                    selectedRuleSet.index === index
+                }"
+                v-bind:key="index"
+                v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
+                v-on:click="loadRuleSet(index, ruleSetTypes.CURRENT)"
+                style="cursor:pointer;"
+              >
+                <span>{{index + 1}}. {{ ruleSet.name }}</span>
+              </a>
+            </div>
+            <div
+              id="rules-saved"
+              class="list-group"
+              v-if="ide.ruleSetPane === ruleSetTypes.SAVED"
+            >
+              <p
+                class="list-group-item border-0"
+                v-if="ide.savedRuleSets.player.length === 0"
+              >No saved rule sets...</p>
+              <!-- Saved Rule Sets -->
+              <div
+                class="ruleset btn-group"
+                role="group"
+                v-bind:key="index"
+                v-for="(savedIndex, index) in playerRuleSets"
+                v-on:click="loadRuleSet(savedIndex, ruleSetTypes.SAVED)"
+              >
+                <a
+                  class="btn btn-outline-success list-group-item list-group-item-action"
+                  role="button"
+                  tabindex="0"
+                  v-bind:class="{
+                    'active':
+                      selectedRuleSet.type === ruleSetTypes.SAVED &&
+                      selectedRuleSet.index === savedIndex
+                  }"
+                  style="cursor:pointer;"
                 >
-                  <p
-                    class="list-group-item border-0"
-                    v-if="ide.savedRuleSets.nomic.length === 0"
-                  >No current rule sets loaded...</p>
-                  <!-- Current Rule Sets -->
-                  <a
-                    class="ruleset btn btn-outline-success list-group-item list-group-item-action"
-                    role="button"
-                    tabindex="0"
-                    v-bind:class="{
-                      'active':
-                        selectedRuleSet.type === ruleSetTypes.CURRENT &&
-                        selectedRuleSet.index === index
-                    }"
-                    v-bind:key="index"
-                    v-for="(ruleSet, index) in ide.savedRuleSets.nomic"
-                    v-on:click="loadRuleSet(index, ruleSetTypes.CURRENT)"
-                    style="cursor:pointer;"
-                  >
-                    <span>{{index + 1}}. {{ ruleSet.name }}</span>
-                  </a>
-                </div>
-                <div
-                  id="rules-saved"
-                  class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetTypes.SAVED"
-                >
-                  <p
-                    class="list-group-item border-0"
-                    v-if="ide.savedRuleSets.player.length === 0"
-                  >No saved rule sets...</p>
-                  <!-- Saved Rule Sets -->
-                  <div
-                    class="ruleset btn-group"
-                    role="group"
-                    v-bind:key="index"
-                    v-for="(savedIndex, index) in playerRuleSets"
-                    v-on:click="loadRuleSet(savedIndex, ruleSetTypes.SAVED)"
-                  >
-                    <a
-                      class="btn btn-outline-success list-group-item list-group-item-action"
-                      role="button"
-                      tabindex="0"
-                      v-bind:class="{
-                        'active':
-                          selectedRuleSet.type === ruleSetTypes.SAVED &&
-                          selectedRuleSet.index === savedIndex
-                      }"
-                      style="cursor:pointer;"
-                    >
-                      <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
-                    </a>
-                    <button
-                      class="btn btn-outline-warning"
-                      @click="queueRuleSet(savedIndex)"
-                    ><small>Queue</small></button>
-                  </div>
-                </div>
-                <div
-                  id="rules-queued"
-                  class="list-group"
-                  v-if="ide.ruleSetPane === ruleSetTypes.QUEUED"
-                >
-                  <!-- Queued Rule Sets -->
-                  <p
-                    class="list-group-item border-0"
-                    v-if="queuedRuleSets.length === 0"
-                  >No queued rule sets...</p>
-                  <div
-                    class="ruleset btn-group"
-                    role="group"
-                    v-bind:key="index"
-                    v-for="(savedIndex, index) in queuedRuleSets"
-                    v-on:click="loadRuleSet(savedIndex, ruleSetTypes.QUEUED)"
-                  >
-                    <a
-                      class="btn btn-outline-success list-group-item list-group-item-action"
-                      role="button"
-                      tabindex="0"
-                      v-bind:class="{
-                        'active':
-                          selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                          selectedRuleSet.index === savedIndex
-                      }"
-                      style="cursor:pointer;"
-                    >
-                      <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
-                    </a>
-                    <button
-                      class="btn btn-outline-warning"
-                      @click="unQueueRuleSet(savedIndex)"
-                      style="word-break: keep-all;"
-                    ><small>Un&#8209;queue</small></button>
-                  </div>
-                </div>
+                  <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
+                </a>
+                <button
+                  class="btn btn-outline-warning"
+                  @click="queueRuleSet(savedIndex)"
+                ><small>Queue</small></button>
               </div>
-              <!-- IDE Input -->
-              <div id="ide-input" class="ide-pane col-9">
-                <label>
-                  <strong>Rule Editor:</strong>
-                </label>
-                <codemirror 
+            </div>
+            <div
+              id="rules-queued"
+              class="list-group"
+              v-if="ide.ruleSetPane === ruleSetTypes.QUEUED"
+            >
+              <!-- Queued Rule Sets -->
+              <p
+                class="list-group-item border-0"
+                v-if="queuedRuleSets.length === 0"
+              >No queued rule sets...</p>
+              <div
+                class="ruleset btn-group"
+                role="group"
+                v-bind:key="index"
+                v-for="(savedIndex, index) in queuedRuleSets"
+                v-on:click="loadRuleSet(savedIndex, ruleSetTypes.QUEUED)"
+              >
+                <a
+                  class="btn btn-outline-success list-group-item list-group-item-action"
+                  role="button"
+                  tabindex="0"
+                  v-bind:class="{
+                    'active':
+                      selectedRuleSet.type === ruleSetTypes.QUEUED &&
+                      selectedRuleSet.index === savedIndex
+                  }"
+                  style="cursor:pointer;"
+                >
+                  <span>{{index + 1}}. {{ ide.savedRuleSets.player[savedIndex].name }}</span>
+                </a>
+                <button
+                  class="btn btn-outline-warning"
+                  @click="unQueueRuleSet(savedIndex)"
+                  style="word-break: keep-all;"
+                ><small>Un&#8209;queue</small></button>
+              </div>
+            </div>
+          </div>
+          <!-- IDE Input -->
+          <div id="ide-input" class="ide-pane col">
+            <label>
+              <strong>Rule Editor:</strong>
+            </label>
+            <div class="row">
+              <div class="col">
+                <codemirror
                   v-model="ide.input"
                   :options="ide.options"
                   @input="clearEditorOutput()"
                 ></codemirror>
-                <div class="execute">
-                  <!-- Compile Nomic -->
-                  <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-                  
-                  <!-- Save Rule Set -->
-                  <button 
-                    class="btn btn-success" 
-                    @click="saveRuleSetHandler()"
-                    :disabled="!ide.output || compilerError"
-                  >Save</button>
-
-                  <!-- Clear Editor -->
-                  <button class="btn btn-danger" @click="clearEditor()">
-                    <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
-                  </button>
-                </div>
               </div>
             </div>
-            <div class="row no-gutters">
-              <!-- IDE Output -->
-              <div id="ide-output" class="ide-pane-b col">
-                <label>
-                  <strong>Output:</strong>
-                </label>
-                <div class="ide-output-wrapper row no-gutters" v-if="ide.output">
-                  <div class="executed clear-output">
-                    <span class="clear" @click="clearEditorOutput()">clear output</span>
-                  </div>
-                  <div class="term-container-wrapper">
-                    <div class="term-container" v-html="ide.output"></div>
-                  </div>
-                </div>
+            <div class="row execute">
+              <!-- Compile Nomic -->
+              <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
+              
+              <!-- Save Rule Set -->
+              <button 
+                class="btn btn-success" 
+                @click="saveRuleSetHandler()"
+                :disabled="!ide.output || compilerError"
+              >Save</button>
+
+              <!-- Clear Editor -->
+              <button class="btn btn-danger" @click="clearEditor()">
+                <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <!-- IDE Output -->
+          <div id="ide-output" class="ide-pane col">
+            <label>
+              <strong>Output:</strong>
+            </label>
+            <div class="ide-output-wrapper row no-gutters" v-if="ide.output">
+              <div class="executed clear-output">
+                <span class="clear" @click="clearEditorOutput()">clear output</span>
+              </div>
+              <div class="term-container-wrapper">
+                <div class="term-container" v-html="ide.output"></div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+          
     </div>
 
     <!-- Save Ruleset Modal -->
@@ -361,6 +360,7 @@ export default {
         tabSize: 4,
         theme: 'dracula',
         lineNumbers: true,
+        lineWrapping: true,
         line: true
       },
       state: {
@@ -487,6 +487,7 @@ export default {
       console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
     },
     saveRuleSetHandler: function () {
+      console.log('selected ----------->', this.selectedRuleSet);
       if (
         this.selectedRuleSet.type === ruleSetTypes.CURRENT ||
         typeof(this.selectedRuleSet.index) !== 'number'
@@ -705,10 +706,10 @@ export default {
     color: white;
     border: none;
   }
-  .container-fluid.main {
+  .container.main {
     margin: auto;
     margin-top: 2rem;
-    margin-bottom: 2rem;
-    max-width: 1175px;
+    /* margin-bottom: 2rem;
+    max-width: 1175px; */
   }
 </style>
