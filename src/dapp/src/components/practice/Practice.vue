@@ -155,7 +155,7 @@
             <label>
               <strong>Rule Editor:</strong>
             </label>
-            <div class="row">
+            <div class="row mb-2">
               <div class="col">
                 <codemirror
                   v-model="ide.input"
@@ -164,21 +164,23 @@
                 ></codemirror>
               </div>
             </div>
-            <div class="row execute">
-              <!-- Compile Nomic -->
-              <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
-              
-              <!-- Save Rule Set -->
-              <button 
-                class="btn btn-success" 
-                @click="saveRuleSetHandler()"
-                :disabled="!ide.output || compilerError"
-              >Save</button>
+            <div class="row">
+              <div class="col">
+                <!-- Compile Nomic -->
+                <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
+                
+                <!-- Save Rule Set -->
+                <button 
+                  class="btn btn-success" 
+                  @click="saveRuleSetHandler()"
+                  :disabled="!ide.output || compilerError"
+                >Save</button>
 
-              <!-- Clear Editor -->
-              <button class="btn btn-danger" @click="clearEditor()">
-                <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
-              </button>
+                <!-- Clear Editor -->
+                <button class="btn btn-danger" @click="clearEditor()">
+                  <span class="oi oi-trash" title="Clear editor" aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

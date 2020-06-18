@@ -25,7 +25,7 @@
       <template v-else>
         <!-- Round totals -->
         <section>
-          <Totals></Totals>
+          <Totals v-bind:round="currentRound" v-bind="currentTotals"></Totals>
         </section>
 
         <!-- Player Chat -->
@@ -149,8 +149,13 @@ export default {
     jwtToken: null,
     showEditor: false,
     votingDuration: 300, // from rule 'external: $bl_turnWindowDuration = 300'
-    round: 1,
-    votingCandidate: null
+    votingCandidate: null,
+    currentRound: 1,
+    currentTotals: {
+      yesTotals: 0,
+      noTotals: 0,
+      abstainTotals: 0
+    }
   }),
   mounted: async function () {
     await this.mountProvider();
@@ -431,19 +436,23 @@ export default {
       let chatMsg = null;
 
       switch (voteType) {
-          case 'yes':
-          case 'no':
-            chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
-            break;
-          case 'abstain':
-            chatMsg = `${this.TwilioIdentity} abstained in round ${this.round}.`;
-            break;
-          default:
-            return;
+        case 'yes':
+          this.currentTotals.yesTotals += 1;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
+          break;
+        case 'no':
+          this.currentTotals.noTotals += 1;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
+          break;
+        case 'abstain':
+          this.currentTotals.abstainTotals += 1;
+          chatMsg = `${this.TwilioIdentity} abstained in round ${this.round}.`;
+          break;
+        default:
+          return;
       }
 
       // this.chatChannel.sendMessage(chatMsg);
-
       this.chatMessages.push({
         type: 'info',
         msg: chatMsg
