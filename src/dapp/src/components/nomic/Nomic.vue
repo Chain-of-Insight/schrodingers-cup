@@ -438,15 +438,15 @@ export default {
       switch (voteType) {
         case 'yes':
           this.currentTotals.yesTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
           break;
         case 'no':
           this.currentTotals.noTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.round}.`;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
           break;
         case 'abstain':
           this.currentTotals.abstainTotals += 1;
-          chatMsg = `${this.TwilioIdentity} abstained in round ${this.round}.`;
+          chatMsg = `${this.TwilioIdentity} abstained in round ${this.currentRound}.`;
           break;
         default:
           return;
