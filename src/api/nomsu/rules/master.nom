@@ -5,7 +5,6 @@
 ### $bl_startPoints
 ### $bl_voteAgainstPts
 
-use "vars"
 
 $bl_nImmutable=1
 $bl_nMutable=7

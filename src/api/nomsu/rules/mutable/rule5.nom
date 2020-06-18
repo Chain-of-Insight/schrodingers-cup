@@ -1,2 +1,1 @@
 use "vars"
-external: $bl_turnWindowDuration = 300

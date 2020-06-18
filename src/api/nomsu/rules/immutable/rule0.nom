@@ -1,2 +1,14 @@
 use "vars"
-external: $bl_startPoints = 5
+
+### The following rules of Nomic are expressly encoded in the game's 
+    core architechture. For this electronic version of Nomic you won't 
+    be able to change them, but they're included here to help get you 
+    acquainted with the bounds of the system you are dealing with :)
+
+### IMMUTABLE:
+
+### 1. All players must always abide by all the rules then in effect, in the form in 
+    which they are then in effect. The rules in the Initial Set are in effect whenever a 
+    game begins.
+
+### 2. 
