@@ -25,6 +25,10 @@
       <h1>{{ title }}</h1>
       <h5>{{ subtitle }}</h5>
 
+      <section>
+        <Totals></Totals>
+      </section>
+
       <!-- Player Chat -->
       <section>
         <div id="messages" class="message-container">
@@ -104,11 +108,18 @@ import { PerformAuth } from '../../services/apiProvider';
 import Notification from '../common/Notifications.vue';
 import RuleProposal from '../common/RuleProposal.vue';
 import Voting from '../common/Voting.vue';
+import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
 export default {
-  components: { Notification, Practice, RuleProposal, Voting },
+  components: {
+    Notification,
+    Practice,
+    RuleProposal,
+    Voting,
+    Totals
+  },
   data: () => ({
     title: "Nomic Battlegrounds",
     subtitle: "Pwned or be pwned, the choice is yours",
