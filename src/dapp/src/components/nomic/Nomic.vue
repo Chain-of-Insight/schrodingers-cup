@@ -66,19 +66,24 @@
           <!-- IDE Shown -->
           <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
           
-          <!-- Voting -->
           <!-- For testing: -->
-          <button type="button" class="btn btn-primary" @click="votingHandler()">
-            Voting Test
-          </button>
+          <div class="btn-group" role="group" aria-label="">
+            <!-- Test Voting -->
+            <button type="button" class="btn btn-outline-primary" @click="votingHandler()">
+              Test Voting
+            </button>
+            <!-- Test Rule Proposal -->
+            <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
+              Test Rule Proposal
+            </button>
+          </div>
           <Voting
             v-bind:voting-duration="votingDuration"
-            class="d-inline"
             v-on:vote-cast="onVoteCast"
             ref="voting"
             v-bind:voting-candidate="votingCandidate"
           ></Voting>
-
+          <RuleProposal ref="proposal"></RuleProposal>
           <Practice :activeGame="true" v-if="showEditor"></Practice>
         </div>
       </template>
@@ -459,6 +464,9 @@ export default {
       });
 
       this.votingCandidate = null;
+    },
+    ruleProposalHandler: function () {
+      this.$refs.proposal.promptForProposal();
     }
   }
 };
