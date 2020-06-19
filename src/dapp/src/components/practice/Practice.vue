@@ -177,7 +177,7 @@
                 <button 
                   class="btn btn-success" 
                   @click="saveRuleSetHandler()"
-                  :disabled="!ide.output || compilerError || selectedRuleSet.type === ruleSetTypes.QUEUED"
+                  :disabled="!ide.output || compilerError"
                 >Save</button>
 
                 <!-- Clear Editor -->
@@ -509,10 +509,10 @@ export default {
         case typeof(this.selectedRuleSet.index) !== 'number':
           $('#save-modal').modal('show');
           break;
+        case ruleSetTypes.QUEUED:
         case ruleSetTypes.SAVED:
           this.saveRuleSet(this.selectedRuleSet.index);
           break;
-        case ruleSetTypes.QUEUED:
         default:
           return;
       }

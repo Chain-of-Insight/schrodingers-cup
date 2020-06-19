@@ -1,5 +1,5 @@
 <template>
-  <div class="notification">
+  <div class="notification fixed-top w-100">
     <!-- Notification Display -->
     <div v-if="type && msg" :class="'alert alert-' + type" role="alert">{{ msg }}</div>
     <span v-if="type && msg" class="close close-x" @click="$emit('reset')">&times;</span>
