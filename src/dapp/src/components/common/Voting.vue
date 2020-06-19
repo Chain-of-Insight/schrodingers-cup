@@ -30,8 +30,7 @@
                   <button
                     type="button"
                     class="btn btn-block btn-lg btn-secondary"
-                    data-dismiss="modal"
-                    @click="vote(voteType.YES)"
+                    @click="vote(voteType.ABSTAIN)"
                     :class="{ 'disabled': votingWindowClosed } "
                     :disabled="votingWindowClosed"
                   >Abstain</button>
@@ -50,7 +49,7 @@
                     <button
                       type="button"
                       class="btn btn-lg btn-success"
-                      @click="vote(voteType.ABSTAIN)"
+                      @click="vote(voteType.YES)"
                       :class="{ 'disabled': votingWindowClosed } "
                       :disabled="votingWindowClosed"
                     >
@@ -160,8 +159,8 @@
       vote: function (type) {
         if (
           typeof(type) !== 'number' || (
-            type !== this.voteType.YES ||
-            type !== this.voteType.NO ||
+            type !== this.voteType.YES &&
+            type !== this.voteType.NO &&
             type !== this.voteType.ABSTAIN
           )
         ) {

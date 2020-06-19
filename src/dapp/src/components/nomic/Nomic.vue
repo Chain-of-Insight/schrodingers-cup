@@ -79,9 +79,9 @@
           <!-- For testing: -->
           <div class="btn-group" role="group" aria-label="">
             <!-- Test Voting -->
-            <button type="button" class="btn btn-outline-primary" @click="votingHandler()">
+            <!-- <button type="button" class="btn btn-outline-primary" @click="votingHandler()">
               Test Voting
-            </button>
+            </button> -->
             <!-- Test Rule Proposal -->
             <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
               Test Rule Proposal
@@ -127,11 +127,12 @@ import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
-const voteTypes = {
+const voteType = {
   YES: 0,
   NO: 1,
   ABSTAIN: -1
 }
+if (Object.freeze) Object.freeze(voteType);
 
 const TZ_WALLET_PATTERN = "tz(1|2|3)[a-zA-Z0-9]{33}";
 
@@ -176,9 +177,9 @@ export default {
     votingCandidate: null,
     currentRound: 1,
     currentTotals: {
-      yesTotals: 0,
-      noTotals: 0,
-      abstainTotals: 0
+      yes: 0,
+      no: 0,
+      abstain: 0
     },
     apiWallet: 'BECjcQFZnoVYu94ns5HMLW7yaDsoJZYbU1zt',
   }),
@@ -418,26 +419,43 @@ export default {
     },
     onSystemMessage: function (message) {
       const apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
-      const messageBody = message.body.replace(apiWalletPattern, ''); // XXX: FOR TESTING ONLY
+      let messageBody = message.body.replace(apiWalletPattern, ''); // XXX: FOR TESTING ONLY
 
       switch (messageBody) {
         case (messageBody.match(RegExp(this.msgPatterns.CREATE_RULE_PATTERN)) || {}).input:
         case (messageBody.match(RegExp(this.msgPatterns.UPDATE_RULE_PATTERN)) || {}).input:
         case (messageBody.match(RegExp(this.msgPatterns.TRANSMUTE_RULE_PATTERN)) || {}).input:
         case (messageBody.match(RegExp(this.msgPatterns.DELETE_RULE_PATTERN)) || {}).input:
-          console.log('RULE PROPOSAL!');
+          // On another player proposing a rule
+          this.votingCandidate = {
+            name: 'testRule',
+            code: '$test_string = "this is test code"\nsay($test_string)'
+          }
+          this.$refs.voting.promptForVote(this.votingCandidate);
           break;
         case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
-          console.log('NEW TURN!');
+          // On new turn
+          // Extract player's address from string
           const playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+          // Check if it's logged in player
           if (playerAddress === this.TwilioIdentity) {
-            console.log("...and it's also YOUR TURN!");
+            // Format message
+            messageBody = "It's your turn to propose a rule!";
+            // Trigger proposal modal
+            this.$refs.proposal.promptForProposal();
           }
           break;
         case (messageBody.match(RegExp(this.msgPatterns.YES_VOTE_PATTERN)) || {}).input:
+          this.currentTotals.yes += 1;
+          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
+          break;
         case (messageBody.match(RegExp(this.msgPatterns.NO_VOTE_PATTERN)) || {}).input:
+          this.currentTotals.no += 1;
+          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
+          break;
         case (messageBody.match(RegExp(this.msgPatterns.ABSTAIN_VOTE_PATTERN)) || {}).input:
-          console.log('VOTE CAST!');
+          this.currentTotals.abstain += 1;
+          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
           break;
         default:
           return false;
@@ -497,43 +515,28 @@ export default {
     toggleEditor: function () {
       this.showEditor = this.showEditor ? false : true;
     },
-    votingHandler: function () {
-      // On button click for now, but will fire on websocket event
+    castVote: function (type) {
+      if (!this.chatChannel)
+        return false;
 
-      // Placeholder rule candidate
-      this.votingCandidate = {
-        name: 'testRule',
-        code: '$test_string = "this is test code"\nsay($test_string)'
-      }
+      let msgBody = null;
 
-      this.$refs.voting.promptForVote(this.votingCandidate);
-    },
-    castVote: function (voteType) {
-      let chatMsg = null;
-
-      switch (voteType) {
-        case 'yes':
-          this.currentTotals.yesTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}`;
+      switch (type) {
+        case voteType.YES:
+          msgBody = `${this.TwilioIdentity} voted YES in round ${this.currentRound}`;
           break;
-        case 'no':
-          this.currentTotals.noTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}`;
+        case voteType.NO:
+          msgBody = `${this.TwilioIdentity} voted NO in round ${this.currentRound}`;
           break;
-        case 'abstain':
-          this.currentTotals.abstainTotals += 1;
-          chatMsg = `${this.TwilioIdentity} abstained in round ${this.currentRound}`;
+        case voteType.ABSTAIN:
+          msgBody = `${this.TwilioIdentity} abstained in round ${this.currentRound}`;
           break;
         default:
           return;
       }
 
-      // this.chatChannel.sendMessage(chatMsg);
-      this.chatMessages.push({
-        type: 'info',
-        msg: chatMsg
-      });
-
+      const msgText = `${this.apiWallet}: ` + msgBody;
+      this.chatChannel.sendMessage(msgText);
       this.votingCandidate = null;
     },
     ruleProposalHandler: function () {
@@ -575,7 +578,7 @@ export default {
       }
 
       const msgText = `${this.apiWallet}: ` + msgBody;
-      this.chatChannel.sendMessage(msgText)
+      this.chatChannel.sendMessage(msgText);
     }
   }
 };
