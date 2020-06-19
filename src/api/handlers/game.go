@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -15,6 +17,13 @@ func CastVote(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
+
+	// Current round
+	currentRound, err := strconv.Atoi(os.Getenv("CURRENT_ROUND"))
+	if (currentRound == 0 || err != nil) {
+		currentRound = 1
+	}
+	
 	return c.JSON(http.StatusOK, map[string]string{
 		"tzid": tzid,
 	})

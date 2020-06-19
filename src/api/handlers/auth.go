@@ -51,8 +51,7 @@ func Auth(c echo.Context) error {
 
 	// validate timestamp
 	msgTime := msgToTime(input.Msg)
-	delta := time.Since(msgTime) 	// XXX (Drew): I think we need to use system time
-									// to account for users in different timezones
+	delta := time.Since(msgTime)
 	allowed, _ := time.ParseDuration("5m")
 
 	// time sync issues?
