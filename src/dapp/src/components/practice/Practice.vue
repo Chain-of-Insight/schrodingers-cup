@@ -85,6 +85,10 @@
                 class="list-group-item border-0"
                 v-if="ide.savedRuleSets.player.length === 0"
               >No saved rule sets...</p>
+              <p
+                class="list-group-item border-0"
+                v-if="queuedRuleSets.length > 0 && playerRuleSets.length === 0"
+              >All of your saved rule sets are queued!</p>
               <!-- Saved Rule Sets -->
               <div
                 class="ruleset btn-group"
@@ -144,7 +148,7 @@
                 </a>
                 <button
                   class="btn btn-outline-warning"
-                  @click="unQueueRuleSet(savedIndex)"
+                  @click="unQueueRuleSet(savedIndex, index)"
                   style="word-break: keep-all;"
                 ><small>Un&#8209;queue</small></button>
               </div>
@@ -173,7 +177,7 @@
                 <button 
                   class="btn btn-success" 
                   @click="saveRuleSetHandler()"
-                  :disabled="!ide.output || compilerError"
+                  :disabled="!ide.output || compilerError || selectedRuleSet.type === ruleSetTypes.QUEUED"
                 >Save</button>
 
                 <!-- Clear Editor -->
@@ -390,24 +394,36 @@ export default {
   },
   computed: {
     playerRuleSets: function () {
+      const ruleSetEntries = Array.from(this.ide.savedRuleSets.player.entries());
+      return ruleSetEntries
+        .filter(([index, ruleSet]) => !ruleSet.hasOwnProperty('queued'))
+        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
+        .map(([index, ruleSet]) => index);
+
       // Store indexes of saved, unqueued rule sets
-      const unqueuedIndexes = [];
-      this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
-        if (!ruleSet.queued) {
-          unqueuedIndexes.push(index);
-        }
-      });
-      return unqueuedIndexes;
+      // const unqueuedIndexes = [];
+      // this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
+      //   if (!ruleSet.hasOwnProperty('queued')) {
+      //     unqueuedIndexes.push(index);
+      //   }
+      // });
+      // return unqueuedIndexes;
     },
     queuedRuleSets: function () {
+      const ruleSetEntries = Array.from(this.ide.savedRuleSets.player.entries());
+      return ruleSetEntries
+        .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
+        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
+        .map(([index, ruleSet]) => index);
+
       // Store indexes of saved, queued rule sets
-      const queuedIndexes = [];
-      this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
-        if (ruleSet.queued) {
-          queuedIndexes.push(index);
-        }
-      });
-      return queuedIndexes;
+      // const queuedIndexes = [];
+      // this.ide.savedRuleSets.player.forEach((ruleSet, index) => {
+      //   if (!ruleSet.hasOwnProperty('queued')) {
+      //     queuedIndexes.push(index);
+      //   }
+      // });
+      // return queuedIndexes;
     }
   },
   methods: {
@@ -486,17 +502,19 @@ export default {
         storedRuleSets = await JSON.parse(storedRuleSets);
         this.ide.savedRuleSets.player = storedRuleSets;
       }
-      console.log('Stored Rule Sets =>', this.ide.savedRuleSets);
     },
     saveRuleSetHandler: function () {
-      console.log('selected ----------->', this.selectedRuleSet);
-      if (
-        this.selectedRuleSet.type === ruleSetTypes.CURRENT ||
-        typeof(this.selectedRuleSet.index) !== 'number'
-      ) {
-        $('#save-modal').modal('show');
-      } else {
-        this.saveRuleSet(this.selectedRuleSet.index);
+      switch (this.selectedRuleSet.type) {
+        case ruleSetTypes.CURRENT:
+        case typeof(this.selectedRuleSet.index) !== 'number':
+          $('#save-modal').modal('show');
+          break;
+        case ruleSetTypes.SAVED:
+          this.saveRuleSet(this.selectedRuleSet.index);
+          break;
+        case ruleSetTypes.QUEUED:
+        default:
+          return;
       }
     },
     saveRuleSet: async function (index = null) {
@@ -529,12 +547,9 @@ export default {
 
       // Prepare rule set
       if (hasRuleSets && index !== null) {
-        console.log(42, index);
         ruleSets[index].code = this.ide.input;
         ruleSet = ruleSets[index];
-        console.log(1);
       } else {
-        console.log(2, index);
         ruleSet = {
           code: this.ide.input,
           name: this.ide.ruleSetName
@@ -621,17 +636,17 @@ export default {
         }
       }
     },
-    updateRuleSet: async function (index, data) {
-      Object.assign(this.ide.savedRuleSets.player[index], data);
-      // Update rule set in localStorage and refresh
+    updateRuleSets: async function (index, data) {
+      // Update rule sets in localStorage and refresh
       await localStorage.setItem('ruleSets', JSON.stringify(this.ide.savedRuleSets.player));
       await this.getSavedRuleSets();
     },
     queueRuleSet: async function (index) {
       const ruleSet = this.ide.savedRuleSets.player[index];
-      console.log('Queuing rule set:', ruleSet);
+      // console.log('Queuing rule set:', ruleSet);
 
-      await this.updateRuleSet(index, { queued: true });     
+      ruleSet.queued = this.queuedRuleSets.length;
+      await this.updateRuleSets();
 
       this.alert.type = 'info';
       this.alert.msg = `Queued ruleset '${ruleSet.name}'`;
@@ -639,11 +654,19 @@ export default {
         this._retireNotification();
       }, 5000);
     },
-    unQueueRuleSet: async function (index) {
-      const ruleSet = this.ide.savedRuleSets.player[index];
-      console.log('Un-queuing rule set:', ruleSet);
+    unQueueRuleSet: async function (savedIndex, queuedIndex) {
+      const ruleSet = this.ide.savedRuleSets.player[savedIndex];
+      // console.log('Un-queuing rule set:', ruleSet);
+      // console.log('Queued rule sets:', this.queuedRuleSets);
       
-      await this.updateRuleSet(index, { queued: false });     
+      // Remove queued order/flag
+      delete ruleSet.queued;
+      // Shift other queued rule sets' orders
+      const toBeShifted = this.queuedRuleSets.slice(queuedIndex + 1);
+      toBeShifted.forEach(savedIndex => {
+        this.ide.savedRuleSets.player[savedIndex].queued -= 1;
+      });
+      await this.updateRuleSets();
 
       this.alert.type = 'info';
       this.alert.msg = `Un-queued rule set '${ruleSet.name}'`;
