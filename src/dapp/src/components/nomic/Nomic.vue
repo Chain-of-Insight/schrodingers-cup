@@ -243,7 +243,7 @@ export default {
       // auth and get JWT token
       let result;
       try {
-        result = await PerformAuth(this.loginSigned.bytes, this.loginSigned.prefixSig, pubKey);
+        result = await PerformAuth(this.loginSigned.bytes, this.loginSigned.prefixSig, pubKey, this.address);
       } catch(e) {
         // unauthorized if we are here
         result = e.response;

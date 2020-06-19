@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"net/http"
 	"time"
+	"os"
+	"strings"
 
 	"github.com/anchorageoss/tezosprotocol/v2"
 	"github.com/dgrijalva/jwt-go"
@@ -15,9 +17,10 @@ import (
 )
 
 type AuthInput struct {
-	Msg    string `json:"msg" form:"msg"`
-	Sig    string `json:"sig" form:"sig"`
-	PubKey string `json:"pubKey" form:"pubKey"`
+	Msg    	string `json:"msg" form:"msg"`
+	Sig    	string `json:"sig" form:"sig"`
+	PubKey 	string `json:"pubKey" form:"pubKey"`
+	Address string `json:"address" form:"address"`
 }
 
 type AuthResult struct {
@@ -48,7 +51,8 @@ func Auth(c echo.Context) error {
 
 	// validate timestamp
 	msgTime := msgToTime(input.Msg)
-	delta := time.Since(msgTime)
+	delta := time.Since(msgTime) 	// XXX (Drew): I think we need to use system time
+									// to account for users in different timezones
 	allowed, _ := time.ParseDuration("5m")
 
 	// time sync issues?
@@ -73,6 +77,17 @@ func Auth(c echo.Context) error {
 	t, err := token.SignedString([]byte(viper.GetString("JWT_SECRET")))
 	if err != nil {
 		return err
+	}
+
+	// Handle player list (defines turn order)
+	currentDay := time.Now().Format("2006-01-02")
+	playerListKey := "PLAYERS_" + currentDay
+	playerList := os.Getenv(playerListKey)
+	playerAddress := input.Address
+	playerAttendanceKey := playerAddress + ","
+	// Verify attendance and handle storage as required
+	if !strings.Contains(playerList, playerAddress) {
+		os.Setenv(playerListKey, playerList + playerAttendanceKey)
 	}
 
 	r := &AuthResult{JWT: t}

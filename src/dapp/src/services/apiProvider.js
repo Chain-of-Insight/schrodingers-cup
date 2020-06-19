@@ -20,7 +20,7 @@ async function testNomic(code) {
 /**
  * Authorize user in nomsu backend
  */
-async function auth(msg, sig, pubKey) {
+async function auth(msg, sig, pubKey, address) {
   if (typeof msg !== 'string') {
     return 'msg rejected. String required, got ' + typeof msg;
   }
@@ -34,7 +34,7 @@ async function auth(msg, sig, pubKey) {
   }
 
   let apiEndpoint = API_URL + 'auth';
-  const res = await axios.post(apiEndpoint, {msg: msg, sig: sig, pubKey: pubKey});
+  const res = await axios.post(apiEndpoint, {msg: msg, sig: sig, pubKey: pubKey, address: address});
 
   return res;
 };

@@ -54,12 +54,33 @@ var doc = `{
         },
         "/game/settle": {
             "post": {
-                "description": "Settle game window"
+                "description": "Settle game window",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ]
             }
         },
         "/game/vote": {
             "post": {
-                "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled"
+                "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ]
             }
         },
         "/ping": {
@@ -73,6 +94,22 @@ var doc = `{
                         "description": "pong",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/players": {
+            "get": {
+                "description": "Players",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of players in the current gameplay session",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PlayerList"
                         }
                     }
                 }
@@ -110,6 +147,9 @@ var doc = `{
         "handlers.AuthInput": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "msg": {
                     "type": "string"
                 },
@@ -125,6 +165,14 @@ var doc = `{
             "type": "object",
             "properties": {
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.PlayerList": {
+            "type": "object",
+            "properties": {
+                "players": {
                     "type": "string"
                 }
             }

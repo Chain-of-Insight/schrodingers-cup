@@ -2,6 +2,8 @@ basePath: /
 definitions:
   handlers.AuthInput:
     properties:
+      address:
+        type: string
       msg:
         type: string
       pubKey:
@@ -12,6 +14,11 @@ definitions:
   handlers.AuthResult:
     properties:
       token:
+        type: string
+    type: object
+  handlers.PlayerList:
+    properties:
+      players:
         type: string
     type: object
   handlers.TestInput:
@@ -53,9 +60,23 @@ paths:
   /game/settle:
     post:
       description: Settle game window
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
   /game/vote:
     post:
       description: Receive and tabulate votes, stage vote outcome to be processed when game window is settled
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
   /ping:
     get:
       description: Ping/Health Check
@@ -66,6 +87,16 @@ paths:
           description: pong
           schema:
             type: string
+  /players:
+    get:
+      description: Players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of players in the current gameplay session
+          schema:
+            $ref: '#/definitions/handlers.PlayerList'
   /test:
     post:
       description: Run some arbitrary nomsu code

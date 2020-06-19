@@ -44,6 +44,7 @@ func main() {
 	// Routes
 	e.GET("/", handlers.HelloWorld)
 	e.GET("/ping", handlers.Ping)
+	e.GET("/players", handlers.Players)
 	e.POST("/test", handlers.TestNomsu)
 	e.POST("/auth", handlers.Auth)
 
