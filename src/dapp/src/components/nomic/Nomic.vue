@@ -59,6 +59,16 @@
               <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
             </div>
           </div>
+
+          <!-- Send test chat messages with fake API wallet address -->
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(0)">Your Turn</button>
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(1)">Another Player's Turn</button>
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(2)">Create Rule</button>
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(3)">Update Rule</button>
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(4)">Transmute Rule</button>
+            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(5)">Delete Rule</button>
+          </div>
         </section>
 
         <!-- IDE -->
@@ -79,7 +89,7 @@
           </div>
           <Voting
             v-bind:voting-duration="votingDuration"
-            v-on:vote-cast="onVoteCast"
+            v-on:vote-cast="castVote"
             ref="voting"
             v-bind:voting-candidate="votingCandidate"
           ></Voting>
@@ -97,7 +107,8 @@ import {
   Tezos,
   mountProvider,
   getBalance,
-  signMessage
+  signMessage,
+  validateAddress
 } from '../../services/tezProvider';
 
 import { 
@@ -115,6 +126,14 @@ import Voting from '../common/Voting.vue';
 import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
+
+const voteTypes = {
+  YES: 0,
+  NO: 1,
+  ABSTAIN: -1
+}
+
+const TZ_WALLET_PATTERN = "tz(1|2|3)[a-zA-Z0-9]{33}";
 
 export default {
   components: {
@@ -160,8 +179,23 @@ export default {
       yesTotals: 0,
       noTotals: 0,
       abstainTotals: 0
-    }
+    },
+    apiWallet: 'BECjcQFZnoVYu94ns5HMLW7yaDsoJZYbU1zt',
   }),
+  computed: {
+    msgPatterns: function () {
+      return {
+        NEW_TURN_PATTERN: `^It's ${TZ_WALLET_PATTERN}'s turn to propose a rule change$`,
+        CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
+        UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
+        TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
+        DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
+        YES_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
+        NO_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
+        ABSTAIN_VOTE_PATTERN: `${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
+      }
+    }
+  },
   mounted: async function () {
     await this.mountProvider();
     console.log('Nomic mounted', this.network);
@@ -210,7 +244,7 @@ export default {
           try {
             // Request authvotingHandler()
             let tokenResponse = await this.getToken(this.address);
-            if (tokenResponse) {votingHandler()
+            if (tokenResponse) {
               // Valid auth
               this.TwilioToken = tokenResponse.token
               this.TwilioIdentity = tokenResponse.identity;
@@ -344,25 +378,15 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
-        //console.log("Received message from " + message.author, message.body);
-        // Determine message origins
-        let messageType;
-        if (message.author == this.TwilioIdentity) {
-          messageType = "local";
+        apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
+        isSystemMessage = apiWalletPattern.test(message.body); // XXX: FOR TESTING ONLY
+
+        if (isSystemMessage) {
+          // TODO: replace above condition with `message.author == this.apiWallet` when api wallet set up
+          this.onSystemMessage(message);
         } else {
-          messageType = "remote";
+          this.onUserMessage(message);
         }
-
-        // Parse message args
-        let messageOutput = {
-          type: messageType,
-          author: message.author,
-          msg: message.body
-        };
-
-        // Release message to UI
-        this.chatMessages.push(messageOutput);
-        // console.log(this.chatMessages);
       });
 
       /**
@@ -391,6 +415,53 @@ export default {
         // Release message to UI
         this.chatMessages.push(messageOutput);
       });
+    },
+    onSystemMessage: function (message) {
+      const apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
+      const messageBody = message.body.replace(apiWalletPattern, ''); // XXX: FOR TESTING ONLY
+
+      switch (messageBody) {
+        case (messageBody.match(RegExp(this.msgPatterns.CREATE_RULE_PATTERN)) || {}).input:
+        case (messageBody.match(RegExp(this.msgPatterns.UPDATE_RULE_PATTERN)) || {}).input:
+        case (messageBody.match(RegExp(this.msgPatterns.TRANSMUTE_RULE_PATTERN)) || {}).input:
+        case (messageBody.match(RegExp(this.msgPatterns.DELETE_RULE_PATTERN)) || {}).input:
+          console.log('RULE PROPOSAL!');
+          break;
+        case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
+          console.log('NEW TURN!');
+          const playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+          if (playerAddress === this.TwilioIdentity) {
+            console.log("...and it's also YOUR TURN!");
+          }
+          break;
+        case (messageBody.match(RegExp(this.msgPatterns.YES_VOTE_PATTERN)) || {}).input:
+        case (messageBody.match(RegExp(this.msgPatterns.NO_VOTE_PATTERN)) || {}).input:
+        case (messageBody.match(RegExp(this.msgPatterns.ABSTAIN_VOTE_PATTERN)) || {}).input:
+          console.log('VOTE CAST!');
+          break;
+        default:
+          return false;
+      }
+
+      // Parse message args
+      let messageOutput = {
+        type: 'system',
+        msg: messageBody // XXX: replace this with message.body later
+      };
+      // Release message to UI
+      this.chatMessages.push(messageOutput);
+    },
+    onUserMessage: function (message) {
+        let messageType = message.author == this.TwilioIdentity ? 'local' : 'remote';
+        // Parse message args
+        let messageOutput = {
+          type: messageType,
+          author: message.author,
+          msg: message.body
+        };
+
+        // Release message to UI
+        this.chatMessages.push(messageOutput);
     },
     // Submit chat message
     submitChatMessage: function () {
@@ -437,21 +508,21 @@ export default {
 
       this.$refs.voting.promptForVote(this.votingCandidate);
     },
-    onVoteCast: function (voteType) {
+    castVote: function (voteType) {
       let chatMsg = null;
 
       switch (voteType) {
         case 'yes':
           this.currentTotals.yesTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}`;
           break;
         case 'no':
           this.currentTotals.noTotals += 1;
-          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}.`;
+          chatMsg = `${this.TwilioIdentity} voted ${voteType} in round ${this.currentRound}`;
           break;
         case 'abstain':
           this.currentTotals.abstainTotals += 1;
-          chatMsg = `${this.TwilioIdentity} abstained in round ${this.currentRound}.`;
+          chatMsg = `${this.TwilioIdentity} abstained in round ${this.currentRound}`;
           break;
         default:
           return;
@@ -467,6 +538,44 @@ export default {
     },
     ruleProposalHandler: function () {
       this.$refs.proposal.promptForProposal();
+    },
+    testSystemMessage: function (type) {
+      if (!this.chatChannel)
+        return false;
+
+      let msgBody = null;
+
+      switch (type) {
+        case 0:
+          // your turn
+          msgBody = `It's ${this.TwilioIdentity}'s turn to propose a rule change`;
+          break;
+        case 1:
+          // another player's turn
+          msgBody = `It's tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC's turn to propose a rule change`;
+          break;
+        case 2:
+          // another player's turn
+          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed a new rule`;
+          break;
+        case 3:
+          // another player's turn
+          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed an update to rule 12`;
+          break;
+        case 4:
+          // another player's turn
+          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to transmute rule 12`;
+          break;
+        case 5:
+          // another player's turn
+          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to delete rule 12`;
+          break;
+        default:
+          return false;
+      }
+
+      const msgText = `${this.apiWallet}: ` + msgBody;
+      this.chatChannel.sendMessage(msgText)
     }
   }
 };

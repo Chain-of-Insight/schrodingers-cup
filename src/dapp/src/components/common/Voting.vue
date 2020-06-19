@@ -31,7 +31,7 @@
                     type="button"
                     class="btn btn-block btn-lg btn-secondary"
                     data-dismiss="modal"
-                    @click="vote('abstain')"
+                    @click="vote(voteType.YES)"
                     :class="{ 'disabled': votingWindowClosed } "
                     :disabled="votingWindowClosed"
                   >Abstain</button>
@@ -41,7 +41,7 @@
                     <button
                       type="button"
                       class="btn btn-lg btn-danger"
-                      @click="vote('no')"
+                      @click="vote(voteType.NO)"
                       :class="{ 'disabled': votingWindowClosed } "
                       :disabled="votingWindowClosed"
                     >
@@ -50,7 +50,7 @@
                     <button
                       type="button"
                       class="btn btn-lg btn-success"
-                      @click="vote('yes')"
+                      @click="vote(voteType.ABSTAIN)"
                       :class="{ 'disabled': votingWindowClosed } "
                       :disabled="votingWindowClosed"
                     >
@@ -82,7 +82,12 @@
       return {
         secondsLeft: null,
         timer: null,
-        votingCandidate: null
+        votingCandidate: null,
+        voteType: {
+          YES: 0,
+          NO: 1,
+          ABSTAIN: -1
+        }
       }
     },
     mounted: function () {
@@ -153,19 +158,14 @@
         }
       },
       vote: function (type) {
-        switch (type) {
-          case 'yes':
-            // Do something on 'yes' vote
-            break;
-          case 'no':
-            // Do something on 'no' vote
-            break;
-          case 'abstain':
-            // Do something on 'abstain'
-            break;
-          default:
-            console.error("No vote type specified (must be 'yes', 'no' or 'abstain')");
-            return;
+        if (
+          typeof(type) !== 'number' || (
+            type !== this.voteType.YES ||
+            type !== this.voteType.NO ||
+            type !== this.voteType.ABSTAIN
+          )
+        ) {
+          return false;
         }
 
         this.$emit('vote-cast', type);

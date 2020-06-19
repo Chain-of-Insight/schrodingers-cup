@@ -1,5 +1,6 @@
 import { TezBridgeSigner } from '@taquito/tezbridge-signer';
 import { Tezos } from '@taquito/taquito';
+import { validateAddress } from '@taquito/utils';
 
 const mountProvider = function () {
   Tezos.setProvider({
@@ -64,5 +65,6 @@ module.exports = {
   mountProvider: mountProvider,
   getBalance: getBalance,
   getContractInstance: getContractInstance,
-  signMessage: signMessage
+  signMessage: signMessage,
+  validateAddress: validateAddress
 };
