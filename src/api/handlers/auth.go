@@ -109,6 +109,7 @@ func Auth(c echo.Context) error {
 	if len(players) == 0 {
 		// No players exist, create entry
 		CreatePlayerEntry(t, playerAddress, timestamp)
+		CreateGameStartEntry()
 	} else {
 		// Check if player has already logged
 		// If so, their turn order will not be updated
@@ -163,4 +164,30 @@ func PlayerExists(slice []string, entry string) bool {
 		}
 	}
     return false
+}
+
+func CreateGameStartEntry() {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	currentDay := time.Now().Format("2006-01-02")
+	gameStartKey := "game:" + currentDay
+	roundKey := "round:" + currentDay
+	timestamp := time.Now().UnixNano()
+	var round int;
+	round = 0;
+
+	if _, err := conn.Do("SET", gameStartKey, timestamp); err != nil {
+		return
+	}
+
+	if _, err := conn.Do("SET", roundKey, round); err != nil {
+		return
+	}
+
 }
