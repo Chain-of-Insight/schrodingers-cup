@@ -265,7 +265,7 @@ export default {
               this.connectChat();
 
               // Sign login auth message for API
-              // await this.doLoginMessageSigning();
+              await this.doLoginMessageSigning();
             }
           } catch (e) {
             // Auth failed
