@@ -18,6 +18,12 @@ definitions:
     type: object
   handlers.PlayerList:
     properties:
+      currentTurn:
+        type: string
+      nextTurn:
+        type: string
+      nextTurnAt:
+        type: string
       players:
         items:
           type: string

@@ -172,6 +172,15 @@ var doc = `{
         "handlers.PlayerList": {
             "type": "object",
             "properties": {
+                "currentTurn": {
+                    "type": "string"
+                },
+                "nextTurn": {
+                    "type": "string"
+                },
+                "nextTurnAt": {
+                    "type": "string"
+                },
                 "players": {
                     "type": "array",
                     "items": {
