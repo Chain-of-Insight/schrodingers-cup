@@ -173,7 +173,10 @@ var doc = `{
             "type": "object",
             "properties": {
                 "players": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

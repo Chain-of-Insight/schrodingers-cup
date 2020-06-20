@@ -19,7 +19,9 @@ definitions:
   handlers.PlayerList:
     properties:
       players:
-        type: string
+        items:
+          type: string
+        type: array
     type: object
   handlers.TestInput:
     properties:
