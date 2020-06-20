@@ -148,8 +148,8 @@ section.chat input {
 }
 #ide-saved,
 .executed.clear-output {
-  width: 300px;
-  max-width: 300px;
+  /* width: 300px; */
+  /* max-width: 300px; */
   margin: 0;
 }
 .executed.clear-output {

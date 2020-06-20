@@ -33,109 +33,99 @@
       >Queued</a>
     </nav>
     <div class="tab-content border rounded-bottom border-top-0 flex-grow-1">
+      <!-- CURRENT RULES -->
       <div
         id="rules-current"
-        class="list-group tab-pane fade show active"
+        class="list-group list-group-flush tab-pane fade show active"
         role="tab-panel"
       >
         <p
           class="list-group-item border-0 text-muted"
-          v-if="gameRuleSets.length === 0"
+          v-if="currentRules.length === 0"
         >No current rule sets loaded...</p>
-        <!-- Current Rule Sets -->
         <a
           class="ruleset btn btn-outline-success list-group-item list-group-item-action"
           role="button"
           tabindex="0"
           v-bind:class="{
             'active':
-              selectedRuleSet.type === ruleSetTypes.CURRENT &&
-              selectedRuleSet.index === index
+              selectedRule.type === ruleSetTypes.CURRENT &&
+              selectedRule.index === index
           }"
           v-bind:key="index"
-          v-for="(ruleSet, index) in gameRuleSets"
-          v-on:click="loadRuleSet(index, ruleSetTypes.CURRENT)"
+          v-for="(ruleSet, index) in currentRules"
+          v-on:click="selectRule(index, ruleSetTypes.CURRENT)"
           style="cursor:pointer;"
         >
           <span>{{index + 1}}. {{ ruleSet.name }}</span>
         </a>
       </div>
+      <!-- PLAYER-SAVED RULES -->
       <div
         id="rules-saved"
-        class="list-group tab-pane fade"
+        class="list-group list-group-flush tab-pane fade"
         role="tab-panel"
       >
         <p
           class="list-group-item border-0 text-muted"
-          v-if="savedRuleSets.length === 0"
+          v-if="savedRules.length === 0"
         >No saved rule sets...</p>
         <p
-          class="list-group-item border-0"
-          v-if="queuedRuleSets.length > 0 && unQueuedRuleSets.length === 0"
+          class="list-group-item border-0 text-muted"
+          v-if="queuedRules.length > 0 && unQueuedRules.length === 0"
         >All of your saved rule sets are queued!</p>
-        <!-- Saved Rule Sets -->
-        <div
-          class="ruleset btn-group"
-          role="group"
+        <a
+          class="ruleset btn btn-outline-success list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          role="button"
+          tabindex="0"
+          v-bind:class="{
+            'active':
+              selectedRule.type === ruleSetTypes.SAVED &&
+              selectedRule.index === savedIndex
+          }"
+          style="cursor:pointer;"
           v-bind:key="index"
-          v-for="(savedIndex, index) in unQueuedRuleSets"
-          v-on:click="loadRuleSet(savedIndex, ruleSetTypes.SAVED)"
+          v-for="(savedIndex, index) in unQueuedRules"
+          v-on:click="selectRule(savedIndex, ruleSetTypes.SAVED)"
         >
-          <a
-            class="btn btn-outline-success list-group-item list-group-item-action"
-            role="button"
-            tabindex="0"
-            v-bind:class="{
-              'active':
-                selectedRuleSet.type === ruleSetTypes.SAVED &&
-                selectedRuleSet.index === savedIndex
-            }"
-            style="cursor:pointer;"
-          >
-            <span>{{index + 1}}. {{ savedRuleSets[savedIndex].name }}</span>
-          </a>
+          <span>{{index + 1}}. {{ savedRules[savedIndex].name }}</span>
           <button
             class="btn btn-outline-warning"
-            @click="queueRuleSet(savedIndex)"
+            @click="queueRule(savedIndex)"
           ><small>Queue</small></button>
-        </div>
+        </a>
       </div>
+      <!-- QUEUED RULES -->
       <div
         id="rules-queued"
-        class="list-group tab-pane fade"
+        class="list-group list-group-flush tab-pane fade"
         role="tab-panel"
       >
-        <!-- Queued Rule Sets -->
         <p
           class="list-group-item border-0 text-muted"
-          v-if="queuedRuleSets.length === 0"
+          v-if="queuedRules.length === 0"
         >No queued rule sets...</p>
-        <div
-          class="ruleset btn-group"
-          role="group"
+        <a
+          class="ruleset btn btn-outline-success list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          role="button"
+          tabindex="0"
+          v-bind:class="{
+            'active':
+              selectedRule.type === ruleSetTypes.QUEUED &&
+              selectedRule.index === savedIndex
+          }"
+          style="cursor:pointer;"
           v-bind:key="index"
-          v-for="(savedIndex, index) in queuedRuleSets"
-          v-on:click="loadRuleSet(savedIndex, ruleSetTypes.QUEUED)"
+          v-for="(savedIndex, index) in queuedRules"
+          v-on:click="selectRule(savedIndex, ruleSetTypes.QUEUED)"
         >
-          <a
-            class="btn btn-outline-success list-group-item list-group-item-action"
-            role="button"
-            tabindex="0"
-            v-bind:class="{
-              'active':
-                selectedRuleSet.type === ruleSetTypes.QUEUED &&
-                selectedRuleSet.index === savedIndex
-            }"
-            style="cursor:pointer;"
-          >
-            <span>{{index + 1}}. {{ savedRuleSets[savedIndex].name }}</span>
-          </a>
+          <span>{{index + 1}}. {{ savedRules[savedIndex].name }}</span>
           <button
             class="btn btn-outline-warning"
-            @click="unQueueRuleSet(savedIndex, index)"
+            @click="unQueueRule(savedIndex, index)"
             style="word-break: keep-all;"
           ><small>Un&#8209;queue</small></button>
-        </div>
+        </a>
       </div>
     </div>
   </div>
@@ -149,34 +139,67 @@
   }
 
   export default {
+    props: {
+      currentRules: {
+        // required: true,
+        type: Array,
+        default: () => []
+      },
+      savedRules: {
+        // required: true,
+        type: Array,
+        default: () => []
+      }
+    },
     data: function () {
       return {
         currentPane: ruleSetTypes.CURRENT,
         ruleSetTypes: ruleSetTypes,
-        savedRuleSets: [],
-        gameRuleSets: [],
-        selectedRuleSet: {
+        selectedRule: {
           type: null,
           index: null
         }
       }
     },
     computed: {
-      unQueuedRuleSets: function () {
-        return this.savedRuleSets;
-      },
-      queuedRuleSets: function () {
-        return this.savedRuleSets;
-      }
+      unQueuedRules: function () {
+      const ruleSetEntries = Array.from(this.savedRules.entries());
+      return ruleSetEntries
+        .filter(([index, ruleSet]) => !ruleSet.hasOwnProperty('queued'))
+        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
+        .map(([index, ruleSet]) => index);
+    },
+    queuedRules: function () {
+      const ruleSetEntries = Array.from(this.savedRules.entries());
+      return ruleSetEntries
+        .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
+        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
+        .map(([index, ruleSet]) => index);
+    }
     },
     methods: {
-      loadRuleSet: function (index, type) {
+      selectRule: function (savedIndex, ruleType) {
+        if (
+          typeof(savedIndex) !== 'number' ||
+          !Object.values(ruleSetTypes).includes(ruleType)
+        ) {
+          return false;
+        }
+
+        this.selectedRule = {
+          type: ruleType,
+          index: savedIndex
+        }
+
+        this.$emit('select-rule', this.selectedRule);
+      },
+      loadRule: function (index, type) {
         // ...
       },
-      queueRuleSet: async function (index) {
+      queueRule: async function (index) {
         // ...
       },
-      unQueueRuleSet: async function (savedIndex, queuedIndex) {
+      unQueueRule: async function (savedIndex, queuedIndex) {
         // ...
       }
     }
