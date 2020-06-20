@@ -17,6 +17,7 @@
               :id="changeType + '-rule'"
               :value="changeType"
               v-model="selectedType"
+              @click="selectChangeType(changeType)"
             ><h4 class="m-0">{{ typeHeadings[changeType] }}</h4>
           </label>
         </div>
@@ -46,7 +47,12 @@
     },
     watch: {
       selectedType: function (value) {
-        this.$emit('select-type', value);
+        this.selectChangeType(value);
+      }
+    },
+    methods: {
+      selectChangeType: function (changeType) {
+        this.$emit('select-type', changeType);
       }
     }
   }
@@ -56,5 +62,11 @@
   .active .oi-check {
     width: 0%;
     display: block !important;
+    position: absolute;
+    top: 35%;
+  }
+
+  .btn {
+    position: relative;
   }
 </style>
