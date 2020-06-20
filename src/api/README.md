@@ -10,6 +10,9 @@
 go get github.com/oxequa/realize
 ```
 
+### Install Redis
+See: https://redis.io/topics/quickstart
+
 ### Setup ENV file
 
 ```
@@ -17,6 +20,11 @@ cp env.example .env
 ```
 
 Edit ENV file as necessary to set API port and NOMSU binary location
+
+### Start Redis daemon
+```
+$ redis-server
+```
 
 ### Run local server
 
