@@ -30,14 +30,16 @@
 
         <!-- Player Chat -->
         <section>
-          <div id="messages" class="message-container">
+          <div ref="chatWindow" id="messages" class="message-container">
             <!-- Chat Messages -->
-            <div v-for="(message, index) in chatMessages" v-bind:key="index">
-              <p v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']">
-                <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
-                <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
-              </p>
-            </div>
+            <p
+              v-for="(message, index) in chatMessages"
+              v-bind:key="index"
+              v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']"
+            >
+              <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
+              <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
+            </p>
           </div>
 
           <!-- Chat Form Input -->
@@ -396,6 +398,15 @@ export default {
         } else {
           this.onUserMessage(message);
         }
+
+        // auto-scroll to bottom to show new message
+        // TODO: fix this so it accommodate's the extra msg's worth of space at bottom
+        this.$nextTick(function () {
+          const messageWindow = this.$refs.chatWindow
+          if (messageWindow && messageWindow.children.length) {
+            messageWindow.scrollTop = messageWindow.scrollHeight - messageWindow.clientHeight;
+          }
+        })
       });
 
       /**
