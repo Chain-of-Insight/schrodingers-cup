@@ -226,7 +226,7 @@ export default {
           console.log('TwilioChat', this.TwilioChat);
           // Connect to chat room
           this.connectChat();
-          // await this.doLoginMessageSigning();
+          await this.doLoginMessageSigning();
         }
       } catch (e) {
         // Auth failed
