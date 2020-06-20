@@ -22,7 +22,7 @@
             <button
               v-if="currentView === 'RuleSelect'"
               type="button"
-              class="btn btn-primary float-left"
+              class="btn btn-info float-left"
               @click="currentView = 'ChangeType'"
             >Back</button>
             <button
@@ -61,7 +61,7 @@ export default {
   },
   data: () => ({
     currentView: 'ChangeType',
-    changeType: ruleChangeTypes.UPDATE,
+    changeType: null,
     typeHeadings: {
       [ruleChangeTypes.CREATE]: 'Create a New Rule',
       [ruleChangeTypes.UPDATE]: 'Update an Existing Rule',
@@ -69,9 +69,16 @@ export default {
       [ruleChangeTypes.DELETE]: 'Delete a Rule'
     }
   }),
+  mounted: function () {
+    $('#proposal-modal').on('hidden.bs.modal', this.resetModal.bind(this));
+  },
   methods: {
     promptForProposal: function () {
       $('#proposal-modal').modal('show');
+    },
+    resetModal: function () {
+      this.currentView = 'ChangeType';
+      this.changeType = null;
     },
     selectChangeType: function (changeType) {
       const validType = Object.values(ruleChangeTypes).includes(changeType);
@@ -89,10 +96,7 @@ export default {
 </script>
 
 <style scoped>
-  .slide-enter-active {
-    transition: all .3s ease;
-  }
-  .slide-leave-active {
+  .slide-enter-active, .slide-leave-active {
     transition: all .3s ease;
   }
   .slide-enter, .slide-leave-to
