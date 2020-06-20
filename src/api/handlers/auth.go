@@ -5,13 +5,14 @@ import (
 	"encoding/hex"
 	"net/http"
 	"time"
-	"os"
 	"strings"
+	"strconv"
 
 	"github.com/anchorageoss/tezosprotocol/v2"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+	"github.com/gomodule/redigo/redis"
 
 	"nomsu-api/tezos"
 )
@@ -26,6 +27,12 @@ type AuthInput struct {
 type AuthResult struct {
 	JWT string `json:"token"`
 }
+
+var (
+	conn redis.Conn
+	err error
+	reply interface{}
+)
 
 // @description Authenticate a user with a signed tezos message
 // @router /auth [post]
@@ -78,15 +85,39 @@ func Auth(c echo.Context) error {
 		return err
 	}
 
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
 	// Handle player list (defines turn order)
 	currentDay := time.Now().Format("2006-01-02")
-	playerListKey := "PLAYERS_" + currentDay
-	playerList := os.Getenv(playerListKey)
+	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+	playersListKey := "players:" + currentDay
 	playerAddress := input.Address
-	playerAttendanceKey := playerAddress + ","
-	// Verify attendance and handle storage as required
-	if !strings.Contains(playerList, playerAddress) {
-		os.Setenv(playerListKey, playerList + playerAttendanceKey)
+	
+	// Load existing logged in players
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return err
+	}
+
+	// Find or create player Redis entry
+	if len(players) == 0 {
+		// No players exist, create entry
+		CreatePlayerEntry(t, playerAddress, timestamp)
+		CreateGameStartEntry()
+	} else {
+		// Check if player has already logged
+		// If so, their turn order will not be updated
+		playerExists := PlayerExists(players, playerAddress)
+		if !playerExists {
+			// Player turn order does not exist, create entry
+			CreatePlayerEntry(t, playerAddress, timestamp)
+		}
 	}
 
 	r := &AuthResult{JWT: t}
@@ -97,4 +128,66 @@ func msgToTime(msg string) time.Time {
 	mBytes, _ := hex.DecodeString(msg)
 	mInt := binary.LittleEndian.Uint64(mBytes)
 	return time.Unix(int64(mInt/1000), 0)
+}
+
+func CreatePlayerEntry(jwt string, playerAddress string, timestamp string) {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	currentDay := time.Now().Format("2006-01-02")
+	playersListKey := "players:" + currentDay
+
+	var player struct {
+		JWT  		string `redis:"JWT"`
+		tzid 		string `redis:"tzid"`
+		timestamp 	string `redis:"timestamp"`
+	}
+
+	player.JWT = jwt
+	player.tzid = playerAddress
+	player.timestamp = timestamp
+	
+	if _, err := conn.Do("LPUSH", playersListKey, player); err != nil {
+		return
+	}
+}
+
+func PlayerExists(slice []string, entry string) bool {
+	for _, s := range slice {
+		if strings.Contains(s, entry) {
+			return true
+		}
+	}
+    return false
+}
+
+func CreateGameStartEntry() {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return
+	}
+
+	defer conn.Close()
+
+	currentDay := time.Now().Format("2006-01-02")
+	gameStartKey := "game:" + currentDay
+	roundKey := "round:" + currentDay
+	timestamp := time.Now().UnixNano()
+	var round int;
+	round = 0;
+
+	if _, err := conn.Do("SET", gameStartKey, timestamp); err != nil {
+		return
+	}
+
+	if _, err := conn.Do("SET", roundKey, round); err != nil {
+		return
+	}
+
 }

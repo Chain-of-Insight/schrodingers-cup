@@ -12,6 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/spec v0.19.8 // indirect
 	github.com/go-openapi/swag v0.19.9 // indirect
+	github.com/gomodule/redigo v1.8.2
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/mailru/easyjson v0.7.1 // indirect
