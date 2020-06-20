@@ -63,7 +63,7 @@
           <!-- Send test chat messages with fake API wallet address -->
           <p class="h5 mt-3">Testing:</p>
           <div class="btn-group mt-1">
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(0)">Your Turn</button>
+            <button class="btn btn-outline-primary" type="button" @click="testSystemMessage(0)">Your Turn</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(1)">Another Player's Turn</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(2)">Create Rule</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(3)">Update Rule</button>
@@ -89,13 +89,20 @@
             </button> -->
           </div>
           <Voting
+            v-if="chatChannelJoined"
             v-bind:voting-duration="votingDuration"
             v-on:vote-cast="castVote"
             ref="voting"
             v-bind:voting-candidate="votingCandidate"
           ></Voting>
-          <RuleProposal ref="proposal"></RuleProposal>
-          <Practice :activeGame="true" v-if="showEditor"></Practice>
+          <RuleProposal
+            v-if="chatChannelJoined"
+            ref="proposal"
+          ></RuleProposal>
+          <Practice
+            :activeGame="true"
+            v-if="showEditor"
+          ></Practice>
         </div>
       </template>
     </div>
@@ -122,7 +129,7 @@ import { PerformAuth } from '../../services/apiProvider';
 
 // Child components
 import Notification from '../common/Notifications.vue';
-import RuleProposal from '../common/RuleProposal.vue';
+import RuleProposal from '../rule-proposal/RuleProposal.vue';
 import Voting from '../common/Voting.vue';
 import Totals from '../common/Totals.vue';
 // IDE Component
