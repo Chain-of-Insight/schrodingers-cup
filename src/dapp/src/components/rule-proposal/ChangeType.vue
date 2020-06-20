@@ -27,35 +27,36 @@
 </template>
 
 <script>
-  const ruleChangeTypes = {
-    CREATE: 'create',
-    UPDATE: 'update',
-    TRANSMUTE: 'transmute',
-    DELETE: 'delete',
-  }
 
-  export default {
-    props: {
-      changeType: String,
-      typeHeadings: Object
-    },
-    data: function () {
-      return {
-        ruleChangeTypes: ruleChangeTypes,
-        selectedType: this.changeType,
-      }
-    },
-    watch: {
-      selectedType: function (value) {
-        this.selectChangeType(value);
-      }
-    },
-    methods: {
-      selectChangeType: function (changeType) {
-        this.$emit('select-type', changeType);
-      }
+const ruleChangeTypes = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  TRANSMUTE: 'transmute',
+  DELETE: 'delete',
+}
+
+export default {
+  props: {
+    changeType: String,
+    typeHeadings: Object
+  },
+  data: function () {
+    return {
+      ruleChangeTypes: ruleChangeTypes,
+      selectedType: this.changeType,
+    }
+  },
+  watch: {
+    selectedType: function (value) {
+      this.selectChangeType(value);
+    }
+  },
+  methods: {
+    selectChangeType: function (changeType) {
+      this.$emit('select-type', changeType);
     }
   }
+}
 </script>
 
 <style scoped>

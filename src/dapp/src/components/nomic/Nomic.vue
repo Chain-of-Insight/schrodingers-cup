@@ -400,7 +400,6 @@ export default {
         }
 
         // auto-scroll to bottom to show new message
-        // TODO: fix this so it accommodate's the extra msg's worth of space at bottom
         this.$nextTick(function () {
           const messageWindow = this.$refs.chatWindow
           if (messageWindow && messageWindow.children.length) {

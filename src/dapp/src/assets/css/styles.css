@@ -138,9 +138,9 @@ section.chat input {
 }
 #rules-current,
 #rules-saved {
-  height: calc(50vh + 0.5rem);
+  /* height: calc(50vh + 0.5rem); */
   overflow-y: auto;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
 }
 .execute {
   margin: 0.5rem;
