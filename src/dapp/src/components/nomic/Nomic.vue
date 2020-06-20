@@ -61,7 +61,8 @@
           </div>
 
           <!-- Send test chat messages with fake API wallet address -->
-          <div class="btn-group">
+          <p class="h5 mt-3">Testing:</p>
+          <div class="btn-group mt-1">
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(0)">Your Turn</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(1)">Another Player's Turn</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(2)">Create Rule</button>
@@ -83,9 +84,9 @@
               Test Voting
             </button> -->
             <!-- Test Rule Proposal -->
-            <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
+            <!-- <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
               Test Rule Proposal
-            </button>
+            </button> -->
           </div>
           <Voting
             v-bind:voting-duration="votingDuration"
