@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"time"
 	"strconv"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/gomodule/redigo/redis"
+	"github.com/spf13/viper"
 )
 
 // XXX TODO: Set turn duration from Tezos
@@ -72,10 +74,17 @@ func SubmitProposal(c echo.Context) error {
 	CreateRuleEntry(tzid, input.Code, input.ProposalType, input.RuleType, input.RuleIndex, round)
 
 	// Update chat
-	// TODO: this
+	message := tzid + " proposed a rule in round " + strconv.Itoa(round)
+	notification := releaseNotification(message)
+	var success bool;
+	if notification == false {
+		success = false
+	} else {
+		success = true
+	}
 
 	r := &ProposalResult{
-		Success: true,
+		Success: success,
 		Round: round,
 	}
 
@@ -180,6 +189,49 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	}
 }
 
-// func releaseNotification(notification string) {
-// 	// 
-// }
+func releaseNotification(notification string) bool {
+	viper.SetConfigFile(".env")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+	  return false
+	}
+
+	serviceId, ok := viper.Get("TWILIO_CHAT_SERVICE_SID").(string)
+	if !ok {
+		return false
+	}
+
+	channelId, ok := viper.Get("TWILIO_CHANNEL").(string)
+	if !ok {
+		return false
+	}
+
+	accountSid, ok := viper.Get("TWILIO_ACCOUNT_SID").(string)
+	if !ok {
+		return false
+	}
+
+	authToken, ok := viper.Get("TWILIO_AUTH_TOKEN").(string)
+	if !ok {
+		return false
+	}
+
+	body := strings.NewReader(`Body=` + notification)
+
+	req, err := http.NewRequest("POST", "https://chat.twilio.com/v2/Services/" + serviceId + "/Channels/" + channelId + "/Messages", body)
+	if err != nil {
+		return false
+	}
+	req.SetBasicAuth(accountSid, authToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	// Et voila
+	return true
+}
