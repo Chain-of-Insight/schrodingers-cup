@@ -27,19 +27,20 @@
       <!-- Connected -->
       <template v-else>
         <div class="row">
-          
-          <RuleSetList
-            :current-rules="ruleSetLists.current"
-            :saved-rules="ruleSetLists.saved"
-            :un-queued-rules="unQueuedRules"
-            :queued-rules="queuedRules"
-            v-on:select-rule="loadRule"
-            v-on:queue-rule="queueRule"
-            v-on:unqueue-rule="unQueueRule"
-          ></RuleSetList>
+          <div class="col-4">
+            <RuleSetList
+              :current-rules="ruleSetLists.current"
+              :saved-rules="ruleSetLists.saved"
+              :un-queued-rules="unQueuedRules"
+              :queued-rules="queuedRules"
+              v-on:select-rule="loadRule"
+              v-on:queue-rule="queueRule"
+              v-on:unqueue-rule="unQueueRule"
+            ></RuleSetList>
+          </div>
 
           <!-- IDE Input -->
-          <div id="ide-input" class="ide-pane col">
+          <div id="ide-input" class="ide-pane col-8">
             <label>
               <strong>Rule Editor:</strong>
             </label>
