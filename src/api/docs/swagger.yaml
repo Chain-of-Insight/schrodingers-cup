@@ -31,6 +31,9 @@ definitions:
     type: object
   handlers.ProposalResult:
     properties:
+      message:
+        description: '"OK!" or error message'
+        type: string
       round:
         description: Updated round value
         type: integer
@@ -40,6 +43,7 @@ definitions:
   handlers.RuleProposal:
     properties:
       code:
+        description: Nomsu code
         type: string
       index:
         description: rule index of the existing rule

@@ -23,10 +23,11 @@ const TRANSMUTE = "transmute"
 type ProposalResult struct {
 	Success bool `json:"success"`
 	Round	int	`json:"round"` // Updated round value
+	Message string `json:"message"` // "OK!" or error message
 }
 
 type RuleProposal struct {
-	Code 			string `json:"code" form:"code"`
+	Code 			string `json:"code" form:"code"`// Nomsu code
 	ProposalType	string `json:"type" form:"type"`// Update, Create, Delete, Transmute
 	RuleType		string `json:"kind" form:"kind"`// Mutable / Immutable
 	RuleIndex		int `json:"index" form:"index"`	// rule index of the existing rule 
@@ -48,6 +49,14 @@ func SubmitProposal(c echo.Context) error {
 	currentDay := time.Now().Format("2006-01-02")
 	roundKey := "round:" + currentDay
 
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
 	// Current round
 	round, err := redis.Int(conn.Do("GET", roundKey))
 	if err != nil {
@@ -60,6 +69,49 @@ func SubmitProposal(c echo.Context) error {
 	} else {
 		round += 1
 	}
+	
+	// Load existing logged in players
+	playersListKey := "players:" + currentDay
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return err
+	}
+
+	var playerList []string;
+	var times []string;
+
+	// Return empty if no players exist in the game session
+	if len(players) == 0 {
+		r := &PlayerList{
+			Players: playerList, 
+			Turn: "", 
+			NextTurn: "", 
+			TurnRemaining: ""}
+
+		return c.JSON(http.StatusOK, r)
+	}
+
+	// Build player and login times lists
+	for _, s := range players {
+		split := strings.Split(s, " ")
+		address := split[1]
+		time := split[2]
+		time_trimmed := strings.TrimRight(time, "}")
+		playerList = append(playerList, address)
+		times = append(times, time_trimmed)
+	}
+	playerTurnAddress := userCan(playerList, times)
+
+	if playerTurnAddress != tzid {
+		r := &ProposalResult{
+			Success: false,
+			Round: round,
+			Message: "Unauthorized",
+		}
+	
+		return c.JSON(http.StatusOK, r)
+	}
+
 	// Update round storage (Redis)
 	if _, err := conn.Do("SET", roundKey, round); err != nil {
 		return err
@@ -77,15 +129,19 @@ func SubmitProposal(c echo.Context) error {
 	message := tzid + " proposed a rule in round " + strconv.Itoa(round)
 	notification := releaseNotification(message)
 	var success bool;
+	var statusMsg string;
 	if notification == false {
 		success = false
+		statusMsg = "Error releasing notification"
 	} else {
 		success = true
+		statusMsg = "OK!"
 	}
 
 	r := &ProposalResult{
 		Success: success,
 		Round: round,
+		Message: statusMsg,
 	}
 
 	return c.JSON(http.StatusOK, r)
@@ -234,4 +290,49 @@ func releaseNotification(notification string) bool {
 
 	// Et voila
 	return true
+}
+
+func userCan(players []string, times []string) string {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return "Loading database failed"
+	}
+
+	defer conn.Close()
+
+	currentDay := time.Now().Format("2006-01-02")
+	roundKey := "round:" + currentDay
+	var turn string;
+
+	// Load current round reference
+	round, err := redis.Int(conn.Do("GET", roundKey))
+	if err != nil {
+		return "Get round failed"
+	}
+
+	totalPlayers := len(players)
+	
+	if round == 0 {
+		turn = players[0]
+		return turn
+	} else {
+		// No wrap
+		if (round < totalPlayers) {
+			turn = players[round]
+		// Wrap last
+		} else if (round == totalPlayers) {
+			turn = players[0]
+		// Calc. wrap
+		} else {
+			wrap_i := round % totalPlayers;
+			if (wrap_i == 0) {
+				turn = players[totalPlayers - 1]
+			} else {
+				turn = players[wrap_i - 1]
+			}
+		}
+
+		return turn
+	}
 }

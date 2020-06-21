@@ -212,6 +212,10 @@ var doc = `{
         "handlers.ProposalResult": {
             "type": "object",
             "properties": {
+                "message": {
+                    "description": "\"OK!\" or error message",
+                    "type": "string"
+                },
                 "round": {
                     "description": "Updated round value",
                     "type": "integer"
@@ -225,6 +229,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "description": "Nomsu code",
                     "type": "string"
                 },
                 "index": {

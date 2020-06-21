@@ -196,6 +196,10 @@
         "handlers.ProposalResult": {
             "type": "object",
             "properties": {
+                "message": {
+                    "description": "\"OK!\" or error message",
+                    "type": "string"
+                },
                 "round": {
                     "description": "Updated round value",
                     "type": "integer"
@@ -209,6 +213,7 @@
             "type": "object",
             "properties": {
                 "code": {
+                    "description": "Nomsu code",
                     "type": "string"
                 },
                 "index": {
