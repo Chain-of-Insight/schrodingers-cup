@@ -36,9 +36,12 @@
                 }
             }
         },
-        "/game/settle": {
+        "/game/propose": {
             "post": {
-                "description": "Settle game window",
+                "description": "Submit a new rule proposal",
+                "produces": [
+                    "application/json"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -46,8 +49,25 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "Proposed rule",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RuleProposal"
+                        }
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProposalResult"
+                        }
+                    }
+                }
             }
         },
         "/game/vote": {
@@ -170,6 +190,38 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "handlers.ProposalResult": {
+            "type": "object",
+            "properties": {
+                "round": {
+                    "description": "Updated round value",
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.RuleProposal": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "index": {
+                    "description": "rule index of the existing rule",
+                    "type": "integer"
+                },
+                "kind": {
+                    "description": "Mutable / Immutable",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Update, Create, Delete, Transmute",
+                    "type": "string"
                 }
             }
         },
