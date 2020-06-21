@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="h-100">
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -7,7 +7,7 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <div class="container main">
+    <div class="container py-4">
       <h1>{{ title }}</h1>
       <h5 class="mb-4">{{ subtitle }}</h5>
 

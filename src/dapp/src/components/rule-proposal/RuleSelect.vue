@@ -2,7 +2,13 @@
   <div class="container-fluid p-0 h-100">
     <div class="row h-100">
       <div class="col" v-if="changeType !== ruleChangeTypes.TRANSMUTE">
-        <component :is="ideView"></component>
+        <component
+          :is="ideView"
+          :active-lists="{
+            [ruleSetTypes.QUEUED]: true
+          }"
+          :default-pane="ruleSetTypes.QUEUED"
+        ></component>
       </div>
       <div class="col" v-else>
         <h2>{{ typeHeadings[changeType] }}</h2>
@@ -21,6 +27,12 @@ const ruleChangeTypes = {
   DELETE: 'delete',
 }
 
+const ruleSetTypes = {
+  SAVED: 'SAVED',
+  CURRENT: 'CURRENT',
+  QUEUED: 'QUEUED'
+}
+
 export default {
   components: {
     RuleSetList
@@ -32,7 +44,8 @@ export default {
   data: function () {
     return {
       ideView: 'RuleSetList',
-      ruleChangeTypes: ruleChangeTypes
+      ruleChangeTypes: ruleChangeTypes,
+      ruleSetTypes: ruleSetTypes
     }
   }
 }

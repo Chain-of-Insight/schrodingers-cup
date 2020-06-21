@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="h-100">
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -8,53 +8,82 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <div :class="{ 'p-0': activeGame }" class="container main">
-      <template v-if="!activeGame">
-        <h1>{{ title }}</h1>
-        <h5 class="mb-4">{{ subtitle }}</h5>
-      </template>
+    <div :class="{
+      'p-0': activeGame,
+      'pt-3': activeGame,
+      'py-4': !activeGame
+    }" class="container">
+      <div class="row" v-if="!activeGame">
+        <div class="col">
+          <h1>{{ title }}</h1>
+          <h5 class="mb-4">{{ subtitle }}</h5>
+        </div>
+      </div>
 
       <!-- Not Connected -->
-      <template v-if="!connected">
-        <ul class="list-unstyled">
-          <li @click="connectUser()">
-            <button class="btn btn-primary btn-connect">Login With Tezos</button>
-          </li>
-        </ul>
-        <p>Connect your Tezos wallet to get started</p>
-      </template>
+      <div class="row" v-if="!connected">
+        <div class="col">
+          <ul class="list-unstyled">
+            <li @click="connectUser()">
+              <button class="btn btn-primary btn-connect">Login With Tezos</button>
+            </li>
+          </ul>
+          <p>Connect your Tezos wallet to get started</p>
+        </div>
+      </div>
 
       <!-- Connected -->
       <template v-else>
         <div class="row">
-          <div class="col-4">
-            <RuleSetList
-              :current-rules="ruleSetLists.current"
-              :saved-rules="ruleSetLists.saved"
-              :un-queued-rules="unQueuedRules"
-              :queued-rules="queuedRules"
-              v-on:select-rule="loadRule"
-              v-on:queue-rule="queueRule"
-              v-on:unqueue-rule="unQueueRule"
-            ></RuleSetList>
+
+          <!-- Rule Lists -->
+          <div class="col-4 d-flex flex-column">
+            <div class="row">
+              <div class="col">
+                <label>
+                  <strong>Rules:</strong>
+                </label>
+              </div>
+            </div>
+            <div class="row flex-grow-1">
+              <div class="col">
+                <RuleSetList
+                  :current-rules="ruleSetLists.current"
+                  :saved-rules="ruleSetLists.saved"
+                  :un-queued-rules="unQueuedRules"
+                  :queued-rules="queuedRules"
+                  v-on:select-rule="loadRule"
+                  v-on:queue-rule="queueRule"
+                  v-on:unqueue-rule="unQueueRule"
+                ></RuleSetList>
+              </div>
+            </div>
           </div>
 
-          <!-- IDE Input -->
-          <div id="ide-input" class="ide-pane col-8">
-            <label>
-              <strong>Rule Editor:</strong>
-            </label>
-            <div class="row mb-2">
+          <!-- IDE Editor -->
+          <div class="col-8">
+            <div class="row">
               <div class="col">
-                <codemirror
-                  v-model="ide.input"
-                  :options="ide.options"
-                  @input="clearEditorOutput()"
-                ></codemirror>
+                <label>
+                  <strong>Rule Editor:</strong>
+                </label>
               </div>
             </div>
             <div class="row">
-              <div class="col">
+              <div id="ide-input" class="ide-pane col h-100">
+                <div class="row">
+                  <div class="col">
+                    <codemirror
+                      v-model="ide.input"
+                      :options="ide.options"
+                      @input="clearEditorOutput()"
+                    ></codemirror>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col pt-2">
                 <!-- Compile Nomic -->
                 <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
                 
@@ -72,19 +101,32 @@
               </div>
             </div>
           </div>
+
         </div>
         <div class="row">
-          <!-- IDE Output -->
-          <div id="ide-output" class="ide-pane col">
-            <label>
-              <strong>Output:</strong>
-            </label>
-            <div class="ide-output-wrapper row no-gutters" v-if="ide.output">
-              <div class="executed clear-output">
-                <span class="clear" @click="clearEditorOutput()">clear output</span>
+          <div class="col pt-3">
+            <div class="row">
+              <div class="col">
+                <label>
+                  <strong>Output:</strong>
+                </label>
               </div>
-              <div class="term-container-wrapper">
-                <div class="term-container" v-html="ide.output"></div>
+            </div>
+            <div class="row" v-if="ide.output">
+              <!-- IDE Output -->
+              <div id="ide-output" class="ide-pane col">
+                <div class="row">
+                  <div class="col">
+                    <div class="executed clear-output">
+                      <span class="clear" @click="clearEditorOutput()">Clear Output</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="term-container" v-html="ide.output"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -160,6 +202,7 @@
     </div>
 
   </div>
+
 </template>
 
 
@@ -621,10 +664,8 @@ export default {
     color: white;
     border: none;
   }
-  .container.main {
-    margin: auto;
-    margin-top: 2rem;
-    /* margin-bottom: 2rem;
-    max-width: 1175px; */
+
+  .container {
+    min-height: 100%;
   }
 </style>
