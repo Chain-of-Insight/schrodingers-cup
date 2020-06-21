@@ -1,23 +1,6 @@
 <template>
   <!-- IDE Saved Rule Sets -->
   <div id="ide-saved" class="ide-pane h-100 d-flex flex-column">
-    <!-- <nav class="nav nav-tabs">
-      <a
-        class="nav-link"
-        @click="currentPane = ruleSetTypes.CURRENT"
-        v-bind:class="{ active: currentPane === ruleSetTypes.CURRENT }"
-      >Current</a>
-      <a
-        class="nav-link"
-        @click="currentPane = ruleSetTypes.SAVED"
-        v-bind:class="{ active: currentPane === ruleSetTypes.SAVED }"
-      >Saved</a>
-      <a
-        class="nav-link"
-        @click="currentPane = ruleSetTypes.QUEUED"
-        v-bind:class="{ active: currentPane === ruleSetTypes.QUEUED }"
-      >Queued</a>
-    </nav> -->
     <nav class="nav nav-tabs">
       <a
         class="nav-link active"
@@ -133,7 +116,7 @@
 
 <script>
   const ruleSetTypes = {
-    SAVED: 'ACTIVE',
+    SAVED: 'SAVED',
     CURRENT: 'CURRENT',
     QUEUED: 'QUEUED'
   }
@@ -141,12 +124,18 @@
   export default {
     props: {
       currentRules: {
-        // required: true,
         type: Array,
         default: () => []
       },
       savedRules: {
-        // required: true,
+        type: Array,
+        default: () => []
+      },
+      unQueuedRules: {
+        type: Array,
+        default: () => []
+      },
+      queuedRules: {
         type: Array,
         default: () => []
       }
@@ -161,22 +150,6 @@
         }
       }
     },
-    computed: {
-      unQueuedRules: function () {
-      const ruleSetEntries = Array.from(this.savedRules.entries());
-      return ruleSetEntries
-        .filter(([index, ruleSet]) => !ruleSet.hasOwnProperty('queued'))
-        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
-        .map(([index, ruleSet]) => index);
-    },
-    queuedRules: function () {
-      const ruleSetEntries = Array.from(this.savedRules.entries());
-      return ruleSetEntries
-        .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
-        .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
-        .map(([index, ruleSet]) => index);
-    }
-    },
     methods: {
       selectRule: function (savedIndex, ruleType) {
         if (
@@ -186,21 +159,30 @@
           return false;
         }
 
-        this.selectedRule = {
-          type: ruleType,
-          index: savedIndex
-        }
+        this.selectedRule.type = ruleType;
+        this.selectedRule.index = savedIndex;
 
         this.$emit('select-rule', this.selectedRule);
       },
-      loadRule: function (index, type) {
-        // ...
-      },
-      queueRule: async function (index) {
-        // ...
+      queueRule: async function (savedIndex) {
+        if (
+          savedIndex !== this.selectedRule.index ||
+          this.selectedRule.type !== ruleSetTypes.SAVED
+        ) {
+          this.selectRule(savedIndex, ruleSetTypes.SAVED);
+        }
+
+        this.$emit('queue-rule');
       },
       unQueueRule: async function (savedIndex, queuedIndex) {
-        // ...
+        if (
+          savedIndex !== this.selectedRule.index ||
+          this.selectedRule.type !== ruleSetTypes.QUEUED
+        ) {
+          this.selectRule(savedIndex, ruleSetTypes.QUEUED);
+        }
+
+        this.$emit('unqueue-rule', queuedIndex);
       }
     }
   }

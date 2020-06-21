@@ -31,7 +31,11 @@
           <RuleSetList
             :current-rules="ruleSetLists.current"
             :saved-rules="ruleSetLists.saved"
+            :un-queued-rules="unQueuedRules"
+            :queued-rules="queuedRules"
             v-on:select-rule="loadRule"
+            v-on:queue-rule="queueRule"
+            v-on:unqueue-rule="unQueueRule"
           ></RuleSetList>
 
           <!-- IDE Input -->
@@ -140,7 +144,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <p><strong>Are you sure you want to delete ruleset '{{ this.ide.selectedRuleSet }}'?</strong></p>
+            <p><strong>Are you sure you want to delete ruleset '{{ this.ide.selectedRule }}'?</strong></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="cancelDelete()" data-dismiss="modal">Cancel</button>
@@ -180,7 +184,7 @@ import 'codemirror/theme/dracula.css';
 const $ = window.jQuery;
 
 const ruleSetTypes = {
-  SAVED: 'ACTIVE',
+  SAVED: 'SAVED',
   CURRENT: 'CURRENT',
   QUEUED: 'QUEUED'
 }
@@ -263,7 +267,7 @@ export default {
       execute: testNomic
     },
     compilerError: false,
-    selectedRuleSet: {
+    selectedRule: {
       type: null,
       index: null
     }
@@ -281,37 +285,19 @@ export default {
     this.getCurrentRuleSets();
   },
   computed: {
-    playerRuleSets: function () {
+    unQueuedRules: function () {
       const ruleSetEntries = Array.from(this.ruleSetLists.saved.entries());
       return ruleSetEntries
         .filter(([index, ruleSet]) => !ruleSet.hasOwnProperty('queued'))
         .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
         .map(([index, ruleSet]) => index);
-
-      // Store indexes of saved, unqueued rule sets
-      // const unqueuedIndexes = [];
-      // this.ruleSetLists.saved.forEach((ruleSet, index) => {
-      //   if (!ruleSet.hasOwnProperty('queued')) {
-      //     unqueuedIndexes.push(index);
-      //   }
-      // });
-      // return unqueuedIndexes;
     },
-    queuedRuleSets: function () {
+    queuedRules: function () {
       const ruleSetEntries = Array.from(this.ruleSetLists.saved.entries());
       return ruleSetEntries
         .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
         .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
         .map(([index, ruleSet]) => index);
-
-      // Store indexes of saved, queued rule sets
-      // const queuedIndexes = [];
-      // this.ruleSetLists.saved.forEach((ruleSet, index) => {
-      //   if (!ruleSet.hasOwnProperty('queued')) {
-      //     queuedIndexes.push(index);
-      //   }
-      // });
-      // return queuedIndexes;
     }
   },
   methods: {
@@ -392,14 +378,14 @@ export default {
       }
     },
     saveRuleSetHandler: function () {
-      switch (this.selectedRuleSet.type) {
+      switch (this.selectedRule.type) {
         case ruleSetTypes.CURRENT:
-        case typeof(this.selectedRuleSet.index) !== 'number':
+        case typeof(this.selectedRule.index) !== 'number':
           $('#save-modal').modal('show');
           break;
         case ruleSetTypes.QUEUED:
         case ruleSetTypes.SAVED:
-          this.saveRuleSet(this.selectedRuleSet.index);
+          this.saveRuleSet(this.selectedRule.index);
           break;
         default:
           return;
@@ -520,8 +506,8 @@ export default {
           // Set IDE state
           this.ide.input = ruleSet.code;
           // Set UI state
-          this.selectedRuleSet.type = type;
-          this.selectedRuleSet.index = Number(index);
+          this.selectedRule.type = type;
+          this.selectedRule.index = Number(index);
           // Force update cycle
           this.$forceUpdate();
         } catch(e) {
@@ -539,35 +525,40 @@ export default {
       await localStorage.setItem('ruleSets', JSON.stringify(this.ruleSetLists.saved));
       await this.getSavedRuleSets();
     },
-    queueRuleSet: async function (index) {
-      const ruleSet = this.ruleSetLists.saved[index];
-      // console.log('Queuing rule set:', ruleSet);
+    queueRule: async function () {
+      // console.log('Queueing rule!', this.selectedRule);
+      const savedIndex = this.selectedRule.index
+      if (typeof(savedIndex) !== 'number')
+        return false;
+      const rule = this.ruleSetLists.saved[savedIndex];
 
-      ruleSet.queued = this.queuedRuleSets.length;
+      rule.queued = this.queuedRules.length + 1;
       await this.updateRuleSets();
 
       this.alert.type = 'info';
-      this.alert.msg = `Queued ruleset '${ruleSet.name}'`;
+      this.alert.msg = `Queued ruleset '${rule.name}'`;
       setTimeout(() => {
         this._retireNotification();
       }, 5000);
     },
-    unQueueRuleSet: async function (savedIndex, queuedIndex) {
-      const ruleSet = this.ruleSetLists.saved[savedIndex];
-      // console.log('Un-queuing rule set:', ruleSet);
-      // console.log('Queued rule sets:', this.queuedRuleSets);
+    unQueueRule: async function (queuedIndex) {
+      // console.log('Un-queueing rule!', this.selectedRule);
+      const savedIndex = this.queuedRules[queuedIndex];
+      if (typeof(savedIndex) !== 'number')
+        return false;
+      const rule = this.ruleSetLists.saved[savedIndex];
       
       // Remove queued order/flag
-      delete ruleSet.queued;
+      delete rule.queued;
       // Shift other queued rule sets' orders
-      const toBeShifted = this.queuedRuleSets.slice(queuedIndex + 1);
+      const toBeShifted = this.queuedRules.slice(queuedIndex + 1);
       toBeShifted.forEach(savedIndex => {
         this.ruleSetLists.saved[savedIndex].queued -= 1;
       });
       await this.updateRuleSets();
 
       this.alert.type = 'info';
-      this.alert.msg = `Un-queued rule set '${ruleSet.name}'`;
+      this.alert.msg = `Un-queued rule set '${rule.name}'`;
       setTimeout(() => {
         this._retireNotification();
       }, 5000);
@@ -576,8 +567,8 @@ export default {
       console.log('Clearing editor...', this.ide);
       this.ide.input = '';
       this.ide.output = null;
-      this.selectedRuleSet.type = null;
-      this.selectedRuleSet.index = null;
+      this.selectedRule.type = null;
+      this.selectedRule.index = null;
       this.compilerError = false;
     },
     clearEditorOutput: function () {
