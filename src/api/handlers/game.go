@@ -82,11 +82,11 @@ func SubmitProposal(c echo.Context) error {
 
 	// Return empty if no players exist in the game session
 	if len(players) == 0 {
-		r := &PlayerList{
-			Players: playerList, 
-			Turn: "", 
-			NextTurn: "", 
-			TurnRemaining: ""}
+		r := &ProposalResult{
+			Success: false,
+			Round: round,
+			Message: "Unauthorized",
+		}
 
 		return c.JSON(http.StatusOK, r)
 	}
