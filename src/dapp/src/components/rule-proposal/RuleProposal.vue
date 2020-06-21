@@ -15,6 +15,7 @@
                 :type-headings="typeHeadings"
                 v-on:select-type="selectChangeType"
                 v-on:go-back="currentView = 'ChangeType'"
+                ref="proposal"
               ></component>
             </transition>
           </div>
@@ -29,7 +30,7 @@
               v-if="currentView === 'RuleSelect'"
               type="button"
               class="btn btn-success float-right"
-              data-dismiss="modal"
+              @click="tryCompile()"
             >Submit</button>
           </div>
         </div>
@@ -87,6 +88,11 @@ export default {
       
       this.changeType = changeType
       this.currentView = 'RuleSelect';
+    },
+    tryCompile: async function () {
+      if (this.currentView === 'RuleSelect') {
+        await this.$refs.proposal.tryCompile();
+      }
     }
   }
 };

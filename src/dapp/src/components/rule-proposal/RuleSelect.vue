@@ -12,7 +12,7 @@
           }"
           :default-pane="ruleSetTypes.QUEUED"
         ></component> -->
-        <Practice :rule-proposal="true"></Practice>
+        <Practice :rule-proposal="true" ref="ide" v-on:compile="onCompile"></Practice>
       </div>
     </div>
   </div>
@@ -49,6 +49,18 @@ export default {
       ideView: 'RuleSetList',
       ruleChangeTypes: ruleChangeTypes,
       ruleSetTypes: ruleSetTypes
+    }
+  },
+  methods: {
+    onCompile: function (successful) {
+      if (successful) {
+        console.log('Compile success!');
+      } else {
+        console.log('Compile failed :(');
+      }
+    },
+    tryCompile: async function () {
+      await this.$refs.ide.testRuleSet();
     }
   }
 }

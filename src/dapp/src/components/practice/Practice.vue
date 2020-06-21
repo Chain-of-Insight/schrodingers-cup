@@ -80,6 +80,7 @@
                       v-model="ide.input"
                       :options="ide.options"
                       @input="clearEditorOutput()"
+                      @change="inputHandler()"
                     ></codemirror>
                   </div>
                 </div>
@@ -109,7 +110,7 @@
 
         </div>
 
-        <div class="row" style="max-height: 40%" v-if="!ruleProposal">
+        <div class="row" style="max-height: 40%">
           <div class="col pt-3 mh-100 overflow-hidden d-flex flex-column">
             <div class="row">
               <div class="col">
@@ -297,7 +298,7 @@ export default {
       saved: [],
     },
     ide: {
-      input: null,
+      input: '',
       output: null,
       ruleSetPane: ruleSetTypes.CURRENT,
       savedRuleSets: {
@@ -393,6 +394,7 @@ export default {
           this.alert.type = 'danger';
           this.alert.msg = 'Compile failed';
           this.compilerError = true;
+          this.$emit('compile', false);
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
@@ -401,6 +403,7 @@ export default {
           this.alert.type = 'success';
           this.alert.msg = 'Compiled successfully';
           this.compilerError = false;
+          this.$emit('compile', true);
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
