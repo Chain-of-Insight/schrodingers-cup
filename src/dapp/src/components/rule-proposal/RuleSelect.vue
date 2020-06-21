@@ -1,7 +1,10 @@
 <template>
   <div class="container-fluid p-0 h-100">
     <div class="row h-100">
-      <div class="col" v-if="changeType !== ruleChangeTypes.TRANSMUTE">
+      <div class="col" v-if="changeType === ruleChangeTypes.TRANSMUTE || changeType === ruleChangeTypes.DELETE">
+        <h2>{{ typeHeadings[changeType] }}</h2>
+      </div>
+      <div class="col" v-else>
         <!-- <component
           :is="ideView"
           :active-lists="{
@@ -9,10 +12,7 @@
           }"
           :default-pane="ruleSetTypes.QUEUED"
         ></component> -->
-        <Practice :active-game="true"></Practice>
-      </div>
-      <div class="col" v-else>
-        <h2>{{ typeHeadings[changeType] }}</h2>
+        <Practice :rule-proposal="true"></Practice>
       </div>
     </div>
   </div>

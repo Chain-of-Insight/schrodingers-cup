@@ -1,6 +1,6 @@
 <template>
 
-  <div :class="{ 'h-100': !activeGame }">
+  <div :class="{ 'h-100': !activeGame || !ruleProposal }">
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -9,12 +9,12 @@
     ></Notification>
 
     <div :class="{
-      'p-0': activeGame,
-      'py-4': !activeGame
+      'p-0': activeGame || ruleProposal,
+      'py-4': !activeGame && !ruleProposal
     }" class="container h-100 d-flex flex-column">
 
       <!-- Heading -->
-      <div class="row" v-if="!activeGame">
+      <div class="row" v-if="!activeGame && !ruleProposal">
         <div class="col">
           <h1>{{ title }}</h1>
           <h5 class="mb-4">{{ subtitle }}</h5>
@@ -35,7 +35,7 @@
 
       <!-- Connected -->
       <template v-else>
-        <div class="row flex-shrink-1 flex-grow-0 overflow-hidden">
+        <div class="row flex-shrink-1 flex-grow-1 overflow-hidden">
 
           <!-- Rule Lists -->
           <div class="col-4 d-flex flex-column mh-100">
@@ -49,6 +49,7 @@
             <div class="row flex-grow-1 flex-shrink-1 overflow-hidden h-100">
               <div class="col mh-100">
                 <RuleSetList
+                  :loaded-rule="selectedRule"
                   :current-rules="ruleSetLists.current"
                   :saved-rules="ruleSetLists.saved"
                   :un-queued-rules="unQueuedRules"
@@ -56,6 +57,7 @@
                   v-on:select-rule="loadRule"
                   v-on:queue-rule="queueRule"
                   v-on:unqueue-rule="unQueueRule"
+                  :rule-proposal="ruleProposal"
                 ></RuleSetList>
               </div>
             </div>
@@ -70,7 +72,7 @@
                 </label>
               </div>
             </div>
-            <div class="row flex-grow-1 flex-shrink-1 overflow-hidden">
+            <div class="row flex-shrink-1 overflow-hidden">
               <div id="ide-input" class="ide-pane col h-100">
                 <div class="row">
                   <div class="col">
@@ -83,16 +85,18 @@
                 </div>
               </div>
             </div>
+
             <div class="row">
               <div class="col pt-2">
                 <!-- Compile Nomic -->
-                <button class="btn btn-primary" @click="testRuleSet()">Compile</button>
+                <button class="btn btn-primary" @click="testRuleSet()" v-if="!ruleProposal">Compile</button>
                 
                 <!-- Save Rule Set -->
                 <button 
                   class="btn btn-success" 
                   @click="saveRuleSetHandler()"
                   :disabled="!ide.output || compilerError"
+                  v-if="!ruleProposal"
                 >Save</button>
 
                 <!-- Clear Editor -->
@@ -104,7 +108,8 @@
           </div>
 
         </div>
-        <div class="row" style="max-height: 40%">
+
+        <div class="row" style="max-height: 40%" v-if="!ruleProposal">
           <div class="col pt-3 mh-100 overflow-hidden d-flex flex-column">
             <div class="row">
               <div class="col">
@@ -236,27 +241,27 @@ const ruleSetTypes = {
 
 const CURRENT_RULES = require('./rules/currentRules.json');
 
-const DEMO_CODE = `### In Nomsu, variables have a "$" prefix, and you can just assign to them
-### without declaring them first:
-$x = 1
-test that ($x == 1)
+// const DEMO_CODE = `### In Nomsu, variables have a "$" prefix, and you can just assign to them
+// ### without declaring them first:
+// $x = 1
+// test that ($x == 1)
 
-### Variables which have not yet been set have the value (nil)
-test that ($not_yet_set == (nil))
+// ### Variables which have not yet been set have the value (nil)
+// test that ($not_yet_set == (nil))
 
-### Variables can be nameless:
-$ = 99
+// ### Variables can be nameless:
+// $ = 99
 
-### Or have spaces, if surrounded with parentheses:
-$(my favorite number) = 23
+// ### Or have spaces, if surrounded with parentheses:
+// $(my favorite number) = 23
 
-### Figure out what value $my_var should have:
-$my_var = 100
-$my_favourite_number = 1
-$x = 0
-$my_var = ($my_var + $x + $my_favourite_number)
-test that ($my_var == 101)
-say("OK!")`;
+// ### Figure out what value $my_var should have:
+// $my_var = 100
+// $my_favourite_number = 1
+// $x = 0
+// $my_var = ($my_var + $x + $my_favourite_number)
+// test that ($my_var == 101)
+// say("OK!")`;
 
 export default {
   components: {
@@ -265,6 +270,10 @@ export default {
   },
   props: {
     activeGame: {
+      default: false,
+      type: Boolean
+    },
+    ruleProposal: {
       default: false,
       type: Boolean
     }
@@ -288,7 +297,7 @@ export default {
       saved: [],
     },
     ide: {
-      input: DEMO_CODE,
+      input: null,
       output: null,
       ruleSetPane: ruleSetTypes.CURRENT,
       savedRuleSets: {
@@ -424,16 +433,15 @@ export default {
     },
     saveRuleSetHandler: function () {
       switch (this.selectedRule.type) {
-        case ruleSetTypes.CURRENT:
-        case typeof(this.selectedRule.index) !== 'number':
-          $('#save-modal').modal('show');
-          break;
         case ruleSetTypes.QUEUED:
         case ruleSetTypes.SAVED:
           this.saveRuleSet(this.selectedRule.index);
           break;
+        case ruleSetTypes.CURRENT:
+        case typeof(this.selectedRule.index) !== 'number':
         default:
-          return;
+          $('#save-modal').modal('show');
+          break;
       }
     },
     saveRuleSet: async function (index = null) {
@@ -513,20 +521,10 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRule: function (selectedRule) {
-      if (
-        !selectedRule ||
-        !selectedRule.hasOwnProperty('type') ||
-        !selectedRule.hasOwnProperty('index')
-      ) {
-        return false;
-      }
-
-      let type = selectedRule.type;
-      let index = selectedRule.index;
+    loadRule: function (savedIndex, ruleType) {
       let ruleSetList = null;
 
-      switch (type) {
+      switch (ruleType) {
         case ruleSetTypes.CURRENT:
           ruleSetList = this.ruleSetLists.current;
           break;
@@ -538,21 +536,21 @@ export default {
           break;
       }
 
-      let ruleSet = ruleSetList[index];
+      let ruleSet = ruleSetList[savedIndex];
 
       if (!ruleSet) {
         return;
       }
 
-      console.log('Loading rule set =>', [ruleSet, index]);
+      console.log('Loading rule set =>', [ruleSet, savedIndex]);
 
       if (ruleSet.hasOwnProperty('code')) {
         try {
           // Set IDE state
           this.ide.input = ruleSet.code;
           // Set UI state
-          this.selectedRule.type = type;
-          this.selectedRule.index = Number(index);
+          this.selectedRule.type = ruleType;
+          this.selectedRule.index = Number(savedIndex);
           // Force update cycle
           this.$forceUpdate();
         } catch(e) {
@@ -570,9 +568,9 @@ export default {
       await localStorage.setItem('ruleSets', JSON.stringify(this.ruleSetLists.saved));
       await this.getSavedRuleSets();
     },
-    queueRule: async function () {
+    queueRule: async function (savedIndex) {
       // console.log('Queueing rule!', this.selectedRule);
-      const savedIndex = this.selectedRule.index
+      // const savedIndex = this.selectedRule.index
       if (typeof(savedIndex) !== 'number')
         return false;
       const rule = this.ruleSetLists.saved[savedIndex];
@@ -586,9 +584,9 @@ export default {
         this._retireNotification();
       }, 5000);
     },
-    unQueueRule: async function (queuedIndex) {
+    unQueueRule: async function (savedIndex, queuedIndex) {
       // console.log('Un-queueing rule!', this.selectedRule);
-      const savedIndex = this.queuedRules[queuedIndex];
+      // const savedIndex = this.queuedRules[queuedIndex];
       if (typeof(savedIndex) !== 'number')
         return false;
       const rule = this.ruleSetLists.saved[savedIndex];

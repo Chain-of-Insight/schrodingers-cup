@@ -87,9 +87,6 @@ export default {
       
       this.changeType = changeType
       this.currentView = 'RuleSelect';
-    },
-    selectRule: function  () {
-      // this.currentView = 'RuleSelect';
     }
   }
 };
