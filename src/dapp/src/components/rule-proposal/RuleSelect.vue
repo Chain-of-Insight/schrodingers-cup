@@ -2,13 +2,14 @@
   <div class="container-fluid p-0 h-100">
     <div class="row h-100">
       <div class="col" v-if="changeType !== ruleChangeTypes.TRANSMUTE">
-        <component
+        <!-- <component
           :is="ideView"
           :active-lists="{
             [ruleSetTypes.QUEUED]: true
           }"
           :default-pane="ruleSetTypes.QUEUED"
-        ></component>
+        ></component> -->
+        <Practice :active-game="true"></Practice>
       </div>
       <div class="col" v-else>
         <h2>{{ typeHeadings[changeType] }}</h2>
@@ -19,6 +20,7 @@
 
 <script>
 import RuleSetList from '../ide/RuleSetList.vue';
+import Practice from '../practice/Practice.vue';
 
 const ruleChangeTypes = {
   CREATE: 'create',
@@ -35,7 +37,8 @@ const ruleSetTypes = {
 
 export default {
   components: {
-    RuleSetList
+    RuleSetList,
+    Practice
   },
   props: {
     changeType: String,

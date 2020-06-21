@@ -30,7 +30,7 @@
         v-if="activeLists[ruleSetTypes.QUEUED] === true"
       >Queued</a>
     </nav>
-    <div class="tab-content border rounded-bottom border-top-0 flex-grow-1">
+    <div class="tab-content border rounded-bottom border-top-0 flex-grow-1 flex-shrink-1 overflow-auto">
       <!-- CURRENT RULES -->
       <div
         id="rules-current"

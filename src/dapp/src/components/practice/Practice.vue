@@ -1,6 +1,6 @@
 <template>
 
-  <div class="h-100">
+  <div :class="{ 'h-100': !activeGame }">
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -10,9 +10,10 @@
 
     <div :class="{
       'p-0': activeGame,
-      'pt-3': activeGame,
       'py-4': !activeGame
-    }" class="container">
+    }" class="container h-100 d-flex flex-column">
+
+      <!-- Heading -->
       <div class="row" v-if="!activeGame">
         <div class="col">
           <h1>{{ title }}</h1>
@@ -34,10 +35,10 @@
 
       <!-- Connected -->
       <template v-else>
-        <div class="row">
+        <div class="row flex-shrink-1 flex-grow-0 overflow-hidden">
 
           <!-- Rule Lists -->
-          <div class="col-4 d-flex flex-column">
+          <div class="col-4 d-flex flex-column mh-100">
             <div class="row">
               <div class="col">
                 <label>
@@ -45,8 +46,8 @@
                 </label>
               </div>
             </div>
-            <div class="row flex-grow-1">
-              <div class="col">
+            <div class="row flex-grow-1 flex-shrink-1 overflow-hidden h-100">
+              <div class="col mh-100">
                 <RuleSetList
                   :current-rules="ruleSetLists.current"
                   :saved-rules="ruleSetLists.saved"
@@ -61,7 +62,7 @@
           </div>
 
           <!-- IDE Editor -->
-          <div class="col-8">
+          <div class="col-8 d-flex flex-column mh-100">
             <div class="row">
               <div class="col">
                 <label>
@@ -69,7 +70,7 @@
                 </label>
               </div>
             </div>
-            <div class="row">
+            <div class="row flex-grow-1 flex-shrink-1 overflow-hidden">
               <div id="ide-input" class="ide-pane col h-100">
                 <div class="row">
                   <div class="col">
@@ -103,8 +104,8 @@
           </div>
 
         </div>
-        <div class="row">
-          <div class="col pt-3">
+        <div class="row" style="max-height: 40%">
+          <div class="col pt-3 mh-100 overflow-hidden d-flex flex-column">
             <div class="row">
               <div class="col">
                 <label>
@@ -112,9 +113,9 @@
                 </label>
               </div>
             </div>
-            <div class="row" v-if="ide.output">
+            <div class="row flex-shrink-1 flex-grow-1 overflow-hidden h-100" v-if="ide.output">
               <!-- IDE Output -->
-              <div id="ide-output" class="ide-pane col">
+              <div id="ide-output" class="ide-pane col mh-100 overflow-hidden d-flex flex-column h-100">
                 <div class="row">
                   <div class="col">
                     <div class="executed clear-output">
@@ -122,9 +123,9 @@
                     </div>
                   </div>
                 </div>
-                <div class="row pt-2">
-                  <div class="col">
-                    <div class="term-container" v-html="ide.output"></div>
+                <div class="row pt-2 flex-grow-1 flex-shrink-1 overflow-hidden">
+                  <div class="col mh-100">
+                    <div class="term-container overflow-auto mh-100" v-html="ide.output"></div>
                   </div>
                 </div>
               </div>

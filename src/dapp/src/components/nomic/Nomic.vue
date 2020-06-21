@@ -72,6 +72,7 @@
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(4)">Transmute Rule</button>
             <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(5)">Delete Rule</button>
           </div>
+          <button class="btn btn-primary" type="button" @click="$refs.proposal.promptForProposal()">Proposal</button>
         </section>
 
         <!-- IDE -->
@@ -90,22 +91,23 @@
               Test Rule Proposal
             </button> -->
           </div>
-          <Voting
-            v-if="chatChannelJoined"
-            v-bind:voting-duration="votingDuration"
-            v-on:vote-cast="castVote"
-            ref="voting"
-            v-bind:voting-candidate="votingCandidate"
-          ></Voting>
-          <RuleProposal
-            v-if="chatChannelJoined"
-            ref="proposal"
-          ></RuleProposal>
-          <Practice
-            :activeGame="true"
-            v-if="showEditor"
-          ></Practice>
         </div>
+        <Voting
+          v-if="chatChannelJoined"
+          v-bind:voting-duration="votingDuration"
+          v-on:vote-cast="castVote"
+          ref="voting"
+          v-bind:voting-candidate="votingCandidate"
+        ></Voting>
+        <RuleProposal
+          v-if="chatChannelJoined"
+          ref="proposal"
+        ></RuleProposal>
+        <Practice
+          :active-game="true"
+          v-if="showEditor"
+          style="height: 500px; max-height: 700px;"
+        ></Practice>
       </template>
     </div>
   </div>
