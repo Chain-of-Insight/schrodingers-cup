@@ -29,6 +29,32 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.ProposalResult:
+    properties:
+      message:
+        description: '"OK!" or error message'
+        type: string
+      round:
+        description: Updated round value
+        type: integer
+      success:
+        type: boolean
+    type: object
+  handlers.RuleProposal:
+    properties:
+      code:
+        description: Nomsu code
+        type: string
+      index:
+        description: rule index of the existing rule
+        type: integer
+      kind:
+        description: Mutable / Immutable
+        type: string
+      type:
+        description: Update, Create, Delete, Transmute
+        type: string
+    type: object
   handlers.TestInput:
     properties:
       code:
@@ -65,15 +91,28 @@ paths:
           description: JWT token
           schema:
             $ref: '#/definitions/handlers.AuthResult'
-  /game/settle:
+  /game/propose:
     post:
-      description: Settle game window
+      description: Submit a new rule proposal
       parameters:
       - description: Bearer token
         in: header
         name: Authorization
         required: true
         type: string
+      - description: Proposed rule
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RuleProposal'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ProposalResult'
   /game/vote:
     post:
       description: Receive and tabulate votes, stage vote outcome to be processed when game window is settled

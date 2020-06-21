@@ -52,9 +52,12 @@ var doc = `{
                 }
             }
         },
-        "/game/settle": {
+        "/game/propose": {
             "post": {
-                "description": "Settle game window",
+                "description": "Submit a new rule proposal",
+                "produces": [
+                    "application/json"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -62,8 +65,25 @@ var doc = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "Proposed rule",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RuleProposal"
+                        }
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProposalResult"
+                        }
+                    }
+                }
             }
         },
         "/game/vote": {
@@ -186,6 +206,43 @@ var doc = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "handlers.ProposalResult": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "\"OK!\" or error message",
+                    "type": "string"
+                },
+                "round": {
+                    "description": "Updated round value",
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.RuleProposal": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Nomsu code",
+                    "type": "string"
+                },
+                "index": {
+                    "description": "rule index of the existing rule",
+                    "type": "integer"
+                },
+                "kind": {
+                    "description": "Mutable / Immutable",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Update, Create, Delete, Transmute",
+                    "type": "string"
                 }
             }
         },

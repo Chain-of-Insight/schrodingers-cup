@@ -13,13 +13,13 @@ Tezos supports meta upgrades: the protocols can evolve by amending their own cod
 
 ## How it works
 
-Schrodinger's Cup consists of a website its API, with offline storage handled by Tezos. Play sessions are conducted daily, the duration and timing of which is coded into the orignal rule set. However, just like any other rule of Nomic they can be updated during game play. 
+Schrodinger's Cup consists of a website, API, and Tezos smart contracts. Play sessions are conducted daily, the duration and timing of which is coded into the orignal rule set stored on Tezos. However, just like any other rule of Nomic they can be updated during game play. 
 
 ## NFTs and Esports
 
-Players who successfully perform an in-game action (changing the rules, voting, etc.) receive a Tezos NFT for playing. Additionally, players with the top highest scores are ranked by NFT distribution system. These ranking NFTs contain a zero knowledge proof attribute which can be used to calculate and prove their final ranking on the overall Nomic ELO ladder. Proofs for ELO tokens can be updated later as the player participates in future games of Nomic, providing the basis for the first long term ELO / Glicko-2 style ladder ranking built on blockchain technology.
+Players who successfully perform an in-game action (changing the rules, voting, etc.) receive a Tezos NFT for playing. Additionally, players with the top highest scores are ranked by the NFT distribution system. These ranking NFTs contain a zero knowledge proof attribute which can be used to calculate and prove their final ranking on the overall Nomic ELO ladder. Proofs for ELO tokens can be updated later as the player participates in future games of Nomic, providing the basis for the first long term ELO / Glicko-2 style ladder ranking built on blockchain technology.
 
 The overall winner of the Nomic game receives an XTZ reward transferred to their wallet in the same operation as mints their ranking NFT.
 
 ## Why
-We hope to produce a blockchain game that's entertaining but psychologically intense, and that educates players about how Tezos actually works. Additionally, our NFT and rewards distribution system is the first implementation to show how esports tournament ladders can be run on blockchain technology.
+We hope to produce a blockchain game that's entertaining but psychologically intense, and that educates players about how Tezos actually works. Additionally, our NFT and rewards distribution system presents a reasonable implementation to show how esports tournament ladders can be run on blockchain technology.
