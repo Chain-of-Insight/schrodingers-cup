@@ -64,7 +64,7 @@
 
           <!-- Send test chat messages with fake API wallet address -->
           <p class="h5 mt-3">Testing:</p>
-          <button class="btn btn-primary" type="button" @click="$refs.proposal.promptForProposal()">Proposal</button>
+          <button class="btn btn-primary" type="button" @click="ruleProposalHandler()">Proposal</button>
         </section>
 
         <!-- IDE -->
@@ -534,14 +534,24 @@ export default {
     castVote: function (type) {
       // TODO: send a POST request to API here.
     },
-    ruleProposalHandler: function () {
-      this.$refs.proposal.promptForProposal();
+    ruleProposalHandler: async function () {
+      if (!this.jwtToken) {
+        this.alert.type = 'danger';
+        this.alert.msg = "It's your turn, but you havent' been authenticated yet! Trying message signing again...";
+        setTimeout(async () => {
+          this._retireNotification();
+          await this.doLoginMessageSigning();
+          this.ruleProposalHandler();
+        }, 3000);
+      } else {
+        this.$refs.proposal.promptForProposal();
+      }
     },
     onRuleProposed: async function (code, index, kind, type) {
-      if (!this.jwtToken) {
-        console.error("No JWT token present. Have you signed a message with TezBridge yet?");
-        return false;
-      }
+      // if (!this.jwtToken) {
+      //   console.error("It's your turn, but you havent' been authenticated yet... Go <a href=\"#\">here</a> to try signing a message again so you can propose a rule!");
+      //   return false;
+      // }
 
       let result = null;
       try {
@@ -552,15 +562,34 @@ export default {
       
       console.log('Propose rule result =====>', result);
 
-      if (result.status == 200 && result.data && result.data.success) {
-        this.$refs.proposal.closeModal();
-        this.alert.type = 'success';
-        this.alert.msg = 'Your rule was proposed successfully';
-        // Update round number and reset vote totals
-        this.currentRound = result.data.round;
-        this.currentTotals.yes = 0;
-        this.currentTotals.no = 0;
-        this.currentTotals.abstain = 0;
+      if (result.status == 200) {
+        if (!result.data) {
+          // TODO: do something here...
+        }
+
+        if (result.data.success) {
+          this.$refs.proposal.closeModal();
+          this.alert.type = 'success';
+          this.alert.msg = 'Your rule was proposed successfully';
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
+
+          // Update round number and reset vote totals
+          this.currentRound = result.data.round;
+          this.currentTotals.yes = 0;
+          this.currentTotals.no = 0;
+          this.currentTotals.abstain = 0;
+        } else {
+          // Response OK but rule proposal failed
+          this.$refs.proposal.alert.type = 'danger';
+          this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '" ...Please try again.';
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
+        }
+      } else if (result.status == 500) {
+        // ...
       }
     }
   }
