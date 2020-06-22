@@ -620,10 +620,15 @@ export default {
       
       console.log('Propose rule result =====>', result);
 
-      if (result.status == 200) {
+      if (result.status == 200 && result.data && result.data.success) {
         this.$refs.proposal.closeModal();
         this.alert.type = 'success';
         this.alert.msg = 'Your rule was proposed successfully';
+        // Update round number and reset vote totals
+        this.currentRound = result.data.round;
+        this.currentTotals.yes = 0;
+        this.currentTotals.no = 0;
+        this.currentTotals.abstain = 0;
       }
     }
   }
