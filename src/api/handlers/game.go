@@ -283,7 +283,7 @@ func CastVote(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	totalPlayers := len(players)//here
+	totalPlayers := len(players)
 	totalVotes := len(votes)
 	isQuorum := isValidQuorum(totalPlayers, totalVotes)
 
@@ -492,6 +492,14 @@ func processRound(round int) bool {
 		return false
 	}
 	// DO PROCESS ROUND STUFF HERE
+
+	// 1) Call your file system functions to change the target rule (see: proposal)
+	// 2) (rules loop) Run updated ruleset using master.nom
+	// 3) Use the output from master to get replacement values for vars.nom
+	// 4) Replace vars.nom with updated values
+	// 5) (players loop) Apply point changes to each user (as necessary)
+	// 6) Store each players point changes for that round
+
 	return true
 }
 
@@ -586,7 +594,7 @@ func checkGameOver() bool {
 		if err != nil {
 			points = 0
 		}
-		if points >= 100 {
+		if points >= pointsToWin {
 			gameover = true
 			break
 		}
