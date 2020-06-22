@@ -102,6 +102,7 @@
         <RuleProposal
           v-if="chatChannelJoined"
           ref="proposal"
+          v-on:rule-proposed="onRuleProposed"
         ></RuleProposal>
         <Practice
           :active-game="true"
@@ -129,7 +130,10 @@ import {
 } from '../../services/twilioProvider';
 
 // API
-import { PerformAuth } from '../../services/apiProvider';
+import {
+  PerformAuth,
+  proposeRule
+} from '../../services/apiProvider';
 
 // Child components
 import Notification from '../common/Notifications.vue';
@@ -599,6 +603,25 @@ export default {
 
       const msgText = `${this.apiWallet}: ` + msgBody;
       this.chatChannel.sendMessage(msgText);
+    },
+    onRuleProposed: async function (code, index, kind, type) {
+      if (!this.jwtToken) {
+        console.error("No JWT token present. Have you signed a message with TezBridge yet?");
+        return false;
+      }
+
+      let result = null;
+      try {
+        result = await proposeRule(this.jwtToken, code, index, kind, type);
+      } catch (error) {
+        result = error.response;
+      }
+      
+      console.log('Propose rule result =====>', result);
+
+      if (result.status == 200) {
+        // Rule proposed successfully
+      }
     }
   }
 };

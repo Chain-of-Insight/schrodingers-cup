@@ -1,5 +1,10 @@
 <template>
-  <div class="notification fixed-top w-100">
+  <div
+    class="notification"
+    :class="{
+      'fixed-top': !local,
+      'w-100': !local
+    }">
     <!-- Notification Display -->
     <div v-if="type && msg" :class="'alert alert-' + type" role="alert">{{ msg }}</div>
     <span v-if="type && msg" class="close close-x" @click="$emit('reset')">&times;</span>
@@ -10,7 +15,11 @@
 export default {
   props: {
     type: String,
-    msg: String
+    msg: String,
+    local: {
+      type: Boolean,
+      default: false
+    }
   }
 };
 </script>

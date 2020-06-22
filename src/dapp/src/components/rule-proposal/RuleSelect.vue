@@ -12,7 +12,7 @@
           }"
           :default-pane="ruleSetTypes.QUEUED"
         ></component> -->
-        <Practice :rule-proposal="true" ref="ide" v-on:compile="onCompile"></Practice>
+        <Practice :rule-proposal="true" ref="ide" v-on:compiled="onCompiled"></Practice>
       </div>
     </div>
   </div>
@@ -52,12 +52,8 @@ export default {
     }
   },
   methods: {
-    onCompile: function (successful) {
-      if (successful) {
-        console.log('Compile success!');
-      } else {
-        console.log('Compile failed :(');
-      }
+    onCompiled: function (successful, code, index) {
+      this.$emit('compiled', successful, code, index);
     },
     tryCompile: async function () {
       await this.$refs.ide.testRuleSet();

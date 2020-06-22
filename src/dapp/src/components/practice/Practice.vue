@@ -394,7 +394,8 @@ export default {
           this.alert.type = 'danger';
           this.alert.msg = 'Compile failed';
           this.compilerError = true;
-          this.$emit('compile', false);
+          // Emit unsuccessful flag for rule proposal
+          this.$emit('compiled', false);
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
@@ -403,7 +404,13 @@ export default {
           this.alert.type = 'success';
           this.alert.msg = 'Compiled successfully';
           this.compilerError = false;
-          this.$emit('compile', true);
+          // Emit success flag and data to submit for proposal
+          this.$emit(
+            'compiled',
+            true,
+            this.ide.input,
+            this.selectedRule.index
+          );
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
