@@ -64,14 +64,6 @@
 
           <!-- Send test chat messages with fake API wallet address -->
           <p class="h5 mt-3">Testing:</p>
-          <div class="btn-group mt-1">
-            <button class="btn btn-outline-primary" type="button" @click="testSystemMessage(0)">Your Turn</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(1)">Another Player's Turn</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(2)">Create Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(3)">Update Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(4)">Transmute Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(5)">Delete Rule</button>
-          </div>
           <button class="btn btn-primary" type="button" @click="$refs.proposal.promptForProposal()">Proposal</button>
         </section>
 
@@ -544,44 +536,6 @@ export default {
     },
     ruleProposalHandler: function () {
       this.$refs.proposal.promptForProposal();
-    },
-    testSystemMessage: function (type) {
-      if (!this.chatChannel)
-        return false;
-
-      let msgBody = null;
-
-      switch (type) {
-        case 0:
-          // your turn
-          msgBody = `It's ${this.TwilioIdentity}'s turn to propose a rule change`;
-          break;
-        case 1:
-          // another player's turn
-          msgBody = `It's tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC's turn to propose a rule change`;
-          break;
-        case 2:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC proposed a rule in round 1`;
-          break;
-        case 3:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed an update to rule 12`;
-          break;
-        case 4:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to transmute rule 12`;
-          break;
-        case 5:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to delete rule 12`;
-          break;
-        default:
-          return false;
-      }
-
-      const msgText = `${this.apiWallet}: ` + msgBody;
-      this.chatChannel.sendMessage(msgText);
     },
     onRuleProposed: async function (code, index, kind, type) {
       if (!this.jwtToken) {
