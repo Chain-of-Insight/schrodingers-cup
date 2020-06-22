@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="h-100">
     <!-- Notifications -->
     <Notification 
       :type="alert.type" 
@@ -7,7 +7,7 @@
       v-on:reset="alert = {type: null, msg: null}"
     ></Notification>
 
-    <div class="container main">
+    <div class="container py-4">
       <h1>{{ title }}</h1>
       <h5 class="mb-4">{{ subtitle }}</h5>
 
@@ -64,14 +64,7 @@
 
           <!-- Send test chat messages with fake API wallet address -->
           <p class="h5 mt-3">Testing:</p>
-          <div class="btn-group mt-1">
-            <button class="btn btn-outline-primary" type="button" @click="testSystemMessage(0)">Your Turn</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(1)">Another Player's Turn</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(2)">Create Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(3)">Update Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(4)">Transmute Rule</button>
-            <button class="btn btn-outline-secondary" type="button" @click="testSystemMessage(5)">Delete Rule</button>
-          </div>
+          <button class="btn btn-primary" type="button" @click="$refs.proposal.promptForProposal()">Proposal</button>
         </section>
 
         <!-- IDE -->
@@ -90,22 +83,24 @@
               Test Rule Proposal
             </button> -->
           </div>
-          <Voting
-            v-if="chatChannelJoined"
-            v-bind:voting-duration="votingDuration"
-            v-on:vote-cast="castVote"
-            ref="voting"
-            v-bind:voting-candidate="votingCandidate"
-          ></Voting>
-          <RuleProposal
-            v-if="chatChannelJoined"
-            ref="proposal"
-          ></RuleProposal>
-          <Practice
-            :activeGame="true"
-            v-if="showEditor"
-          ></Practice>
         </div>
+        <Voting
+          v-if="chatChannelJoined"
+          v-bind:voting-duration="votingDuration"
+          v-on:vote-cast="castVote"
+          ref="voting"
+          v-bind:voting-candidate="votingCandidate"
+        ></Voting>
+        <RuleProposal
+          v-if="chatChannelJoined"
+          ref="proposal"
+          v-on:rule-proposed="onRuleProposed"
+        ></RuleProposal>
+        <Practice
+          :active-game="true"
+          v-if="showEditor"
+          style="height: 500px; max-height: 700px;"
+        ></Practice>
       </template>
     </div>
   </div>
@@ -127,7 +122,10 @@ import {
 } from '../../services/twilioProvider';
 
 // API
-import { PerformAuth } from '../../services/apiProvider';
+import {
+  PerformAuth,
+  proposeRule
+} from '../../services/apiProvider';
 
 // Child components
 import Notification from '../common/Notifications.vue';
@@ -190,20 +188,20 @@ export default {
       yes: 0,
       no: 0,
       abstain: 0
-    },
-    apiWallet: 'BECjcQFZnoVYu94ns5HMLW7yaDsoJZYbU1zt',
+    }
   }),
   computed: {
     msgPatterns: function () {
       return {
         NEW_TURN_PATTERN: `^It's ${TZ_WALLET_PATTERN}'s turn to propose a rule change$`,
-        CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
-        UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
-        TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
-        DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
-        YES_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
-        NO_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
-        ABSTAIN_VOTE_PATTERN: `${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
+        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round ${this.currentRound}$`,
+        // CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
+        // UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
+        // TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
+        // DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
+        YES_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
+        NO_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
+        ABSTAIN_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
       }
     }
   },
@@ -389,10 +387,9 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
-        apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
-        isSystemMessage = apiWalletPattern.test(message.body); // XXX: FOR TESTING ONLY
+        console.log('chat message!', message);
 
-        if (isSystemMessage) {
+        if (message.author === 'system') {
           // TODO: replace above condition with `message.author == this.apiWallet` when api wallet set up
           this.onSystemMessage(message);
         } else {
@@ -400,7 +397,6 @@ export default {
         }
 
         // auto-scroll to bottom to show new message
-        // TODO: fix this so it accommodate's the extra msg's worth of space at bottom
         this.$nextTick(function () {
           const messageWindow = this.$refs.chatWindow
           if (messageWindow && messageWindow.children.length) {
@@ -437,25 +433,28 @@ export default {
       });
     },
     onSystemMessage: function (message) {
-      const apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
-      let messageBody = message.body.replace(apiWalletPattern, ''); // XXX: FOR TESTING ONLY
+      const messageBody = message.body;
+      let playerAddress = null;
 
       switch (messageBody) {
-        case (messageBody.match(RegExp(this.msgPatterns.CREATE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.UPDATE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.TRANSMUTE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.DELETE_RULE_PATTERN)) || {}).input:
-          // On another player proposing a rule
-          this.votingCandidate = {
-            name: 'testRule',
-            code: '$test_string = "this is test code"\nsay($test_string)'
+        case (messageBody.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
+          // TODO: GET (/game/proposals?) to get latest proposed rule
+          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+
+          if (playerAddress !== this.TwilioIdentity) {
+            // On another player proposing a rule
+            this.votingCandidate = {
+              name: 'testRule',
+              code: '$test_string = "this is test code"\nsay($test_string)'
+            }
+            console.log('Time to vote!');
+            this.$refs.voting.promptForVote(this.votingCandidate);
           }
-          this.$refs.voting.promptForVote(this.votingCandidate);
           break;
         case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
           // On new turn
           // Extract player's address from string
-          const playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
           // Check if it's logged in player
           if (playerAddress === this.TwilioIdentity) {
             // Format message
@@ -476,8 +475,6 @@ export default {
           this.currentTotals.abstain += 1;
           messageBody = messageBody.replace(this.TwilioIdentity, 'You');
           break;
-        default:
-          return false;
       }
 
       // Parse message args
@@ -535,69 +532,36 @@ export default {
       this.showEditor = this.showEditor ? false : true;
     },
     castVote: function (type) {
-      if (!this.chatChannel)
-        return false;
-
-      let msgBody = null;
-
-      switch (type) {
-        case voteType.YES:
-          msgBody = `${this.TwilioIdentity} voted YES in round ${this.currentRound}`;
-          break;
-        case voteType.NO:
-          msgBody = `${this.TwilioIdentity} voted NO in round ${this.currentRound}`;
-          break;
-        case voteType.ABSTAIN:
-          msgBody = `${this.TwilioIdentity} abstained in round ${this.currentRound}`;
-          break;
-        default:
-          return;
-      }
-
-      const msgText = `${this.apiWallet}: ` + msgBody;
-      this.chatChannel.sendMessage(msgText);
-      this.votingCandidate = null;
+      // TODO: send a POST request to API here.
     },
     ruleProposalHandler: function () {
       this.$refs.proposal.promptForProposal();
     },
-    testSystemMessage: function (type) {
-      if (!this.chatChannel)
+    onRuleProposed: async function (code, index, kind, type) {
+      if (!this.jwtToken) {
+        console.error("No JWT token present. Have you signed a message with TezBridge yet?");
         return false;
-
-      let msgBody = null;
-
-      switch (type) {
-        case 0:
-          // your turn
-          msgBody = `It's ${this.TwilioIdentity}'s turn to propose a rule change`;
-          break;
-        case 1:
-          // another player's turn
-          msgBody = `It's tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC's turn to propose a rule change`;
-          break;
-        case 2:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed a new rule`;
-          break;
-        case 3:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed an update to rule 12`;
-          break;
-        case 4:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to transmute rule 12`;
-          break;
-        case 5:
-          // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed to delete rule 12`;
-          break;
-        default:
-          return false;
       }
 
-      const msgText = `${this.apiWallet}: ` + msgBody;
-      this.chatChannel.sendMessage(msgText);
+      let result = null;
+      try {
+        result = await proposeRule(this.jwtToken, code, index, kind, type);
+      } catch (error) {
+        result = error.response;
+      }
+      
+      console.log('Propose rule result =====>', result);
+
+      if (result.status == 200 && result.data && result.data.success) {
+        this.$refs.proposal.closeModal();
+        this.alert.type = 'success';
+        this.alert.msg = 'Your rule was proposed successfully';
+        // Update round number and reset vote totals
+        this.currentRound = result.data.round;
+        this.currentTotals.yes = 0;
+        this.currentTotals.no = 0;
+        this.currentTotals.abstain = 0;
+      }
     }
   }
 };

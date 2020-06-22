@@ -8,6 +8,13 @@
             <h5 class="modal-title" id="proposal-modal-label">Time to propose a rule change!</h5>
           </div>
           <div class="modal-body">
+            <!-- Notifications -->
+            <Notification 
+              :type="alert.type" 
+              :msg="alert.msg" 
+              v-on:reset="alert = {type: null, msg: null}"
+              :local="true"
+            ></Notification>
             <transition name="slide" mode="out-in">
               <component
                 :is="currentView"
@@ -15,6 +22,8 @@
                 :type-headings="typeHeadings"
                 v-on:select-type="selectChangeType"
                 v-on:go-back="currentView = 'ChangeType'"
+                v-on:compiled="onCompiled"
+                ref="proposal"
               ></component>
             </transition>
           </div>
@@ -29,7 +38,7 @@
               v-if="currentView === 'RuleSelect'"
               type="button"
               class="btn btn-success float-right"
-              data-dismiss="modal"
+              @click="tryCompile()"
             >Submit</button>
           </div>
         </div>
@@ -48,13 +57,20 @@ const ruleChangeTypes = {
   DELETE: 'delete',
 }
 
+const ruleTypes = {
+  MUTABLE: 'mutable',
+  IMMUTABLE: 'immutable'
+}
+
 import ChangeType from '../rule-proposal/ChangeType.vue';
 import RuleSelect from '../rule-proposal/RuleSelect.vue';
+import Notification from '../common/Notifications.vue';
 
 export default {
   components: {
     ChangeType,
-    RuleSelect
+    RuleSelect,
+    Notification
   },
   props: {
     rule: Object
@@ -67,7 +83,11 @@ export default {
       [ruleChangeTypes.UPDATE]: 'Update an Existing Rule',
       [ruleChangeTypes.TRANSMUTE]: 'Transmute a Rule',
       [ruleChangeTypes.DELETE]: 'Delete a Rule'
-    }
+    },
+    alert: {
+      type: null,
+      msg: null
+    },
   }),
   mounted: function () {
     $('#proposal-modal').on('hidden.bs.modal', this.resetModal.bind(this));
@@ -75,6 +95,9 @@ export default {
   methods: {
     promptForProposal: function () {
       $('#proposal-modal').modal('show');
+    },
+    closeModal: function () {
+      $('#proposal-modal').modal('hide');
     },
     resetModal: function () {
       this.currentView = 'ChangeType';
@@ -88,9 +111,21 @@ export default {
       this.changeType = changeType
       this.currentView = 'RuleSelect';
     },
-    selectRule: function  () {
-      // this.currentView = 'RuleSelect';
-    }
+    tryCompile: async function () {
+      if (this.currentView === 'RuleSelect') {
+        await this.$refs.proposal.tryCompile();
+      }
+    },
+    onCompiled: async function (successful, code, index) {
+      if (!successful) {
+        this.alert.type = 'danger';
+        this.alert.msg = 'Fix your rule! Your rule must compile successfully before trying to propose it.';
+        return;
+      }
+
+      let kind = ruleTypes.MUTABLE; // How to handle transmutation?
+      this.$emit('rule-proposed', code, index, kind, this.changeType);
+    },
   }
 };
 </script>
@@ -106,7 +141,15 @@ export default {
   }
 
   #proposal-modal .modal-dialog {
-    min-height: 95%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  #proposal-modal .modal-body {
+    overflow-x: hidden;
   }
   
   #proposal-modal .modal-footer {

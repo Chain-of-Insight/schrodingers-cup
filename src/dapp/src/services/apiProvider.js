@@ -39,7 +39,48 @@ async function auth(msg, sig, pubKey, address) {
   return res;
 };
 
+/**
+ * Propose a nomsu rule
+ */
+async function proposeRule(jwt, code, index, kind, type) {
+  if (typeof(jwt) !== 'string') {
+    return 'jwt rejected. String required, got ' + typeof code;
+  }
+  if (typeof code !== 'string') {
+    return 'code rejected. String required, got ' + typeof code;
+  }
+
+  if (typeof index !== 'number') {
+    return 'index rejected. Number required, got ' + typeof index;
+  }
+
+  if (typeof code !== 'string') {
+    return 'kind rejected. String required, got ' + typeof kind;
+  }
+
+  if (typeof code !== 'string') {
+    return 'kind rejected. String required, got ' + typeof type;
+  }
+
+  const config = {
+    headers: {
+      'Authorization': 'Bearer ' + jwt
+    }
+  }
+
+  let apiEndpoint = API_URL + 'game/propose';
+  const res = await axios.post(apiEndpoint, {
+    code: code,
+    index: index,
+    kind: kind,
+    type: type
+  }, config);
+
+  return res;
+};
+
 module.exports = {
   testNomic: testNomic,
-  PerformAuth: auth
+  PerformAuth: auth,
+  proposeRule: proposeRule
 };

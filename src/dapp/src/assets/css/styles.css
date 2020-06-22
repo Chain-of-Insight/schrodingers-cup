@@ -1,3 +1,7 @@
+html, body {
+  height: 100%;
+}
+
 /* General */
 .hidden {
   display: none;
@@ -7,10 +11,10 @@
 }
 
 /* Main Content Pane */
-.main {
+/* .main {
   width: 100%;
   margin: 2rem auto;
-}
+} */
 
 /* Contract Icons */
 .icon-wrapper {
@@ -126,7 +130,7 @@ section.chat input {
 .CodeMirror,
 .vue-codemirror {
   border: 1px solid #eee;
-  /* height: auto; */
+  /* height: auto !important; */
   /* height: 50vh; */
   /* min-height: 50vh; */
   /* min-width: 770px; */
@@ -138,9 +142,9 @@ section.chat input {
 }
 #rules-current,
 #rules-saved {
-  height: calc(50vh + 0.5rem);
+  /* height: calc(50vh + 0.5rem); */
   overflow-y: auto;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
 }
 .execute {
   margin: 0.5rem;
@@ -148,23 +152,25 @@ section.chat input {
 }
 #ide-saved,
 .executed.clear-output {
-  width: 300px;
-  max-width: 300px;
-  margin: 0;
+  /* width: 300px; */
+  /* max-width: 300px; */
+  /* margin: 0; */
 }
 .executed.clear-output {
   display: inline-block;
 }
-.term-container-wrapper {
+/* .term-container-wrapper {
   display: block;
   width: calc(100% - 300px);
   float: right;
-}
+} */
 /* .term-container, 
 .ide-pane {
   margin: auto;
 } */
 .term-container {
-  position: relative;
-  left: -5.5px;
+  /* position: relative;
+  left: -5.5px; */
+  width: 100%;
+  max-width: unset;
 }

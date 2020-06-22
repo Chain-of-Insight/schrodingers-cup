@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="h-100">
 
     <!-- Not Connected -->
-    <div class="container main" v-if="!connected">
+    <div class="container py-4" v-if="!connected">
       <h1>{{ title }}</h1>
       <h5>{{ subtitle }}</h5>
       <ul class="list-unstyled" v-if="!connected">

@@ -6,7 +6,12 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
-            <div>
+            <Countdown
+              :duration="votingDuration"
+              v-on:ended="closeVotingWindow()"
+              ref="timer"
+            ></Countdown>
+            <!-- <div>
               <h5 class="d-inline">Time remaining:</h5>
               <h5
                 class="countdown d-inline h4 border rounded ml-2 p-2 text-monospace"
@@ -18,7 +23,7 @@
                   ] : 'border-dark'
                 ]"
               >{{ hours }}:{{ minutes }}:{{ seconds }}</h5>
-            </div>
+            </div> -->
           </div>
           <div class="modal-body">
             <pre v-if="votingCandidate" class="term-container">{{ votingCandidate.code }}</pre>
@@ -69,8 +74,10 @@
 <script>
   const $ = window.jQuery;
 
+  import Countdown from '../common/Countdown.vue';
+
   export default {
-    components: {},
+    components: { Countdown },
     props: {
       votingDuration: {
         required: true,
@@ -79,9 +86,8 @@
     },
     data: function () {
       return {
-        secondsLeft: null,
-        timer: null,
         votingCandidate: null,
+        votingWindowClosed: false,
         voteType: {
           YES: 0,
           NO: 1,
@@ -94,41 +100,6 @@
       $('#voting-modal').on('shown.bs.modal', this.startTimer.bind(this));
       $('#voting-modal').on('hidden.bs.modal', this.resetTimer.bind(this));
     },
-    destroyed: function () {
-      clearInterval(this.timer);
-    },
-    computed: {
-      hours: function () {
-        let hours = null;
-        if (this.votingWindowClosed) {
-          hours = 0 
-        } else {
-          hours = Math.floor(this.secondsLeft / 3600);
-        }
-        return hours.toString().padStart(2, '0');
-      },
-      minutes: function () {
-        let minutes = null;
-        if (this.votingWindowClosed) {
-          minutes = 0 
-        } else {
-          minutes = Math.floor((this.secondsLeft % 3600) / 60);
-        }
-        return minutes.toString().padStart(2, '0');
-      },
-      seconds: function () {
-        let seconds = null;
-        if (this.votingWindowClosed) {
-          seconds = 0 
-        } else {
-          seconds = this.secondsLeft % 60;
-        }
-        return seconds.toString().padStart(2, '0');
-      },
-      votingWindowClosed: function () {
-        return this.secondsLeft <= 0;
-      }
-    },
     methods: {
       promptForVote: function (votingCandidate) {
         if (!votingCandidate.code) {
@@ -138,24 +109,24 @@
         this.votingCandidate = votingCandidate
         $('#voting-modal').modal('show');
       },
-      startTimer: function () {
-        this.secondsLeft = this.votingDuration;
-        this.timer = setInterval(this.timerDecrement, 1000);
-      },
-      resetTimer: function () {
-        clearInterval(this.timer);
-        this.secondsLeft = this.votingDuration;
-        this.votingCandidate = null;
-      },
-      timerDecrement: function () {
-        if (this.secondsLeft > -2) {
-          this.secondsLeft -= 1;
-        } else {
-          $('#voting-modal').modal('hide');
-          // Register vote as abstained if no action when time runs out
-          this.$emit('vote-cast', 'abstain');
-        }
-      },
+      // startTimer: function () {
+      //   this.secondsLeft = this.votingDuration;
+      //   this.timer = setInterval(this.timerDecrement, 1000);
+      // },
+      // resetTimer: function () {
+      //   clearInterval(this.timer);
+      //   this.secondsLeft = this.votingDuration;
+      //   this.votingCandidate = null;
+      // },
+      // timerDecrement: function () {
+      //   if (this.secondsLeft > -2) {
+      //     this.secondsLeft -= 1;
+      //   } else {
+      //     $('#voting-modal').modal('hide');
+      //     // Register vote as abstained if no action when time runs out
+      //     this.$emit('vote-cast', 'abstain');
+      //   }
+      // },
       vote: function (type) {
         if (
           typeof(type) !== 'number' || (
@@ -169,30 +140,17 @@
 
         this.$emit('vote-cast', type);
         $('#voting-modal').modal('hide');
+      },
+      closeVotingWindow: function () {
+        this.votingWindowClosed = true;
+        $emit('vote-cast', voteType.ABSTAIN);
+      },
+      startTimer: function () {
+        this.$refs.timer.start();
+      },
+      resetTimer: function () {
+        this.$refs.timer.reset();
       }
     }
   }
 </script>
-
-<style scoped>
-  .oi.mirrored {
-    -webkit-transform: scale(-1, 1);
-    -moz-transform: scale(-1, 1);
-    -ms-transform: scale(-1, 1);
-    -o-transform: scale(-1, 1);
-    transform: scale(-1, 1);
-  }
-
-  .countdown.critical {
-    -webkit-animation: blink 1s steps(1) infinite;
-    -moz-animation: blink 1s steps(1) infinite;
-    -o-animation: blink 1s steps(1) infinite;
-    animation: blink 1s steps(1) infinite;
-  }
-
-  @keyframes blink {
-    75% {
-      opacity: 0;
-    }
-  }
-</style>
