@@ -86,7 +86,7 @@
         </div>
         <Voting
           v-if="chatChannelJoined"
-          v-bind:voting-duration="votingDuration"
+          v-bind:turn-window="turnWindow"
           v-on:vote-cast="castVote"
           ref="voting"
           v-bind:voting-candidate="votingCandidate"
@@ -95,6 +95,7 @@
           v-if="chatChannelJoined"
           ref="proposal"
           v-on:rule-proposed="onRuleProposed"
+          :turn-window="turnWindow"
         ></RuleProposal>
         <Practice
           :active-game="true"
@@ -124,7 +125,9 @@ import {
 // API
 import {
   PerformAuth,
-  proposeRule
+  proposeRule,
+  getRoundNumber,
+  getPlayers
 } from '../../services/apiProvider';
 
 // Child components
@@ -181,7 +184,7 @@ export default {
     loginSigned: null,
     jwtToken: null,
     showEditor: false,
-    votingDuration: 300, // from rule 'external: $bl_turnWindowDuration = 300'
+    turnWindow: 300, // from rule 'external: $bl_turnWindowDuration = 300'
     votingCandidate: null,
     currentRound: 1,
     currentTotals: {
@@ -212,6 +215,13 @@ export default {
     if (returningUser) {
       this.connected = true;
       this.address = returningUser;
+
+      // Get current round number
+      await this.getCurrentRound();
+
+      // Get players
+      await this.getPlayers();
+
       // Request Twilio token
       try {
         // Request auth
@@ -537,12 +547,13 @@ export default {
     ruleProposalHandler: async function () {
       if (!this.jwtToken) {
         this.alert.type = 'danger';
-        this.alert.msg = "It's your turn, but you havent' been authenticated yet! Trying message signing again...";
+        this.alert.msg = "It's your turn, but you havent' been authenticated yet! Try signing a message with TezBridge again...";
+        // this.doLoginMessageSigning();
         setTimeout(async () => {
           this._retireNotification();
-          await this.doLoginMessageSigning();
           this.ruleProposalHandler();
-        }, 3000);
+          await this.doLoginMessageSigning();
+        }, 2000);
       } else {
         this.$refs.proposal.promptForProposal();
       }
@@ -564,7 +575,8 @@ export default {
 
       if (result.status == 200) {
         if (!result.data) {
-          // TODO: do something here...
+          console.error('Response successful but no data present:', result);
+          return false;
         }
 
         if (result.data.success) {
@@ -597,8 +609,43 @@ export default {
         }, 5000);
       }
     },
-    getCurrentRound: function () {
-      
+    getCurrentRound: async function () {
+      let result = null;
+      try {
+        result = await getRoundNumber();
+      } catch (error) {
+        result = error.response;
+      }
+
+      if (result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        this.currentRound = result.data.round;
+      } else if (result.status == 500) {
+        console.error('Error while trying to get current round number: ', result);
+      }
+    },
+    getPlayers: async function () {
+      let result = null;
+      try {
+        result = await getPlayers();
+      } catch (error) {
+        result = error.response;
+      }
+
+      if (result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        console.log('Players =====>', result);
+      } else if (result.status == 500) {
+        console.error('Error while trying to get current round number: ', result);
+      }
     }
   }
 };

@@ -7,8 +7,8 @@
           <div class="modal-header">
             <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
             <Countdown
-              :duration="votingDuration"
-              v-on:ended="closeVotingWindow()"
+              :duration="turnWindow"
+              v-on:ended="closeTurnWindow()"
               ref="timer"
             ></Countdown>
             <!-- <div>
@@ -79,7 +79,7 @@
   export default {
     components: { Countdown },
     props: {
-      votingDuration: {
+      turnWindow: {
         required: true,
         type: Number
       }
@@ -110,12 +110,12 @@
         $('#voting-modal').modal('show');
       },
       // startTimer: function () {
-      //   this.secondsLeft = this.votingDuration;
+      //   this.secondsLeft = this.turnWindow;
       //   this.timer = setInterval(this.timerDecrement, 1000);
       // },
       // resetTimer: function () {
       //   clearInterval(this.timer);
-      //   this.secondsLeft = this.votingDuration;
+      //   this.secondsLeft = this.turnWindow;
       //   this.votingCandidate = null;
       // },
       // timerDecrement: function () {
@@ -141,9 +141,10 @@
         this.$emit('vote-cast', type);
         $('#voting-modal').modal('hide');
       },
-      closeVotingWindow: function () {
+      closeTurnWindow: function () {
         this.votingWindowClosed = true;
         $emit('vote-cast', voteType.ABSTAIN);
+        $('#voting-modal').modal('hide');
       },
       startTimer: function () {
         this.$refs.timer.start();

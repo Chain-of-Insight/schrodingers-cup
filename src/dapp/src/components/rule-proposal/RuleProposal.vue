@@ -6,6 +6,11 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="proposal-modal-label">Time to propose a rule change!</h5>
+            <Countdown
+              :duration="turnWindow"
+              v-on:ended="closeTurnWindow()"
+              ref="timer"
+            ></Countdown>
           </div>
           <div class="modal-body">
             <!-- Notifications -->
@@ -65,15 +70,21 @@ const ruleTypes = {
 import ChangeType from '../rule-proposal/ChangeType.vue';
 import RuleSelect from '../rule-proposal/RuleSelect.vue';
 import Notification from '../common/Notifications.vue';
+import Countdown from '../common/Countdown.vue';
 
 export default {
   components: {
     ChangeType,
     RuleSelect,
-    Notification
+    Notification,
+    Countdown
   },
   props: {
-    rule: Object
+    rule: Object,
+    turnWindow: {
+      type: Number,
+      required: true
+    }
   },
   data: () => ({
     currentView: 'ChangeType',
@@ -84,12 +95,15 @@ export default {
       [ruleChangeTypes.TRANSMUTE]: 'Transmute a Rule',
       [ruleChangeTypes.DELETE]: 'Delete a Rule'
     },
+    proposalWindowClosed: false,
     alert: {
       type: null,
       msg: null
     },
   }),
   mounted: function () {
+    // Start timer
+    $('#proposal-modal').on('shown.bs.modal', this.startTimer.bind(this));
     $('#proposal-modal').on('hidden.bs.modal', this.resetModal.bind(this));
   },
   methods: {
@@ -98,10 +112,6 @@ export default {
     },
     closeModal: function () {
       $('#proposal-modal').modal('hide');
-    },
-    resetModal: function () {
-      this.currentView = 'ChangeType';
-      this.changeType = null;
     },
     selectChangeType: function (changeType) {
       const validType = Object.values(ruleChangeTypes).includes(changeType);
@@ -125,6 +135,19 @@ export default {
 
       let kind = ruleTypes.MUTABLE; // How to handle transmutation?
       this.$emit('rule-proposed', code, index, kind, this.changeType);
+    },
+    closeTurnWindow: function () {
+        this.proposalWindowClosed = true;
+        this.$emit('no-proposal');
+        $('#proposal-modal').modal('hide');
+      },
+    startTimer: function () {
+      this.$refs.timer.start();
+    },
+    resetModal: function () {
+      this.currentView = 'ChangeType';
+      this.changeType = null;
+      this.$refs.timer.reset();
     },
   }
 };

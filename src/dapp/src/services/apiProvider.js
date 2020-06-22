@@ -79,8 +79,30 @@ async function proposeRule(jwt, code, index, kind, type) {
   return res;
 };
 
+/**
+ * Get current round numer
+ */
+async function getRoundNumber() {
+  let apiEndpoint = API_URL + 'round';
+  const res = await axios.get(apiEndpoint);
+
+  return res;
+}
+
+/**
+ * Get player info for current game
+ */
+async function getPlayers() {
+  let apiEndpoint = API_URL + 'players';
+  const res = await axios.get(apiEndpoint);
+
+  return res;
+}
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
-  proposeRule: proposeRule
+  proposeRule: proposeRule,
+  getRoundNumber: getRoundNumber,
+  getPlayers: getPlayers
 };
