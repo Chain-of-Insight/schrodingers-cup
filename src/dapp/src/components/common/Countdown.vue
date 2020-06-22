@@ -24,7 +24,7 @@
     },
     data: function () {
       return {
-        secondsLeft: null,
+        secondsLeft: this.duration,
         timer: null
       }
     },

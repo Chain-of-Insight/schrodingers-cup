@@ -25,7 +25,13 @@
       <template v-else>
         <!-- Round totals -->
         <section>
-          <Totals v-bind:round="currentRound" v-bind="currentTotals"></Totals>
+          <Totals
+            v-bind:round="currentRound"
+            v-bind="currentTotals"
+            :turn-window="turnWindow"
+            ref="totals"
+            v-on:round-over="getPlayers()"
+          ></Totals>
         </section>
 
         <!-- Player Chat -->
@@ -686,14 +692,20 @@ export default {
 
         // console.log('Players =====>', result);
         this.players = result.data.players;
-        this.currentTurn = result.data.currentTurn;
+        // this.currentTurn = result.data.currentTurn;
         this.nextTurn = result.data.nextTurn;
+
+        // XXX: TESTING:
+        // this.currentTurn = "tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC";
 
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
           // TODO: how to keep track of whether or not user already has rule up for vote?
           this.$refs.proposal.promptForProposal();
         }
+
+        // Start round timer
+        this.$refs.totals.startTimer();
       } else if (result.status == 500) {
         console.error('Error while trying to get players: ', result);
       }

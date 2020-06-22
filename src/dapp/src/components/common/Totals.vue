@@ -4,11 +4,19 @@
     <p class="h2 m-0">Yes: <span class="badge badge-pill badge-success">{{ yes }}</span></p>
     <p class="h2 m-0">No: <span class="badge badge-pill badge-danger">{{ no }}</span></p>
     <p class="h2 m-0">Abstain: <span class="badge badge-pill badge-secondary">{{ abstain }}</span></p>
+    <Countdown
+      :duration="turnWindow"
+      v-on:ended="endRound()"
+      ref="timer"
+    ></Countdown>
   </div>
 </template>
 
 <script>
+  import Countdown from '../common/Countdown.vue';
+
   export default {
+    components: { Countdown },
     props: {
       round: {
         required: true,
@@ -29,7 +37,22 @@
         required: true,
         default: 0,
         type: Number
+      },
+      turnWindow: {
+        required: true,
+        type: Number
       }
+    },
+    methods: {
+      endRound: function () {
+        this.$emit('round-over');
+      },
+      startTimer: function () {
+        this.$refs.timer.start();
+      },
+      resetTimer: function () {
+        this.$refs.timer.reset();
+      },
     }
   }
 </script>
