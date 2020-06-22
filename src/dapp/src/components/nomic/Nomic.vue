@@ -395,6 +395,7 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
+        console.log('chat message!', message);
 
         if (message.author === 'system') {
           // TODO: replace above condition with `message.author == this.apiWallet` when api wallet set up
@@ -482,8 +483,6 @@ export default {
           this.currentTotals.abstain += 1;
           messageBody = messageBody.replace(this.TwilioIdentity, 'You');
           break;
-        default:
-          return false;
       }
 
       // Parse message args
