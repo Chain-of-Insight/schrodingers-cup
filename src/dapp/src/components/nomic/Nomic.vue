@@ -583,14 +583,22 @@ export default {
         } else {
           // Response OK but rule proposal failed
           this.$refs.proposal.alert.type = 'danger';
-          this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '" ...Please try again.';
+          this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '"... Please try again.';
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
         }
       } else if (result.status == 500) {
-        // ...
+        console.error('Error while trying to propose rule: ', result);
+        this.$refs.proposal.alert.type = 'danger';
+        this.$refs.proposal.alert.msg = 'There was an error while trying to propose your rule... Please try again.';
+        setTimeout(() => {
+          this._retireNotification();
+        }, 5000);
       }
+    },
+    getCurrentRound: function () {
+      
     }
   }
 };
