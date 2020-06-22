@@ -540,28 +540,7 @@ export default {
       this.showEditor = this.showEditor ? false : true;
     },
     castVote: function (type) {
-      if (!this.chatChannel)
-        return false;
-
-      let msgBody = null;
-
-      switch (type) {
-        case voteType.YES:
-          msgBody = `${this.TwilioIdentity} voted YES in round ${this.currentRound}`;
-          break;
-        case voteType.NO:
-          msgBody = `${this.TwilioIdentity} voted NO in round ${this.currentRound}`;
-          break;
-        case voteType.ABSTAIN:
-          msgBody = `${this.TwilioIdentity} abstained in round ${this.currentRound}`;
-          break;
-        default:
-          return;
-      }
-
-      const msgText = `${this.apiWallet}: ` + msgBody;
-      this.chatChannel.sendMessage(msgText);
-      this.votingCandidate = null;
+      // TODO: send a POST request to API here.
     },
     ruleProposalHandler: function () {
       this.$refs.proposal.promptForProposal();
