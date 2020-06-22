@@ -148,6 +148,13 @@ export default {
       this.currentView = 'ChangeType';
       this.changeType = null;
       this.$refs.timer.reset();
+      this._retireNotification();
+    },
+    _retireNotification: function () {
+      this.alert = {
+        type: null,
+        msg: null
+      };
     },
   }
 };

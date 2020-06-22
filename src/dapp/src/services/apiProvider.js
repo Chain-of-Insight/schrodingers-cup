@@ -44,8 +44,9 @@ async function auth(msg, sig, pubKey, address) {
  */
 async function proposeRule(jwt, code, index, kind, type) {
   if (typeof(jwt) !== 'string') {
-    return 'jwt rejected. String required, got ' + typeof code;
+    return 'jwt rejected. String required, got ' + typeof jwt;
   }
+
   if (typeof code !== 'string') {
     return 'code rejected. String required, got ' + typeof code;
   }
@@ -99,10 +100,42 @@ async function getPlayers() {
   return res;
 }
 
+/**
+ * Vote on a nomsu rule
+ */
+async function castVote(jwt, vote, round) {
+  if (typeof jwt !== 'string') {
+    return 'jwt rejected. String required, got ' + typeof jwt;
+  }
+
+  if (typeof vote !== 'boolean') {
+    return 'vote rejected. Boolean required, got ' + typeof vote;
+  }
+
+  if (typeof round !== 'number') {
+    return 'round rejected. Number required, got ' + typeof round;
+  }
+
+  const config = {
+    headers: {
+      'Authorization': 'Bearer ' + jwt
+    }
+  }
+
+  let apiEndpoint = API_URL + 'game/vote';
+  const res = await axios.post(apiEndpoint, {
+    vote: vote,
+    round: round
+  }, config);
+
+  return res;
+};
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
   proposeRule: proposeRule,
+  castVote: castVote,
   getRoundNumber: getRoundNumber,
   getPlayers: getPlayers
 };

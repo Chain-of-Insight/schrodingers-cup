@@ -26,6 +26,13 @@
             </div> -->
           </div>
           <div class="modal-body">
+            <!-- Notifications -->
+            <Notification 
+              :type="alert.type" 
+              :msg="alert.msg" 
+              v-on:reset="alert = {type: null, msg: null}"
+              :local="true"
+            ></Notification>
             <pre v-if="votingCandidate" class="term-container">{{ votingCandidate.code }}</pre>
           </div>
           <div class="modal-footer container-fluid">
@@ -35,7 +42,7 @@
                   <button
                     type="button"
                     class="btn btn-block btn-lg btn-secondary"
-                    @click="vote(voteType.ABSTAIN)"
+                    @click="vote(voteTypes.ABSTAIN)"
                     :class="{ 'disabled': votingWindowClosed } "
                     :disabled="votingWindowClosed"
                   >Abstain</button>
@@ -45,7 +52,7 @@
                     <button
                       type="button"
                       class="btn btn-lg btn-danger"
-                      @click="vote(voteType.NO)"
+                      @click="vote(voteTypes.NO)"
                       :class="{ 'disabled': votingWindowClosed } "
                       :disabled="votingWindowClosed"
                     >
@@ -54,7 +61,7 @@
                     <button
                       type="button"
                       class="btn btn-lg btn-success"
-                      @click="vote(voteType.YES)"
+                      @click="vote(voteTypes.YES)"
                       :class="{ 'disabled': votingWindowClosed } "
                       :disabled="votingWindowClosed"
                     >
@@ -75,9 +82,13 @@
   const $ = window.jQuery;
 
   import Countdown from '../common/Countdown.vue';
+  import Notification from '../common/Notifications.vue';
 
   export default {
-    components: { Countdown },
+    components: {
+      Countdown,
+      Notification
+    },
     props: {
       turnWindow: {
         required: true,
@@ -88,17 +99,21 @@
       return {
         votingCandidate: null,
         votingWindowClosed: false,
-        voteType: {
-          YES: 0,
-          NO: 1,
+        voteTypes: {
+          YES: 1,
+          NO: 0,
           ABSTAIN: -1
-        }
+        },
+        alert: {
+          type: null,
+          msg: null
+        },
       }
     },
     mounted: function () {
       // Start timer
       $('#voting-modal').on('shown.bs.modal', this.startTimer.bind(this));
-      $('#voting-modal').on('hidden.bs.modal', this.resetTimer.bind(this));
+      $('#voting-modal').on('hidden.bs.modal', this.resetModal.bind(this));
     },
     methods: {
       promptForVote: function (votingCandidate) {
@@ -109,49 +124,41 @@
         this.votingCandidate = votingCandidate
         $('#voting-modal').modal('show');
       },
-      // startTimer: function () {
-      //   this.secondsLeft = this.turnWindow;
-      //   this.timer = setInterval(this.timerDecrement, 1000);
-      // },
-      // resetTimer: function () {
-      //   clearInterval(this.timer);
-      //   this.secondsLeft = this.turnWindow;
-      //   this.votingCandidate = null;
-      // },
-      // timerDecrement: function () {
-      //   if (this.secondsLeft > -2) {
-      //     this.secondsLeft -= 1;
-      //   } else {
-      //     $('#voting-modal').modal('hide');
-      //     // Register vote as abstained if no action when time runs out
-      //     this.$emit('vote-cast', 'abstain');
-      //   }
-      // },
+      closeModal: function () {
+        $('#voting-modal').modal('hide');
+      },
       vote: function (type) {
         if (
           typeof(type) !== 'number' || (
-            type !== this.voteType.YES &&
-            type !== this.voteType.NO &&
-            type !== this.voteType.ABSTAIN
+            type !== this.voteTypes.YES &&
+            type !== this.voteTypes.NO &&
+            type !== this.voteTypes.ABSTAIN
           )
         ) {
           return false;
         }
 
         this.$emit('vote-cast', type);
-        $('#voting-modal').modal('hide');
       },
       closeTurnWindow: function () {
         this.votingWindowClosed = true;
-        $emit('vote-cast', voteType.ABSTAIN);
+        $emit('vote-cast', voteTypes.ABSTAIN);
         $('#voting-modal').modal('hide');
       },
       startTimer: function () {
         this.$refs.timer.start();
       },
-      resetTimer: function () {
+      resetModal: function () {
+        this.votingCandidate = null;
         this.$refs.timer.reset();
-      }
+        this._retireNotification();
+      },
+      _retireNotification: function () {
+        this.alert = {
+          type: null,
+          msg: null
+        };
+      },
     }
   }
 </script>

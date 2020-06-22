@@ -87,7 +87,7 @@
         <Voting
           v-if="chatChannelJoined"
           v-bind:turn-window="turnWindow"
-          v-on:vote-cast="castVote"
+          v-on:vote-cast="onVoteCast"
           ref="voting"
           v-bind:voting-candidate="votingCandidate"
         ></Voting>
@@ -126,6 +126,7 @@ import {
 import {
   PerformAuth,
   proposeRule,
+  castVote,
   getRoundNumber,
   getPlayers
 } from '../../services/apiProvider';
@@ -138,12 +139,11 @@ import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
-const voteType = {
-  YES: 0,
-  NO: 1,
+const voteTypes = {
+  YES: 1,
+  NO: 0,
   ABSTAIN: -1
 }
-if (Object.freeze) Object.freeze(voteType);
 
 const TZ_WALLET_PATTERN = "tz(1|2|3)[a-zA-Z0-9]{33}";
 
@@ -541,37 +541,73 @@ export default {
     toggleEditor: function () {
       this.showEditor = this.showEditor ? false : true;
     },
-    castVote: function (type) {
-      // TODO: send a POST request to API here.
+    onVoteCast: async function (vote) {
+      if (vote === voteTypes.ABSTAIN) {
+        // Don't send anything on abstain, just increment
+        this.currentTotals.abstain += 1;
+        return false;
+      }
+
+      let result = null;
+      try {
+        result = await castVote(this.jwtToken, Boolean(vote), this.currentRound);
+      } catch (error) {
+        result = error.response;
+      }
+
+      if (result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        if (result.data.success) {
+          this.$refs.voting.closeModal();
+          this.alert.type = 'success';
+          this.alert.msg = 'Your vote was cast successfully';
+          setTimeout(() => {
+            this._retireNotification();
+          }, 5000);
+
+          // Update round number
+          this.currentRound = result.data.round;
+        } else {
+          // Response OK but vote cast failed
+          this.$refs.voting.alert.type = 'danger';
+          this.$refs.voting.alert.msg = 'Vote cast unsuccessful: "' + result.data.message + '"... Please try again.';
+          setTimeout(() => {
+            this.$refs.voting._retireNotification();
+          }, 5000);
+        }
+      } else if (result.status == 500) {
+        console.error('Error while trying to propose rule: ', result);
+        this.$refs.voting.alert.type = 'danger';
+        this.$refs.voting.alert.msg = 'There was an error while trying to cast your vote... Please try again.';
+        setTimeout(() => {
+          this.$refs.voting._retireNotification();
+        }, 5000);
+      }
     },
     ruleProposalHandler: async function () {
       if (!this.jwtToken) {
         this.alert.type = 'danger';
-        this.alert.msg = "It's your turn, but you havent' been authenticated yet! Try signing a message with TezBridge again...";
-        // this.doLoginMessageSigning();
+        this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Try signing a message with TezBridge again...";
         setTimeout(async () => {
           this._retireNotification();
           this.ruleProposalHandler();
           await this.doLoginMessageSigning();
-        }, 2000);
+        }, 3000);
       } else {
         this.$refs.proposal.promptForProposal();
       }
     },
     onRuleProposed: async function (code, index, kind, type) {
-      // if (!this.jwtToken) {
-      //   console.error("It's your turn, but you havent' been authenticated yet... Go <a href=\"#\">here</a> to try signing a message again so you can propose a rule!");
-      //   return false;
-      // }
-
       let result = null;
       try {
         result = await proposeRule(this.jwtToken, code, index, kind, type);
       } catch (error) {
         result = error.response;
       }
-      
-      console.log('Propose rule result =====>', result);
 
       if (result.status == 200) {
         if (!result.data) {
@@ -597,7 +633,7 @@ export default {
           this.$refs.proposal.alert.type = 'danger';
           this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '"... Please try again.';
           setTimeout(() => {
-            this._retireNotification();
+            this.$refs.voting._retireNotification();
           }, 5000);
         }
       } else if (result.status == 500) {
@@ -605,7 +641,7 @@ export default {
         this.$refs.proposal.alert.type = 'danger';
         this.$refs.proposal.alert.msg = 'There was an error while trying to propose your rule... Please try again.';
         setTimeout(() => {
-          this._retireNotification();
+          this.$refs.voting._retireNotification();
         }, 5000);
       }
     },
