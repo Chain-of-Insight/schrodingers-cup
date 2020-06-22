@@ -28,42 +28,24 @@
         timer: null
       }
     },
-    mounted: function () {
-      // this.start();
-    },
     destroyed: function () {
       clearInterval(this.timer);
     },
     computed: {
       hours: function () {
         let hours = null;
-        if (this.windowClosed) {
-          hours = 0 
-        } else {
-          hours = Math.floor(this.secondsLeft / 3600);
-        }
+        hours = Math.floor(this.secondsLeft / 3600);
         return hours.toString().padStart(2, '0');
       },
       minutes: function () {
         let minutes = null;
-        if (this.windowClosed) {
-          minutes = 0 
-        } else {
-          minutes = Math.floor((this.secondsLeft % 3600) / 60);
-        }
+        minutes = Math.floor((this.secondsLeft % 3600) / 60);
         return minutes.toString().padStart(2, '0');
       },
       seconds: function () {
         let seconds = null;
-        if (this.windowClosed) {
-          seconds = 0 
-        } else {
-          seconds = this.secondsLeft % 60;
-        }
+        seconds = this.secondsLeft % 60;
         return seconds.toString().padStart(2, '0');
-      },
-      windowClosed: function () {
-        return this.secondsLeft <= 0;
       }
     },
     methods: {
@@ -76,9 +58,10 @@
         this.secondsLeft = this.duration;
       },
       timerDecrement: function () {
-        if (this.secondsLeft > -2) {
+        if (this.secondsLeft > 0) {
           this.secondsLeft -= 1;
         } else {
+          this.secondsLeft = 0;
           this.$emit('ended');
         }
       }

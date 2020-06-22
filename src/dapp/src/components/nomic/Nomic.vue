@@ -145,7 +145,7 @@ const voteTypes = {
   ABSTAIN: -1
 }
 
-const TZ_WALLET_PATTERN = "tz(1|2|3)[a-zA-Z0-9]{33}";
+const TZ_WALLET_PATTERN = "(tz(?:1|2|3)[a-zA-Z0-9]{33})";
 
 export default {
   components: {
@@ -197,14 +197,11 @@ export default {
     msgPatterns: function () {
       return {
         NEW_TURN_PATTERN: `^It's ${TZ_WALLET_PATTERN}'s turn to propose a rule change$`,
-        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round ${this.currentRound}$`,
-        // CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
-        // UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
-        // TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
-        // DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
-        YES_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
-        NO_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
-        ABSTAIN_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
+        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (${this.currentRound})$`,
+        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (${this.currentRound})$`,
+        // YES_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
+        // NO_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
+        // ABSTAIN_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
       }
     }
   },
@@ -443,7 +440,7 @@ export default {
       });
     },
     onSystemMessage: function (message) {
-      const messageBody = message.body;
+      let messageBody = message.body;
       let playerAddress = null;
 
       switch (messageBody) {
@@ -473,16 +470,24 @@ export default {
             this.$refs.proposal.promptForProposal();
           }
           break;
-        case (messageBody.match(RegExp(this.msgPatterns.YES_VOTE_PATTERN)) || {}).input:
-          this.currentTotals.yes += 1;
-          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
-          break;
-        case (messageBody.match(RegExp(this.msgPatterns.NO_VOTE_PATTERN)) || {}).input:
-          this.currentTotals.no += 1;
-          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
-          break;
-        case (messageBody.match(RegExp(this.msgPatterns.ABSTAIN_VOTE_PATTERN)) || {}).input:
-          this.currentTotals.abstain += 1;
+        case (messageBody.match(RegExp(this.msgPatterns.VOTE_PATTERN)) || {}).input:
+          const matches = messageBody.match(RegExp(this.msgPatterns.VOTE_PATTERN));
+          const vote = matches[2];
+          const round = parseInt(matches[3]);
+
+          // If vote msg applies to this round, increment vote counter
+          if (round === this.currentRound) {
+            switch (vote) {
+              case "YES":
+                this.currentTotals.yes ++;
+                break;
+              case "NO":
+                this.currentTotals.no ++;
+                break;
+            }
+          }
+          
+          // If msg applies to your vote:
           messageBody = messageBody.replace(this.TwilioIdentity, 'You');
           break;
       }
@@ -543,8 +548,7 @@ export default {
     },
     onVoteCast: async function (vote) {
       if (vote === voteTypes.ABSTAIN) {
-        // Don't send anything on abstain, just increment
-        this.currentTotals.abstain += 1;
+        // Don't send anything on abstain
         return false;
       }
 
