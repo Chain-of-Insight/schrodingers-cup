@@ -191,7 +191,10 @@ export default {
       yes: 0,
       no: 0,
       abstain: 0
-    }
+    },
+    players: [],
+    currentTurn: null,
+    nextTurn: null
   }),
   computed: {
     msgPatterns: function () {
@@ -216,9 +219,6 @@ export default {
       // Get current round number
       await this.getCurrentRound();
 
-      // Get players
-      await this.getPlayers();
-
       // Request Twilio token
       try {
         // Request auth
@@ -232,6 +232,8 @@ export default {
           // Connect to chat room
           this.connectChat();
           await this.doLoginMessageSigning();
+          // Get players
+          await this.getPlayers();
         }
       } catch (e) {
         // Auth failed
@@ -682,9 +684,18 @@ export default {
           return false;
         }
 
-        console.log('Players =====>', result);
+        // console.log('Players =====>', result);
+        this.players = result.data.players;
+        this.currentTurn = result.data.currentTurn;
+        this.nextTurn = result.data.nextTurn;
+
+        // If user's turn, prompt for rule proposal immediately?
+        if (this.currentTurn === this.TwilioIdentity) {
+          // TODO: how to keep track of whether or not user already has rule up for vote?
+          this.$refs.proposal.promptForProposal();
+        }
       } else if (result.status == 500) {
-        console.error('Error while trying to get current round number: ', result);
+        console.error('Error while trying to get players: ', result);
       }
     }
   }
