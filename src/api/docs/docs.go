@@ -135,6 +135,22 @@ var doc = `{
                 }
             }
         },
+        "/round": {
+            "get": {
+                "description": "Players",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The current round, 0 if game has not started, or -1 if no players are online",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CurrentRound"
+                        }
+                    }
+                }
+            }
+        },
         "/test": {
             "post": {
                 "description": "Run some arbitrary nomsu code",
@@ -186,6 +202,14 @@ var doc = `{
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.CurrentRound": {
+            "type": "object",
+            "properties": {
+                "round": {
+                    "type": "integer"
                 }
             }
         },

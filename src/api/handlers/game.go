@@ -5,6 +5,7 @@ import (
 	"time"
 	"strconv"
 	"strings"
+	"os"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -14,6 +15,10 @@ import (
 
 // XXX TODO: Set turn duration from Tezos
 const turnDuration = 300
+// XXX TODO: Set quorum ratio from Tezos
+const quorumRatio float64 = 100
+// XXX TODO: Set points to win from Tezos
+const pointsToWin = 100
 
 const DELETE = "delete"
 const CREATE = "create"
@@ -32,6 +37,17 @@ type RuleProposal struct {
 	RuleType		string `json:"kind" form:"kind"`// Mutable / Immutable
 	RuleIndex		int `json:"index" form:"index"`	// rule index of the existing rule 
 													// (or -1 if creating a new rule)
+}
+
+type VoteResult struct {
+	Success bool `json:"success"`
+	Round	int	`json:"round"` // 
+	Message string `json:"message"` // "OK!" or error message
+}
+
+type Vote struct {
+	Vote bool `json:"vote"`
+	Round int `json:"round"`
 }
 
 // @description Submit a new rule proposal
@@ -123,7 +139,16 @@ func SubmitProposal(c echo.Context) error {
 	// RuleIndex		int `json:"index" form:"index"`
 	
 	// Create rule storage
-	CreateRuleEntry(tzid, input.Code, input.ProposalType, input.RuleType, input.RuleIndex, round)
+	ruleWasCreated := CreateRuleEntry(tzid, input.Code, input.ProposalType, input.RuleType, input.RuleIndex, round)
+	if !ruleWasCreated {
+		r := &ProposalResult{
+			Success: false,
+			Round: round,
+			Message: "Failed to create rule entry of type " + input.RuleType,
+		}
+		return c.JSON(http.StatusOK, r)	
+	}
+
 
 	// Update chat
 	message := tzid + " proposed a rule in round " + strconv.Itoa(round)
@@ -152,6 +177,18 @@ func SubmitProposal(c echo.Context) error {
 // @param Authorization header string true "Bearer token"
 // @produce json
 func CastVote(c echo.Context) error {
+	// type VoteResult struct {
+	// 	Success bool `json:"success"`
+	// 	Round	int	`json:"round"` // 
+	// 	Message string `json:"message"` // "OK!" or error message
+	// }
+	
+	// type Vote struct {
+	// 	Vote bool `json:"vote"`
+	// 	Round int `json:"round"`
+	// }
+
+	input := new(Vote)
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
@@ -166,6 +203,7 @@ func CastVote(c echo.Context) error {
 
 	currentDay := time.Now().Format("2006-01-02")
 	roundKey := "round:" + currentDay
+	playersListKey := "players:" + currentDay
 
 	// Current round
 	round, err := redis.Int(conn.Do("GET", roundKey))
@@ -173,13 +211,131 @@ func CastVote(c echo.Context) error {
 		return err
 	}
 
-	if (round == 0 || err != nil) {
-		round = 1
+	// Players
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return err
+	}
+
+	// Game not started
+	if (round == 0) {
+		r := &VoteResult{
+			Success: false,
+			Round: round,
+			Message: "Unauthorized",
+		}
+		return c.JSON(http.StatusOK, r)
+	// Voting on incorrect round
+	} else if (input.Round != round) {
+		r := &VoteResult{
+			Success: false,
+			Round: round,
+			Message: "Unauthorized",
+		}
+		return c.JSON(http.StatusOK, r)
+	}
+
+	// If user can vote
+	canVote := userCanVote(tzid, round)
+	var success bool;
+	var message string;
+	var votetype string;
+	if canVote {
+		if (input.Vote == true) {
+			votetype = "YES"
+		} else {
+			votetype = "NO"
+		}
+
+		success = true
+		message = tzid + " successfully voted " + votetype + " in round " + strconv.Itoa(round)
+	} else {
+		r := &VoteResult{
+			Success: false,
+			Round: round,
+			Message: "Unauthorized",
+		}
+		return c.JSON(http.StatusOK, r)
+	}
+
+	// Cast vote
+	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+	
+	var vote struct {
+		author		string `redis:"author"`
+		timestamp 	string `redis:"timestamp"`
+		vote		bool `redis:"vote"`
+	}
+
+	vote.author = tzid
+	vote.timestamp = timestamp
+	vote.vote = input.Vote
+
+	// Update vote
+	if _, err := conn.Do("LPUSH", voteKey, vote); err != nil {
+		return err
+	}
+
+	// Handle quorum vote
+	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
+	if err != nil {
+		return err
+	}
+	totalPlayers := len(players)//here
+	totalVotes := len(votes)
+	isQuorum := isValidQuorum(totalPlayers, totalVotes)
+
+	if isQuorum {
+		// Handle round proccessing
+		// XXX TODO: THIS
+		processRound := processRound(round)
+		// @pogo @drew
+		
+		// State of paradox :o
+		if processRound == false {
+			statusMsg := "Error proccessing round. The game has reached a state of paradox!"
+			paradoxMessage := message + " which has brought the game to a state of paradox"
+			notification := releaseNotification(paradoxMessage)
+			if notification == false {
+				success = false
+				statusMsg = "Error releasing notification"
+			} else {
+				success = true
+				statusMsg = "OK!"
+			}
+			EndNomic(tzid);
+			r := &VoteResult{
+				Success: false,
+				Round: round,
+				Message: statusMsg,
+			}
+			return c.JSON(http.StatusOK, r)
+		}
+		// Check game over
+		isGameOver := checkGameOver()
+		if isGameOver {
+			EndNomic(tzid)
+		}
+	}
+
+	// Release notification
+	var statusMsg string;
+	notification := releaseNotification(message)
+	if notification == false {
+		statusMsg = "Error releasing notification"
+	} else {
+		statusMsg = "OK!"
 	}
 	
-	return c.JSON(http.StatusOK, map[string]string{
-		"tzid": tzid,
-	})
+	// HTTP repsonse
+	r := &VoteResult{
+		Success: success,
+		Round: round,
+		Message: statusMsg,
+	}
+
+	return c.JSON(http.StatusOK, r)
 }
 
 // @description Settle game window
@@ -189,18 +345,32 @@ func CastVote(c echo.Context) error {
 // 	return c.String(http.StatusOK, "todo settle game")
 // }
 
-func CreateRuleEntry(author string, code string, pType string, rKind string, rIndex int, round int) {
+func CreateRuleEntry(author string, code string, pType string, rKind string, rIndex int, round int) bool {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
-		return
+		return false
 	}
 
 	defer conn.Close()
 
 	currentDay := time.Now().Format("2006-01-02")
 	proposalsListKey := "proposals:" + currentDay
+	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+
+	// Check if rule proposal exists for round
+	// Checking by votes is easier since their key
+	// is instanced by round. This works because
+	// submitting a proposal automatically casts the 
+	// first vote as e.g. "yes" for proposing player
+	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
+	if err != nil {
+		return false
+	}
+	if len(votes) != 0 {
+		return false
+	}
 
 	var proposal struct {
 		author 		string `redis:"author"`
@@ -218,8 +388,22 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	proposal.proposal = pType
 	proposal.round = round
 
+	var vote struct {
+		author		string `redis:"author"`
+		timestamp 	string `redis:"timestamp"`
+		vote		bool `redis:"vote"`
+	}
+
+	vote.author = author
+	vote.timestamp = timestamp
+	vote.vote = true
+
 	// Create New / Update Existing
 	if (pType != DELETE && pType != TRANSMUTE) {
+		// Proposal type must be valid
+		if (pType != CREATE && pType != UPDATE) {
+			return false
+		}
 		proposal.code = code
 		proposal.ruletype = "mutable" // Only mutable rules can be created / updated
 		if pType == CREATE {
@@ -240,9 +424,17 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 
 	proposal.success = false;
 	
+	// Update proposal
 	if _, err := conn.Do("LPUSH", proposalsListKey, proposal); err != nil {
-		return
+		return false
 	}
+
+	// Update vote
+	if _, err := conn.Do("LPUSH", voteKey, vote); err != nil {
+		return false
+	}
+
+	return true
 }
 
 func releaseNotification(notification string) bool {
@@ -290,6 +482,144 @@ func releaseNotification(notification string) bool {
 
 	// Et voila
 	return true
+}
+
+
+// XXX TODO - Process round
+func processRound(round int) bool {
+	if (round < 1) {
+		return false
+	}
+	// DO PROCESS ROUND STUFF HERE
+	return true
+}
+
+func isValidQuorum(totalPlayers int, totalVotes int) bool {
+	// Shift percentage to ratio multer
+	q := quorumRatio * 0.01
+	var players float64 = float64(totalPlayers)
+	var votes float64 = float64(totalVotes)
+	var isQuorum bool
+	// Minimum votes required (float64 with decimals)
+	votesRequired := players * q
+	if votes >= votesRequired {
+		isQuorum = true
+	} else {
+		isQuorum = false
+	}
+	return isQuorum
+}
+
+func userCanVote(playerAddress string, round int) bool {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return false
+	}
+
+	defer conn.Close()
+
+	currentDay := time.Now().Format("2006-01-02")
+	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	playersListKey := "players:" + currentDay
+	
+	// Load existing logged in players
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return false
+	}
+
+	// Check if player has already logged in 
+	playerExists := ItemExists(players, playerAddress)
+	if !playerExists {
+		return false
+	}
+
+	// Load existing votes of target round
+	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
+	if err != nil {
+		return false
+	}
+
+	// Check if player has already voted in this round
+	voteExists := ItemExists(votes, playerAddress)
+	if voteExists {
+		return false
+	}
+
+	// Else, can vote
+	return true
+}
+
+func checkGameOver() bool {
+	// Redis init
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return false
+	}
+
+	defer conn.Close()
+	
+	currentDay := time.Now().Format("2006-01-02")
+	playersListKey := "players:" + currentDay
+	
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return false
+	}
+
+	var playerList []string;
+	
+	// Build player list
+	for _, s := range players {
+		split := strings.Split(s, " ")
+		address := split[1]
+		playerList = append(playerList, address)
+	}
+
+	// Check points
+	var gameover bool = false;
+	for _, p := range playerList {
+		pKey := p + ":points:" + currentDay
+		points, err := redis.Int(conn.Do("GET", pKey))
+		if err != nil {
+			points = 0
+		}
+		if points >= 100 {
+			gameover = true
+			break
+		}
+	}
+
+	return gameover
+}
+
+/*
+TODO: finish this...
+- Update chat with game result
+- Add environment variables middleware to disable the server when Nomic is won
+*/
+func EndNomic(player string) {
+	os.Setenv("GAME_OVER", "1")
+	gameoverMsg := "This game of nomic has just been concluded by " + player
+	gameoverNotification := releaseNotification(gameoverMsg)
+	if (!gameoverNotification) {
+		return	
+	}
+	ggMsg := "Congrats and GG to everyone who participated!"
+	ggNotification := releaseNotification(ggMsg)
+	if (!ggNotification) {
+		return
+	}
+}
+
+func ItemExists(slice []string, entry string) bool {
+	for _, s := range slice {
+		if strings.Contains(s, entry) {
+			return true
+		}
+	}
+    return false
 }
 
 func userCan(players []string, times []string) string {

@@ -16,6 +16,11 @@ definitions:
       token:
         type: string
     type: object
+  handlers.CurrentRound:
+    properties:
+      round:
+        type: integer
+    type: object
   handlers.PlayerList:
     properties:
       currentTurn:
@@ -144,6 +149,16 @@ paths:
           description: List of players in the current gameplay session
           schema:
             $ref: '#/definitions/handlers.PlayerList'
+  /round:
+    get:
+      description: Players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The current round, 0 if game has not started, or -1 if no players are online
+          schema:
+            $ref: '#/definitions/handlers.CurrentRound'
   /test:
     post:
       description: Run some arbitrary nomsu code
