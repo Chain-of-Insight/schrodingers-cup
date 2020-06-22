@@ -96,6 +96,9 @@ export default {
     promptForProposal: function () {
       $('#proposal-modal').modal('show');
     },
+    closeModal: function () {
+      $('#proposal-modal').modal('hide');
+    },
     resetModal: function () {
       this.currentView = 'ChangeType';
       this.changeType = null;

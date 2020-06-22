@@ -196,20 +196,20 @@ export default {
       yes: 0,
       no: 0,
       abstain: 0
-    },
-    apiWallet: 'BECjcQFZnoVYu94ns5HMLW7yaDsoJZYbU1zt',
+    }
   }),
   computed: {
     msgPatterns: function () {
       return {
         NEW_TURN_PATTERN: `^It's ${TZ_WALLET_PATTERN}'s turn to propose a rule change$`,
-        CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
-        UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
-        TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
-        DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
-        YES_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
-        NO_VOTE_PATTERN: `${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
-        ABSTAIN_VOTE_PATTERN: `${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
+        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round ${this.currentRound}$`,
+        // CREATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed a new rule$`,
+        // UPDATE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed an update to rule \\d+$`,
+        // TRANSMUTE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to transmute rule \\d+$`,
+        // DELETE_RULE_PATTERN: `^${TZ_WALLET_PATTERN} has proposed to delete rule \\d+$`,
+        YES_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
+        NO_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
+        ABSTAIN_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
       }
     }
   },
@@ -395,10 +395,8 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
-        apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
-        isSystemMessage = apiWalletPattern.test(message.body); // XXX: FOR TESTING ONLY
 
-        if (isSystemMessage) {
+        if (message.author === 'system') {
           // TODO: replace above condition with `message.author == this.apiWallet` when api wallet set up
           this.onSystemMessage(message);
         } else {
@@ -442,25 +440,28 @@ export default {
       });
     },
     onSystemMessage: function (message) {
-      const apiWalletPattern = new RegExp('^' + this.apiWallet + ':\\s'); // XXX: FOR TESTING ONLY
-      let messageBody = message.body.replace(apiWalletPattern, ''); // XXX: FOR TESTING ONLY
+      const messageBody = message.body;
+      let playerAddress = null;
 
       switch (messageBody) {
-        case (messageBody.match(RegExp(this.msgPatterns.CREATE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.UPDATE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.TRANSMUTE_RULE_PATTERN)) || {}).input:
-        case (messageBody.match(RegExp(this.msgPatterns.DELETE_RULE_PATTERN)) || {}).input:
-          // On another player proposing a rule
-          this.votingCandidate = {
-            name: 'testRule',
-            code: '$test_string = "this is test code"\nsay($test_string)'
+        case (messageBody.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
+          // TODO: GET (/game/proposals?) to get latest proposed rule
+          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+
+          if (playerAddress !== this.TwilioIdentity) {
+            // On another player proposing a rule
+            this.votingCandidate = {
+              name: 'testRule',
+              code: '$test_string = "this is test code"\nsay($test_string)'
+            }
+            console.log('Time to vote!');
+            this.$refs.voting.promptForVote(this.votingCandidate);
           }
-          this.$refs.voting.promptForVote(this.votingCandidate);
           break;
         case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
           // On new turn
           // Extract player's address from string
-          const playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
           // Check if it's logged in player
           if (playerAddress === this.TwilioIdentity) {
             // Format message
@@ -583,7 +584,7 @@ export default {
           break;
         case 2:
           // another player's turn
-          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC has proposed a new rule`;
+          msgBody = `tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC proposed a rule in round 1`;
           break;
         case 3:
           // another player's turn
@@ -620,7 +621,9 @@ export default {
       console.log('Propose rule result =====>', result);
 
       if (result.status == 200) {
-        // Rule proposed successfully
+        this.$refs.proposal.closeModal();
+        this.alert.type = 'success';
+        this.alert.msg = 'Your rule was proposed successfully';
       }
     }
   }

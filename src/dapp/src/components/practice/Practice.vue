@@ -242,28 +242,6 @@ const ruleSetTypes = {
 
 const CURRENT_RULES = require('./rules/currentRules.json');
 
-// const DEMO_CODE = `### In Nomsu, variables have a "$" prefix, and you can just assign to them
-// ### without declaring them first:
-// $x = 1
-// test that ($x == 1)
-
-// ### Variables which have not yet been set have the value (nil)
-// test that ($not_yet_set == (nil))
-
-// ### Variables can be nameless:
-// $ = 99
-
-// ### Or have spaces, if surrounded with parentheses:
-// $(my favorite number) = 23
-
-// ### Figure out what value $my_var should have:
-// $my_var = 100
-// $my_favourite_number = 1
-// $x = 0
-// $my_var = ($my_var + $x + $my_favourite_number)
-// test that ($my_var == 101)
-// say("OK!")`;
-
 export default {
   components: {
     Notification,
