@@ -62,6 +62,7 @@
           this.secondsLeft -= 1;
         } else {
           this.secondsLeft = 0;
+          clearInterval(this.timer);
           this.$emit('ended');
         }
       }

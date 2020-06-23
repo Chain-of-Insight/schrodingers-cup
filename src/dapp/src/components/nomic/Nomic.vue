@@ -30,7 +30,7 @@
             v-bind="currentTotals"
             :turn-window="turnWindow"
             ref="totals"
-            v-on:round-over="getPlayers()"
+            v-on:round-over="getCurrentPlayers"
           ></Totals>
         </section>
 
@@ -239,7 +239,7 @@ export default {
           this.connectChat();
           await this.doLoginMessageSigning();
           // Get players
-          await this.getPlayers();
+          await this.getCurrentPlayers();
         }
       } catch (e) {
         // Auth failed
@@ -674,7 +674,7 @@ export default {
         console.error('Error while trying to get current round number: ', result);
       }
     },
-    getPlayers: async function () {
+    getCurrentPlayers: async function () {
       let result = null;
       try {
         result = await getPlayers();

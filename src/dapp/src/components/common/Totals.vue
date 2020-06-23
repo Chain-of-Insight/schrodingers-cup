@@ -6,7 +6,7 @@
     <p class="h2 m-0">Abstain: <span class="badge badge-pill badge-secondary">{{ abstain }}</span></p>
     <Countdown
       :duration="turnWindow"
-      v-on:ended="endRound()"
+      v-on:ended="endRound"
       ref="timer"
     ></Countdown>
   </div>
