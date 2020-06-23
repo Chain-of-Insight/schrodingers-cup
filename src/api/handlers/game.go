@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io/ioutil"
 	"net/http"
 	"nomsu-api/nomsu"
 	"os"
