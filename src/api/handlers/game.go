@@ -37,7 +37,7 @@ type RuleProposal struct {
 	ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
 	RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
 	RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
-	// (or -1 if creating a new rule)
+													// (or -1 if creating a new rule)
 }
 
 type VoteResult struct {
@@ -59,6 +59,10 @@ type Vote struct {
 // @produce json
 func SubmitProposal(c echo.Context) error {
 	input := new(RuleProposal)
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
@@ -129,15 +133,10 @@ func SubmitProposal(c echo.Context) error {
 		return c.JSON(http.StatusOK, r)
 	}
 
-	// Update round storage (Redis)
-	if _, err := conn.Do("SET", roundKey, round); err != nil {
-		return err
-	}
-
-	// Code 			string `json:"code" form:"code"`
-	// ProposalType		string `json:"type" form:"type"`
-	// RuleType			string `json:"kind" form:"kind"`
-	// RuleIndex		int `json:"index" form:"index"`
+	// Code         string `json:"code" form:"code"`   // Nomsu code
+	// ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
+	// RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
+	// RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
 
 	// Create rule storage
 	ruleWasCreated := CreateRuleEntry(tzid, input.Code, input.ProposalType, input.RuleType, input.RuleIndex, round)
@@ -164,6 +163,11 @@ func SubmitProposal(c echo.Context) error {
 		statusMsg = "OK!"
 	}
 
+	// Update round storage (Redis)
+	if _, err := conn.Do("SET", roundKey, round); err != nil {
+		return err
+	}
+
 	r := &ProposalResult{
 		Success: success,
 		Round:   round,
@@ -178,18 +182,11 @@ func SubmitProposal(c echo.Context) error {
 // @param Authorization header string true "Bearer token"
 // @produce json
 func CastVote(c echo.Context) error {
-	// type VoteResult struct {
-	// 	Success bool `json:"success"`
-	// 	Round	int	`json:"round"` // 
-	// 	Message string `json:"message"` // "OK!" or error message
-	// }
-	
-	// type Vote struct {
-	// 	Vote bool `json:"vote"`
-	// 	Round int `json:"round"`
-	// }
-
 	input := new(Vote)
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
@@ -356,7 +353,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	defer conn.Close()
 
 	currentDay := time.Now().Format("2006-01-02")
-	proposalsListKey := "proposals:" + currentDay
+	proposalItemKey := "proposals:" + currentDay + ":" + strconv.Itoa(round)
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 
@@ -424,9 +421,9 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	}
 
 	proposal.success = false;
-	
+
 	// Update proposal
-	if _, err := conn.Do("LPUSH", proposalsListKey, proposal); err != nil {
+	if _, err := conn.Do("HSET", proposalItemKey, "author", proposal.author, "code", proposal.code, "timestamp", proposal.timestamp, "proposal", proposal.proposal, "ruletype", proposal.ruletype, "ruleindex", proposal.ruleindex, "round", proposal.round, "success", proposal.success); err != nil {
 		return false
 	}
 
