@@ -37,7 +37,7 @@ type RuleProposal struct {
 	ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
 	RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
 	RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
-	// (or -1 if creating a new rule)
+													// (or -1 if creating a new rule)
 }
 
 type VoteResult struct {
