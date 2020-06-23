@@ -353,7 +353,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	defer conn.Close()
 
 	currentDay := time.Now().Format("2006-01-02")
-	proposalsListKey := "proposals:" + currentDay
+	proposalItemKey := "proposals:" + currentDay + ":" + strconv.Itoa(round)
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 
@@ -421,9 +421,9 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	}
 
 	proposal.success = false;
-	
+
 	// Update proposal
-	if _, err := conn.Do("LPUSH", proposalsListKey, proposal); err != nil {
+	if _, err := conn.Do("HSET", proposalItemKey, "author", proposal.author, "code", proposal.code, "timestamp", proposal.timestamp, "proposal", proposal.proposal, "ruletype", proposal.ruletype, "ruleindex", proposal.ruleindex, "round", proposal.round, "success", proposal.success); err != nil {
 		return false
 	}
 
