@@ -8,7 +8,7 @@
         data-toggle="tab"
         href="#rules-current"
         role="tab"
-        v-if="!ruleProposal"
+        v-if="!queuedOnly"
       >Current</a>
       <a
         class="nav-link"
@@ -16,15 +16,16 @@
         data-toggle="tab"
         href="#rules-saved"
         role="tab"
-        v-if="!ruleProposal"
+        v-if="!queuedOnly && !currentOnly"
       >Saved</a>
       <a
         class="nav-link"
-        :class="{ 'active': ruleProposal }"
+        :class="{ 'active': queuedOnly }"
         id="nav-queued-tab"
         data-toggle="tab"
         href="#rules-queued"
         role="tab"
+        v-if="!currentOnly"
       >Queued</a>
     </nav>
     <div class="tab-content border rounded-bottom border-top-0 flex-grow-1 flex-shrink-1 overflow-auto">
@@ -33,7 +34,7 @@
         id="rules-current"
         class="list-group list-group-flush tab-pane fade active show"
         role="tab-panel"
-        v-if="!ruleProposal"
+        v-if="!queuedOnly"
       >
         <p
           class="list-group-item border-0 text-muted"
@@ -61,7 +62,7 @@
         id="rules-saved"
         class="list-group list-group-flush tab-pane fade"
         role="tab-panel"
-        v-if="!ruleProposal"
+        v-if="!currentOnly && !queuedOnly"
       >
         <p
           class="list-group-item border-0 text-muted"
@@ -98,9 +99,10 @@
         class="list-group list-group-flush tab-pane fade"
         role="tab-panel"
         :class="{
-          'active': ruleProposal,
-          'show': ruleProposal
+          'active': queuedOnly,
+          'show': queuedOnly
         }"
+        v-if="!currentOnly"
       >
         <p
           class="list-group-item border-0 text-muted"
@@ -125,7 +127,7 @@
             class="btn btn-outline-warning"
             @click="unQueueRule(savedIndex, index)"
             style="word-break: keep-all;"
-            v-if="!ruleProposal"
+            v-if="!queuedOnly"
           ><small>Un&#8209;queue</small></button>
         </a>
       </div>
@@ -142,10 +144,6 @@
 
   export default {
     props: {
-      ruleProposal: {
-        default: false,
-        type: Boolean
-      },
       loadedRule: {
         type: Object,
         default: () => ({
@@ -168,6 +166,14 @@
       queuedRules: {
         type: Array,
         default: () => []
+      },
+      queuedOnly: {
+        type: Boolean,
+        default: false
+      },
+      currentOnly: {
+        type: Boolean,
+        default: false
       }
     },
     data: function () {

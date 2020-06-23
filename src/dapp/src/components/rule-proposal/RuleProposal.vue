@@ -29,22 +29,28 @@
                 v-on:go-back="currentView = 'ChangeType'"
                 v-on:compiled="onCompiled"
                 ref="proposal"
+                :rule-proposal="true"
+                :queued-only="currentView === 'Practice' ? true : false"
               ></component>
             </transition>
           </div>
           <div class="modal-footer d-block">
             <button
-              v-if="currentView === 'RuleSelect'"
+              v-if="currentView !== 'ChangeType'"
               type="button"
               class="btn btn-info float-left"
-              @click="currentView = 'ChangeType'"
+              @click="goBack()"
             >Back</button>
             <button
-              v-if="currentView === 'RuleSelect'"
+              v-if="submitEnabled || nextEnabled"
               type="button"
-              class="btn btn-success float-right"
-              @click="tryCompile()"
-            >Submit</button>
+              class="btn float-right"
+              :class="{
+                'btn-success': submitEnabled,
+                'btn-primary': nextEnabled
+              }"
+              @click="testRule()"
+            >{{ submitEnabled ? 'Submit' : nextEnabled ? 'Next' : null }}</button>
           </div>
         </div>
       </div>
@@ -67,6 +73,7 @@ const ruleTypes = {
   IMMUTABLE: 'immutable'
 }
 
+import Practice from '../practice/Practice.vue';
 import ChangeType from '../rule-proposal/ChangeType.vue';
 import RuleSelect from '../rule-proposal/RuleSelect.vue';
 import Notification from '../common/Notifications.vue';
@@ -77,7 +84,8 @@ export default {
     ChangeType,
     RuleSelect,
     Notification,
-    Countdown
+    Countdown,
+    Practice
   },
   props: {
     rule: Object,
@@ -100,7 +108,32 @@ export default {
       type: null,
       msg: null
     },
+    ruleCandidate: {
+      code: null,
+      index: null,
+      kind: 'mutable'
+    }
   }),
+  computed: {
+    submitEnabled: function () {
+      if (this.changeType === ruleChangeTypes.CREATE && this.currentView === 'Practice') {
+        return true;
+      }
+
+      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'RuleSelect') {
+        return true;
+      }
+
+      return false;
+    },
+    nextEnabled: function () {
+      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'Practice') {
+        return true;
+      }
+
+      return false;
+    }
+  },
   mounted: function () {
     // Start timer
     $('#proposal-modal').on('shown.bs.modal', this.startTimer.bind(this));
@@ -119,22 +152,47 @@ export default {
         return false;
       
       this.changeType = changeType
-      this.currentView = 'RuleSelect';
+      this.currentView = 'Practice';
     },
-    tryCompile: async function () {
-      if (this.currentView === 'RuleSelect') {
-        await this.$refs.proposal.tryCompile();
+    selectCurrentRule: function () {
+      // ...
+    },
+    testRule: async function () {
+      if (!this.ruleCandidate.code) {
+        await this.$refs.proposal.testRuleSet();
+      } else {
+        this.proposeRule();
       }
     },
     onCompiled: async function (successful, code, index) {
       if (!successful) {
         this.alert.type = 'danger';
         this.alert.msg = 'Fix your rule! Your rule must compile successfully before trying to propose it.';
+        setTimeout(() => {
+          this._retireNotification();
+        }, 5000);
         return;
       }
 
-      let kind = ruleTypes.MUTABLE; // How to handle transmutation?
-      this.$emit('rule-proposed', code, index, kind, this.changeType);
+      this.ruleCandidate.code = code;
+      this.ruleCandidate.index = index;
+      this.ruleCandidate.kind = ruleTypes.MUTABLE;
+
+      if (this.nextEnabled) {
+        this.currentView = 'RuleSelect';
+        this._retireNotification();
+      } else if (this.submitEnabled) {
+        this.proposeRule();
+      }
+    },
+    proposeRule () {
+      this.$emit(
+        'rule-proposed',
+        this.ruleCandidate.code,
+        this.ruleCandidate.index,
+        this.ruleCandidate.kind,
+        this.changeType
+      );
     },
     closeTurnWindow: function () {
         this.proposalWindowClosed = true;
@@ -147,8 +205,19 @@ export default {
     resetModal: function () {
       this.currentView = 'ChangeType';
       this.changeType = null;
+      this.ruleCandidate.code = null;
+      this.ruleCandidate.index = null;
+      this.ruleCandidate.kind = ruleTypes.MUTABLE;
       this.$refs.timer.reset();
       this._retireNotification();
+    },
+    goBack: function () {
+      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'RuleSelect') {
+        this.currentView = 'Practice';
+        return;
+      }
+
+      this.currentView = 'ChangeType';
     },
     _retireNotification: function () {
       this.alert = {

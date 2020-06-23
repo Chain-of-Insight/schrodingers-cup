@@ -38,7 +38,13 @@
         <div class="row flex-shrink-1 flex-grow-1 overflow-hidden">
 
           <!-- Rule Lists -->
-          <div class="col-4 d-flex flex-column mh-100">
+          <div
+            class="d-flex flex-column mh-100"
+            :class="{
+              'col-4': !noEditor,
+              'col': noEditor
+            }"
+          >
             <div class="row">
               <div class="col">
                 <label>
@@ -57,14 +63,22 @@
                   v-on:select-rule="loadRule"
                   v-on:queue-rule="queueRule"
                   v-on:unqueue-rule="unQueueRule"
-                  :rule-proposal="ruleProposal"
+                  :queued-only="queuedOnly"
+                  :current-only="currentOnly"
                 ></RuleSetList>
               </div>
             </div>
           </div>
 
           <!-- IDE Editor -->
-          <div class="col-8 d-flex flex-column mh-100">
+          <div
+            class="d-flex flex-column mh-100"
+            :class="{
+              'col-8': !noEditor,
+              'col': noEditor
+            }"
+            v-if="!noEditor"
+          >
             <div class="row">
               <div class="col">
                 <label>
@@ -110,7 +124,11 @@
 
         </div>
 
-        <div class="row" style="max-height: 40%">
+        <div
+          class="row"
+          style="max-height: 40%"
+          v-if="!noEditor"
+        >
           <div class="col pt-3 mh-100 overflow-hidden d-flex flex-column">
             <div class="row">
               <div class="col">
@@ -255,6 +273,18 @@ export default {
     ruleProposal: {
       default: false,
       type: Boolean
+    },
+    queuedOnly: {
+      type: Boolean,
+      default: false
+    },
+    currentOnly: {
+      type: Boolean,
+      default: false
+    },
+    noEditor: {
+      type: Boolean,
+      default: false
     }
   },
   data: () => ({

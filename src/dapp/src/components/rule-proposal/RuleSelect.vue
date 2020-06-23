@@ -12,7 +12,13 @@
           }"
           :default-pane="ruleSetTypes.QUEUED"
         ></component> -->
-        <Practice :rule-proposal="true" ref="ide" v-on:compiled="onCompiled"></Practice>
+        <Practice
+          :rule-proposal="true"
+          :current-only="true"
+          :no-editor="true"
+          ref="ide"
+          v-on:compiled="onCompiled"
+        ></Practice>
       </div>
     </div>
   </div>
