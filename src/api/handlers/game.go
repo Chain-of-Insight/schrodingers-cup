@@ -364,7 +364,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	// is instanced by round. This works because
 	// submitting a proposal automatically casts the
 	// first vote as e.g. "yes" for proposing player
-	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
+	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1)) //  lrange votes:2020-06-23:1 0 -1
 	if err != nil {
 		return false
 	}
@@ -489,23 +489,67 @@ func processRound(round int) bool {
 	if round < 1 {
 		return false
 	}
-	// DO PROCESS ROUND STUFF HERE
 
-	tmp := "UPDATE"
+	conn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		return false
+	}
+
+	var proposal struct {
+		author    string `redis:"author"`
+		code      string `redis:"code"`
+		timestamp string `redis:"timestamp"`
+		proposal  string `redis:"proposal"`
+		ruletype  string `redis:"type"`
+		ruleindex int    `redis:"index"`
+		round     int    `redis:"round"`
+		success   bool   `redis:"passed"`
+	}
+
+	currentDay := time.Now().Format("2006-01-02")
+	proposalItemKey := "proposals:" + currentDay + ":" + strconv.Itoa(round)
+
+	p, err := redis.Strings(conn.Do("HMGET", proposalItemKey, "author", "code", "timestamp", "proposal", "ruletype", "ruleindex", "round", "success"))
+	if err != nil {
+		return false
+	}
+	proposal.author = p[0]
+	proposal.code = p[1]
+	proposal.timestamp = p[2]
+	proposal.proposal = p[3]
+	proposal.ruletype = p[4]
+	proposal.ruleindex, err = strconv.Atoi(p[5])
+	if err != nil {
+		return false
+	}
+	proposal.round, err = strconv.Atoi(p[6])
+	if err != nil {
+		return false
+	}
+	proposal.success = false
+
 	// 1) Call your file system functions to change the target rule (see: proposal)
-	switch tmp { // replace this with a real variable
+	switch proposal.proposal {
 	case UPDATE:
-		//bla
-		//Update(proposal.code,proposal.index,proposal.ruleType)
+		err, _ := Update(proposal.code, proposal.ruleindex, proposal.ruletype)
+		if err != nil {
+			return false
+		}
 	case CREATE:
-		//bla
-		//Create(proposal.code,proposal.ruleType)
+		err, _, _ := Create(proposal.code, proposal.ruletype)
+		if err != nil {
+			return false
+		}
 	case DELETE:
-		//bla
-		//Delete(proposal.index,proposal.ruleType)
+		err := Delete(proposal.ruleindex, proposal.ruletype)
+		if err != nil {
+			return false
+		}
 	case TRANSMUTE:
-		//bla
-		//Transmute(proposal.index,proposal.ruleType)
+		err, _ := Transmute(proposal.ruleindex, proposal.ruletype)
+		if err != nil {
+			return false
+		}
 	}
 
 	// 2) (rules loop) Run updated ruleset using master.nom
@@ -535,14 +579,16 @@ func processRound(round int) bool {
 
 	// replace the integer values
 	newVars := ""
+	count := 0
 	words = strings.Fields(string(b))
 	for _, word := range words {
-		val, err := strconv.Atoi(word)
+		_, err := strconv.Atoi(word)
 		if err != nil {
 			newVars += word + " "
 			continue
 		}
-		newVars += strconv.Itoa(val) + "\n"
+		newVars += strconv.Itoa(ruleSet[count]) + "\n"
+		count++
 	}
 
 	f, err := os.Create("../nomsu/rules/vars.nom") // write the file
@@ -558,7 +604,7 @@ func processRound(round int) bool {
 	}
 
 	// 5) (players loop) Apply point changes to each user (as necessary)
-	//rulePassPts := ruleSet[2]
+	//rulePassPts := ruleSet[2]          // TODO: Uncomment these once there's a use for them
 	//voteAgainstPts := ruleSet[3]
 	//ruleFailedPenalty := ruleSet[4]
 
@@ -759,7 +805,7 @@ func MoveUpFiles(index int, ruleType string) error {
 	return nil
 }
 
-func Update(code string, index int, ruleType string) (error, int, string) {
+func Update(code string, index int, ruleType string) (error, string) {
 	// cleanup code
 	code = strings.TrimSpace(code)
 	code = strings.ReplaceAll(code, "\t", strings.Repeat(" ", 4))
@@ -767,29 +813,49 @@ func Update(code string, index int, ruleType string) (error, int, string) {
 	// check if code is valid Nomsu code before overwriting anything! (might be redundant)
 	_, err := nomsu.RunCode(code)
 	if err != nil {
-		return err, -1, ""
+		return err, ""
 	}
 
 	// check if file exists (otherwise it's not really Updating, is it?)
 	if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
-		return err, -1, ""
+		return err, ""
 	}
+
+	// read the file
+	byte_contents, err := ioutil.ReadFile("schrodinger/schrodingers-cup/src/api/nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom") // read the original file contents
+	if err != nil {
+		return err, ""
+	}
+	contents := string(byte_contents)
+
+	idx1 := strings.Index(contents, "external: $")
+	idx2 := strings.Index(contents[idx1+11:], "=")
+	varname := contents[idx1+11 : idx1+11+idx2]
+	varname = strings.ReplaceAll(varname, " ", "")
+	idx3 := strings.Index(code, varname)
+	if idx3 < 0 {
+		return err, ""
+	}
+	code = strings.ReplaceAll(code, " ", "")
+	idx4 := strings.Index(code[idx3:], "=")
+	newVal, err := strconv.Atoi(code[idx4+2:])
+	newContents := contents[:idx1+11+idx2+1] + " " + strconv.Itoa(newVal)
 
 	// overwrite the file
 	f, err := os.Create("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
-		return err, -1, ""
+		return err, ""
 	}
 	defer f.Close()
 
 	// write the code string
-	_, err = f.WriteString(code)
+	_, err = f.WriteString(newContents)
 	if err != nil {
-		return err, -1, ""
+		return err, ""
 	}
 
 	// return success
-	return nil, index, code
+	return nil, code
 }
 
 func Create(code string, ruleType string) (error, int, string) {
@@ -797,10 +863,23 @@ func Create(code string, ruleType string) (error, int, string) {
 	code = strings.TrimSpace(code)
 	code = strings.ReplaceAll(code, "\t", strings.Repeat(" ", 4))
 
+	//check if the user added the "basic stuff a rule needs" aka 'use "vars"' and 'external: '
+	//this check is very basic and will not work with complex rules (but probably won't need to either)
+	idx := strings.Index(code, "external: ")
+	if idx < 0 {
+		code = "external: " + code
+	}
+
 	// check if code is valid Nomsu code before overwriting anything! (might be redundant)
-	_, err := nomsu.RunCode(code)
+	_, err = nomsu.RunCode(code)
 	if err != nil {
 		return err, -1, ""
+	}
+
+	//we can't run the code in limbo with this, so we're adding it after
+	idx = strings.Index(code, "use \"vars\"")
+	if idx < 0 {
+		code = "use \"vars\"\n" + code
 	}
 
 	// find the first free available index
@@ -813,7 +892,7 @@ func Create(code string, ruleType string) (error, int, string) {
 	}
 
 	// create the new rule file with the free index
-	f, err := os.Create("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	f, err := os.Create("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err, -1, ""
 	}

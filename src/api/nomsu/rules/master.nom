@@ -25,7 +25,7 @@ repeat:
         stop
 
 ### Parse the mutable rules first - ascending, to ensure rule amendment 
-for $ctr in (($bl_nMutable-1) to 0 by -1):
+for $ctr in (0 to ($bl_nMutable-1)):
     try:
         use ("mutable/rule"+$ctr)
     ..if it fails:

@@ -1,5 +1,5 @@
 external: $bl_startPoints = 0
-external: $bl_winPoints = 100
+external: $bl_winPoints = 5
 external: $bl_rulePassPts = 10
 external: $bl_voteAgainstPts = 10
 external: $bl_ruleFailedPenalty = 10
