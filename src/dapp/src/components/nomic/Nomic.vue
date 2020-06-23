@@ -603,11 +603,9 @@ export default {
     ruleProposalHandler: async function () {
       if (!this.jwtToken) {
         this.alert.type = 'danger';
-        this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Try signing a message with TezBridge again...";
+        this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Have you signed a message in TezBridge yet?";
         setTimeout(async () => {
           this._retireNotification();
-          this.ruleProposalHandler();
-          await this.doLoginMessageSigning();
         }, 3000);
       } else {
         this.$refs.proposal.promptForProposal();
@@ -698,7 +696,7 @@ export default {
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
           // TODO: how to keep track of whether or not user already has rule up for vote?
-          this.$refs.proposal.promptForProposal();
+          this.ruleProposalHandler();
         }
 
         // Start round timer
