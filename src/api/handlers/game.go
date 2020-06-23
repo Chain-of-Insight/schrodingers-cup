@@ -260,7 +260,7 @@ func CastVote(c echo.Context) error {
 	}
 
 	// Cast vote
-	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	voteKey := "votes_" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	
 	var vote struct {
@@ -357,7 +357,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 
 	currentDay := time.Now().Format("2006-01-02")
 	proposalsListKey := "proposals:" + currentDay
-	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	voteKey := "votes_" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	// Check if rule proposal exists for round
@@ -529,7 +529,7 @@ func userCanVote(playerAddress string, round int) bool {
 	defer conn.Close()
 
 	currentDay := time.Now().Format("2006-01-02")
-	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	voteKey := "votes_" + currentDay + ":" + strconv.Itoa(round)
 	playersListKey := "players:" + currentDay
 	
 	// Load existing logged in players
