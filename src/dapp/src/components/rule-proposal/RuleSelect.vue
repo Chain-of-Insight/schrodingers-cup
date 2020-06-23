@@ -1,23 +1,13 @@
 <template>
   <div class="container-fluid p-0 h-100">
     <div class="row h-100">
-      <div class="col" v-if="changeType === ruleChangeTypes.TRANSMUTE || changeType === ruleChangeTypes.DELETE">
-        <h2>{{ typeHeadings[changeType] }}</h2>
-      </div>
-      <div class="col" v-else>
-        <!-- <component
-          :is="ideView"
-          :active-lists="{
-            [ruleSetTypes.QUEUED]: true
-          }"
-          :default-pane="ruleSetTypes.QUEUED"
-        ></component> -->
+      <div class="col">
         <Practice
           :rule-proposal="true"
           :current-only="true"
-          :no-editor="true"
+          :disable-editing="true"
           ref="ide"
-          v-on:compiled="onCompiled"
+          v-on:rule-selected="selectCurrentRule"
         ></Practice>
       </div>
     </div>
@@ -58,11 +48,15 @@ export default {
     }
   },
   methods: {
-    onCompiled: function (successful, code, index) {
-      this.$emit('compiled', successful, code, index);
-    },
     tryCompile: async function () {
       await this.$refs.ide.testRuleSet();
+    },
+    selectCurrentRule: function (index, ruleSetType) {
+      if (ruleSetType !== ruleSetTypes.CURRENT) {
+        return false;
+      }
+
+      this.$emit('current-selected', index);
     }
   }
 }

@@ -60,7 +60,7 @@
                   :saved-rules="ruleSetLists.saved"
                   :un-queued-rules="unQueuedRules"
                   :queued-rules="queuedRules"
-                  v-on:select-rule="loadRule"
+                  v-on:select-rule="selectRule"
                   v-on:queue-rule="queueRule"
                   v-on:unqueue-rule="unQueueRule"
                   :queued-only="queuedOnly"
@@ -82,7 +82,7 @@
             <div class="row">
               <div class="col">
                 <label>
-                  <strong>Rule Editor:</strong>
+                  <strong>{{ disableEditing ? 'Rule Code:' : 'Rule Editor:' }}</strong>
                 </label>
               </div>
             </div>
@@ -285,56 +285,63 @@ export default {
     noEditor: {
       type: Boolean,
       default: false
+    },
+    disableEditing: {
+      type: Boolean,
+      default: false
     }
   },
-  data: () => ({
-    title: "Practice Zone",
-    subtitle: "Familiarize yourself with creating and editing Nomic rules",
-    network: (process.env.hasOwnProperty('CURRENT_NETWORK')) ? process.env.CURRENT_NETWORK : 'carthagenet',
-    address: null,
-    getBalance: getBalance,
-    connected: false,
-    Tezos: Tezos,
-    mountProvider: mountProvider,
-    alert: {
-      type: null,
-      msg: null
-    },
-    ruleSetTypes: ruleSetTypes,
-    ruleSetLists: {
-      current: [],
-      saved: [],
-    },
-    ide: {
-      input: '',
-      output: null,
-      ruleSetPane: ruleSetTypes.CURRENT,
-      savedRuleSets: {
-        player: [],
-        nomic: []
+  data: function () {
+    return {
+      title: "Practice Zone",
+      subtitle: "Familiarize yourself with creating and editing Nomic rules",
+      network: (process.env.hasOwnProperty('CURRENT_NETWORK')) ? process.env.CURRENT_NETWORK : 'carthagenet',
+      address: null,
+      getBalance: getBalance,
+      connected: false,
+      Tezos: Tezos,
+      mountProvider: mountProvider,
+      alert: {
+        type: null,
+        msg: null
       },
-      ruleSetName: '',
-      nameError: false,
-      options: {
-        // IDE Options
-        // mode: 'text/x-lua',
-        tabSize: 4,
-        theme: 'dracula',
-        lineNumbers: true,
-        lineWrapping: true,
-        line: true
+      ruleSetTypes: ruleSetTypes,
+      ruleSetLists: {
+        current: [],
+        saved: [],
       },
-      state: {
-        loading: false
+      ide: {
+        input: '',
+        output: null,
+        ruleSetPane: ruleSetTypes.CURRENT,
+        savedRuleSets: {
+          player: [],
+          nomic: []
+        },
+        ruleSetName: '',
+        nameError: false,
+        options: {
+          // IDE Options
+          // mode: 'text/x-lua',
+          tabSize: 4,
+          theme: 'dracula',
+          lineNumbers: true,
+          lineWrapping: true,
+          line: true,
+          readOnly: this.disableEditing
+        },
+        state: {
+          loading: false
+        },
+        execute: testNomic
       },
-      execute: testNomic
-    },
-    compilerError: false,
-    selectedRule: {
-      type: null,
-      index: null
+      compilerError: false,
+      selectedRule: {
+        type: ruleSetTypes.CURRENT,
+        index: 0
+      }
     }
-  }),
+  },
   mounted: async function () {
     await this.mountProvider();
     console.log('Practice mounted', this.network);
@@ -416,8 +423,7 @@ export default {
           this.$emit(
             'compiled',
             true,
-            this.ide.input,
-            this.selectedRule.index
+            this.ide.input
           );
           setTimeout(() => {
             this._retireNotification();
@@ -522,7 +528,7 @@ export default {
       }
 
       await this.getSavedRuleSets();
-      this.loadRule(index, ruleSetTypes.SAVED);
+      this.selectRule(index, ruleSetTypes.SAVED);
       this.ide.ruleSetPane = ruleSetTypes.SAVED;
 
       // Reset app state
@@ -539,7 +545,7 @@ export default {
       this.ide.ruleSetName = '';
       this.ide.nameError = false;
     },
-    loadRule: function (savedIndex, ruleType) {
+    selectRule: function (savedIndex, ruleType) {
       let ruleSetList = null;
 
       switch (ruleType) {
@@ -564,15 +570,20 @@ export default {
 
       if (ruleSet.hasOwnProperty('code')) {
         try {
-          // Set IDE state
-          this.ide.input = ruleSet.code;
+          if (!this.noEditor) {
+            // Set IDE state
+            this.ide.input = ruleSet.code;
+          }
           // Set UI state
           this.selectedRule.type = ruleType;
           this.selectedRule.index = Number(savedIndex);
+          
+          this.$emit('rule-selected', this.selectedRule.index, this.selectedRule.type);
+          
           // Force update cycle
           this.$forceUpdate();
         } catch(e) {
-          console.log('Error loading ruleset =>', [e, ruleSet])
+          console.error('Error loading ruleset =>', [e, ruleSet])
           this.alert.type = 'danger';
           this.alert.msg = `Error loading rule set '${JSON.stringify(ruleSet)}'`;
           setTimeout(() => {
