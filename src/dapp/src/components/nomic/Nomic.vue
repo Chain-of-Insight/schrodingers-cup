@@ -30,7 +30,6 @@
             v-bind="currentTotals"
             :turn-window="turnWindow"
             ref="totals"
-            v-on:round-over="getCurrentPlayers"
           ></Totals>
         </section>
 
