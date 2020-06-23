@@ -59,6 +59,10 @@ type Vote struct {
 // @produce json
 func SubmitProposal(c echo.Context) error {
 	input := new(RuleProposal)
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
@@ -178,18 +182,11 @@ func SubmitProposal(c echo.Context) error {
 // @param Authorization header string true "Bearer token"
 // @produce json
 func CastVote(c echo.Context) error {
-	// type VoteResult struct {
-	// 	Success bool `json:"success"`
-	// 	Round	int	`json:"round"` // 
-	// 	Message string `json:"message"` // "OK!" or error message
-	// }
-	
-	// type Vote struct {
-	// 	Vote bool `json:"vote"`
-	// 	Round int `json:"round"`
-	// }
-
 	input := new(Vote)
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	tzid := claims["tzid"].(string)
