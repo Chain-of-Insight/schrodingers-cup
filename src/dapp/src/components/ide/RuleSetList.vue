@@ -147,8 +147,8 @@
       loadedRule: {
         type: Object,
         default: () => ({
-          type: null,
-          index: null
+          type: 0,
+          index: ruleSetTypes.CURRENT
         })
       },
       currentRules: {

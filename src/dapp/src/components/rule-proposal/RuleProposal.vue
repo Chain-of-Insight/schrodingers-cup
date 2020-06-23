@@ -31,6 +31,8 @@
                 ref="proposal"
                 :rule-proposal="true"
                 :queued-only="currentView === 'Practice' ? true : false"
+                v-on:rule-selected="selectQueuedRule"
+                v-on:current-selected="selectCurrentRule"
               ></component>
             </transition>
           </div>
@@ -49,7 +51,7 @@
                 'btn-success': submitEnabled,
                 'btn-primary': nextEnabled
               }"
-              @click="testRule()"
+              @click="submitRule()"
             >{{ submitEnabled ? 'Submit' : nextEnabled ? 'Next' : null }}</button>
           </div>
         </div>
@@ -71,6 +73,12 @@ const ruleChangeTypes = {
 const ruleTypes = {
   MUTABLE: 'mutable',
   IMMUTABLE: 'immutable'
+}
+
+const ruleSetTypes = {
+  SAVED: 'SAVED',
+  CURRENT: 'CURRENT',
+  QUEUED: 'QUEUED'
 }
 
 import Practice from '../practice/Practice.vue';
@@ -112,22 +120,26 @@ export default {
       code: null,
       index: null,
       kind: 'mutable'
-    }
+    },
+    queuedIndex: 0,
   }),
   computed: {
     submitEnabled: function () {
-      if (this.changeType === ruleChangeTypes.CREATE && this.currentView === 'Practice') {
-        return true;
-      }
-
-      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'RuleSelect') {
-        return true;
+      if (this.changeType === ruleChangeTypes.CREATE) {
+        return this.currentView === 'Practice' ? true : false;
+      } else {
+        return this.currentView === 'RuleSelect' ? true : false
       }
 
       return false;
     },
     nextEnabled: function () {
-      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'Practice') {
+      if (
+        (
+          this.changeType === ruleChangeTypes.UPDATE ||
+          this.changeType === ruleChangeTypes.TRANSMUTE
+        ) && this.currentView === 'Practice'
+      ) {
         return true;
       }
 
@@ -152,19 +164,30 @@ export default {
         return false;
       
       this.changeType = changeType
-      this.currentView = 'Practice';
+      
+      if (this.changeType === ruleChangeTypes.DELETE) {
+        this.currentView = 'RuleSelect';
+      } else {
+        this.currentView = 'Practice';
+      }
     },
-    selectCurrentRule: function () {
-      // ...
+    selectCurrentRule: function (currentIndex) {
+      this.ruleCandidate.index = currentIndex;
     },
-    testRule: async function () {
-      if (!this.ruleCandidate.code) {
+    selectQueuedRule: function (queuedIndex, ruleSetType) {
+      if (ruleSetType !== ruleSetTypes.QUEUED)
+        return false;
+
+      this.queuedIndex = queuedIndex;
+    },
+    submitRule: async function () {
+      if (!this.ruleCandidate.code && this.changeType !== ruleChangeTypes.DELETE) {
         await this.$refs.proposal.testRuleSet();
       } else {
         this.proposeRule();
       }
     },
-    onCompiled: async function (successful, code, index) {
+    onCompiled: async function (successful, code) {
       if (!successful) {
         this.alert.type = 'danger';
         this.alert.msg = 'Fix your rule! Your rule must compile successfully before trying to propose it.';
@@ -175,8 +198,6 @@ export default {
       }
 
       this.ruleCandidate.code = code;
-      this.ruleCandidate.index = index;
-      this.ruleCandidate.kind = ruleTypes.MUTABLE;
 
       if (this.nextEnabled) {
         this.currentView = 'RuleSelect';
@@ -186,6 +207,21 @@ export default {
       }
     },
     proposeRule () {
+      if (this.changeType === ruleChangeTypes.CREATE) {
+        this.ruleCandidate.index = -1;
+      } else if (typeof(this.ruleCandidate.index) !== 'number') {
+        this.alert.type = 'danger';
+        this.alert.msg = 'You must select a current rule to change.';
+        setTimeout(() => {
+          this._retireNotification();
+        }, 5000);
+        return;
+      }
+
+      if (this.changeType === ruleChangeTypes.DELETE) {
+        this.ruleCandidate.code = "";
+      }
+
       this.$emit(
         'rule-proposed',
         this.ruleCandidate.code,
@@ -212,7 +248,11 @@ export default {
       this._retireNotification();
     },
     goBack: function () {
-      if (this.changeType === ruleChangeTypes.UPDATE && this.currentView === 'RuleSelect') {
+      // For now:
+      this.ruleCandidate.code = null;
+      this.ruleCandidate.index = null;
+
+      if (this.changeType !== ruleChangeTypes.DELETE && this.currentView === 'RuleSelect') {
         this.currentView = 'Practice';
         return;
       }
