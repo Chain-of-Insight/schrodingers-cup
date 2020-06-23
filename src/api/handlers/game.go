@@ -16,8 +16,10 @@ import (
 
 // XXX TODO: Set turn duration from Tezos
 const turnDuration = 300
+
 // XXX TODO: Set quorum ratio from Tezos
 const quorumRatio float64 = 100
+
 // XXX TODO: Set points to win from Tezos
 const pointsToWin = 100
 
@@ -37,18 +39,18 @@ type RuleProposal struct {
 	ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
 	RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
 	RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
-													// (or -1 if creating a new rule)
+	// (or -1 if creating a new rule)
 }
 
 type VoteResult struct {
-	Success bool `json:"success"`
-	Round	int	`json:"round"` // 
+	Success bool   `json:"success"`
+	Round   int    `json:"round"`   //
 	Message string `json:"message"` // "OK!" or error message
 }
 
 type Vote struct {
-	Vote bool `json:"vote"`
-	Round int `json:"round"`
+	Vote  bool `json:"vote"`
+	Round int  `json:"round"`
 }
 
 // @description Submit a new rule proposal
@@ -143,12 +145,11 @@ func SubmitProposal(c echo.Context) error {
 	if !ruleWasCreated {
 		r := &ProposalResult{
 			Success: false,
-			Round: round,
+			Round:   round,
 			Message: "Failed to create rule entry of type " + input.RuleType,
 		}
-		return c.JSON(http.StatusOK, r)	
+		return c.JSON(http.StatusOK, r)
 	}
-
 
 	// Update chat
 	message := tzid + " proposed a rule in round " + strconv.Itoa(round)
@@ -216,18 +217,18 @@ func CastVote(c echo.Context) error {
 	}
 
 	// Game not started
-	if (round == 0) {
+	if round == 0 {
 		r := &VoteResult{
 			Success: false,
-			Round: round,
+			Round:   round,
 			Message: "Unauthorized",
 		}
 		return c.JSON(http.StatusOK, r)
-	// Voting on incorrect round
-	} else if (input.Round != round) {
+		// Voting on incorrect round
+	} else if input.Round != round {
 		r := &VoteResult{
 			Success: false,
-			Round: round,
+			Round:   round,
 			Message: "Unauthorized",
 		}
 		return c.JSON(http.StatusOK, r)
@@ -235,11 +236,11 @@ func CastVote(c echo.Context) error {
 
 	// If user can vote
 	canVote := userCanVote(tzid, round)
-	var success bool;
-	var message string;
-	var votetype string;
+	var success bool
+	var message string
+	var votetype string
 	if canVote {
-		if (input.Vote == true) {
+		if input.Vote == true {
 			votetype = "YES"
 		} else {
 			votetype = "NO"
@@ -250,7 +251,7 @@ func CastVote(c echo.Context) error {
 	} else {
 		r := &VoteResult{
 			Success: false,
-			Round: round,
+			Round:   round,
 			Message: "Unauthorized",
 		}
 		return c.JSON(http.StatusOK, r)
@@ -259,11 +260,11 @@ func CastVote(c echo.Context) error {
 	// Cast vote
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	
+
 	var vote struct {
-		author		string `redis:"author"`
-		timestamp 	string `redis:"timestamp"`
-		vote		bool `redis:"vote"`
+		author    string `redis:"author"`
+		timestamp string `redis:"timestamp"`
+		vote      bool   `redis:"vote"`
 	}
 
 	vote.author = tzid
@@ -289,7 +290,7 @@ func CastVote(c echo.Context) error {
 		// XXX TODO: THIS
 		processRound := processRound(round)
 		// @pogo @drew
-		
+
 		// State of paradox :o
 		if processRound == false {
 			statusMsg := "Error proccessing round. The game has reached a state of paradox!"
@@ -302,10 +303,10 @@ func CastVote(c echo.Context) error {
 				success = true
 				statusMsg = "OK!"
 			}
-			EndNomic(tzid);
+			EndNomic(tzid)
 			r := &VoteResult{
 				Success: false,
-				Round: round,
+				Round:   round,
 				Message: statusMsg,
 			}
 			return c.JSON(http.StatusOK, r)
@@ -318,18 +319,18 @@ func CastVote(c echo.Context) error {
 	}
 
 	// Release notification
-	var statusMsg string;
+	var statusMsg string
 	notification := releaseNotification(message)
 	if notification == false {
 		statusMsg = "Error releasing notification"
 	} else {
 		statusMsg = "OK!"
 	}
-	
+
 	// HTTP repsonse
 	r := &VoteResult{
 		Success: success,
-		Round: round,
+		Round:   round,
 		Message: statusMsg,
 	}
 
@@ -360,7 +361,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	// Check if rule proposal exists for round
 	// Checking by votes is easier since their key
 	// is instanced by round. This works because
-	// submitting a proposal automatically casts the 
+	// submitting a proposal automatically casts the
 	// first vote as e.g. "yes" for proposing player
 	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
 	if err != nil {
@@ -387,9 +388,9 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	proposal.round = round
 
 	var vote struct {
-		author		string `redis:"author"`
-		timestamp 	string `redis:"timestamp"`
-		vote		bool `redis:"vote"`
+		author    string `redis:"author"`
+		timestamp string `redis:"timestamp"`
+		vote      bool   `redis:"vote"`
 	}
 
 	vote.author = author
@@ -397,9 +398,9 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	vote.vote = true
 
 	// Create New / Update Existing
-	if (pType != DELETE && pType != TRANSMUTE) {
+	if pType != DELETE && pType != TRANSMUTE {
 		// Proposal type must be valid
-		if (pType != CREATE && pType != UPDATE) {
+		if pType != CREATE && pType != UPDATE {
 			return false
 		}
 		proposal.code = code
@@ -420,7 +421,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 		proposal.ruleindex = rIndex
 	}
 
-	proposal.success = false;
+	proposal.success = false
 
 	// Update proposal
 	if _, err := conn.Do("HSET", proposalItemKey, "author", proposal.author, "code", proposal.code, "timestamp", proposal.timestamp, "proposal", proposal.proposal, "ruletype", proposal.ruletype, "ruleindex", proposal.ruleindex, "round", proposal.round, "success", proposal.success); err != nil {
@@ -482,19 +483,84 @@ func releaseNotification(notification string) bool {
 	return true
 }
 
-
 // XXX TODO - Process round
 func processRound(round int) bool {
-	if (round < 1) {
+	if round < 1 {
 		return false
 	}
 	// DO PROCESS ROUND STUFF HERE
 
+	tmp := "UPDATE"
 	// 1) Call your file system functions to change the target rule (see: proposal)
+	switch tmp { // replace this with a real variable
+	case UPDATE:
+		//bla
+		//Update(proposal.code,proposal.index,proposal.ruleType)
+	case CREATE:
+		//bla
+		//Create(proposal.code,proposal.ruleType)
+	case DELETE:
+		//bla
+		//Delete(proposal.index,proposal.ruleType)
+	case TRANSMUTE:
+		//bla
+		//Transmute(proposal.index,proposal.ruleType)
+	}
+
 	// 2) (rules loop) Run updated ruleset using master.nom
+	output, err := nomsu.RunMaster()
+	if err != nil {
+		return false
+	}
+
 	// 3) Use the output from master to get replacement values for vars.nom
+	var ruleSet []int
+	words := strings.Fields(string(output))
+	for idx, word := range words {
+		if word == "=" {
+			val, err := strconv.Atoi(words[idx+1])
+			if err != nil {
+				return false
+			}
+			ruleSet = append(ruleSet, val)
+		}
+	}
+
 	// 4) Replace vars.nom with updated values
+	b, err := ioutil.ReadFile("../nomsu/rules/vars.nom") // read the original file contents
+	if err != nil {
+		return false
+	}
+
+	// replace the integer values
+	newVars := ""
+	words = strings.Fields(string(b))
+	for _, word := range words {
+		val, err := strconv.Atoi(word)
+		if err != nil {
+			newVars += word + " "
+			continue
+		}
+		newVars += strconv.Itoa(val) + "\n"
+	}
+
+	f, err := os.Create("../nomsu/rules/vars.nom") // write the file
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	// write the code string
+	_, err = f.WriteString(newVars)
+	if err != nil {
+		return false
+	}
+
 	// 5) (players loop) Apply point changes to each user (as necessary)
+	//rulePassPts := ruleSet[2]
+	//voteAgainstPts := ruleSet[3]
+	//ruleFailedPenalty := ruleSet[4]
+
 	// 6) Store each players point changes for that round
 
 	return true
@@ -528,14 +594,14 @@ func userCanVote(playerAddress string, round int) bool {
 	currentDay := time.Now().Format("2006-01-02")
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	playersListKey := "players:" + currentDay
-	
+
 	// Load existing logged in players
 	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
 	if err != nil {
 		return false
 	}
 
-	// Check if player has already logged in 
+	// Check if player has already logged in
 	playerExists := ItemExists(players, playerAddress)
 	if !playerExists {
 		return false
@@ -565,17 +631,17 @@ func checkGameOver() bool {
 	}
 
 	defer conn.Close()
-	
+
 	currentDay := time.Now().Format("2006-01-02")
 	playersListKey := "players:" + currentDay
-	
+
 	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
 	if err != nil {
 		return false
 	}
 
-	var playerList []string;
-	
+	var playerList []string
+
 	// Build player list
 	for _, s := range players {
 		split := strings.Split(s, " ")
@@ -584,7 +650,7 @@ func checkGameOver() bool {
 	}
 
 	// Check points
-	var gameover bool = false;
+	var gameover bool = false
 	for _, p := range playerList {
 		pKey := p + ":points:" + currentDay
 		points, err := redis.Int(conn.Do("GET", pKey))
@@ -609,12 +675,12 @@ func EndNomic(player string) {
 	os.Setenv("GAME_OVER", "1")
 	gameoverMsg := "This game of nomic has just been concluded by " + player
 	gameoverNotification := releaseNotification(gameoverMsg)
-	if (!gameoverNotification) {
-		return	
+	if !gameoverNotification {
+		return
 	}
 	ggMsg := "Congrats and GG to everyone who participated!"
 	ggNotification := releaseNotification(ggMsg)
-	if (!ggNotification) {
+	if !ggNotification {
 		return
 	}
 }
@@ -625,7 +691,7 @@ func ItemExists(slice []string, entry string) bool {
 			return true
 		}
 	}
-    return false
+	return false
 }
 
 func userCan(players []string, times []string) string {
@@ -677,12 +743,12 @@ func userCan(players []string, times []string) string {
 func MoveUpFiles(index int, ruleType string) error {
 	for true {
 		// check if file exists
-		nextRuleFile := "rules/" + ruleType + "/rule" + strconv.Itoa((index + 1)) + ".nom"
+		nextRuleFile := "../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa((index + 1)) + ".nom"
 		if _, err := os.Stat(nextRuleFile); os.IsNotExist(err) {
 			break
 		}
 		// rename it
-		currRuleFile := "rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"
+		currRuleFile := "../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"
 		err := os.Rename(nextRuleFile, currRuleFile)
 		if err != nil {
 			return err
@@ -704,12 +770,12 @@ func Update(code string, index int, ruleType string) (error, int, string) {
 	}
 
 	// check if file exists (otherwise it's not really Updating, is it?)
-	if _, err := os.Stat("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+	if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 		return err, -1, ""
 	}
 
 	// overwrite the file
-	f, err := os.Create("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	f, err := os.Create("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err, -1, ""
 	}
@@ -739,7 +805,7 @@ func Create(code string, ruleType string) (error, int, string) {
 	// find the first free available index
 	index := 0
 	for true {
-		if _, err := os.Stat("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+		if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 			break
 		}
 		index += 1
@@ -764,12 +830,12 @@ func Create(code string, ruleType string) (error, int, string) {
 
 func Delete(index int, ruleType string) error {
 	// check if the file exists
-	if _, err := os.Stat("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+	if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 		return err
 	}
 
 	// remove the file
-	err := os.Remove("rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	err := os.Remove("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err
 	}
@@ -783,7 +849,7 @@ func Delete(index int, ruleType string) error {
 
 func Transmute(indexFrom int, ruleTypeFrom string) (error, int) {
 	// check if the file exists
-	fileFrom := "rules/" + ruleTypeFrom + "/rule" + strconv.Itoa(indexFrom) + ".nom"
+	fileFrom := "../nomsu/rules/" + ruleTypeFrom + "/rule" + strconv.Itoa(indexFrom) + ".nom"
 	if _, err := os.Stat(fileFrom); os.IsNotExist(err) {
 		return err, -1
 	}
@@ -797,14 +863,14 @@ func Transmute(indexFrom int, ruleTypeFrom string) (error, int) {
 	// find the first free available index in the new folder
 	indexTo := 0
 	for true {
-		if _, err := os.Stat("rules/" + ruleTypeTo + "/rule" + strconv.Itoa(indexTo) + ".nom"); os.IsNotExist(err) {
+		if _, err := os.Stat("../nomsu/rules/" + ruleTypeTo + "/rule" + strconv.Itoa(indexTo) + ".nom"); os.IsNotExist(err) {
 			break
 		}
 		indexTo += 1
 	}
 
 	// move the file from the old folder to the new one
-	err := os.Rename(fileFrom, "rules/"+ruleTypeTo+"/rule"+strconv.Itoa(indexTo)+".nom")
+	err := os.Rename(fileFrom, "../nomsu/rules/"+ruleTypeTo+"/rule"+strconv.Itoa(indexTo)+".nom")
 	if err != nil {
 		return err, -1
 	}
