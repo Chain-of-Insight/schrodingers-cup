@@ -134,10 +134,10 @@ func SubmitProposal(c echo.Context) error {
 		return err
 	}
 
-	// Code 			string `json:"code" form:"code"`
-	// ProposalType		string `json:"type" form:"type"`
-	// RuleType			string `json:"kind" form:"kind"`
-	// RuleIndex		int `json:"index" form:"index"`
+	// Code         string `json:"code" form:"code"`   // Nomsu code
+	// ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
+	// RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
+	// RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
 
 	// Create rule storage
 	ruleWasCreated := CreateRuleEntry(tzid, input.Code, input.ProposalType, input.RuleType, input.RuleIndex, round)
