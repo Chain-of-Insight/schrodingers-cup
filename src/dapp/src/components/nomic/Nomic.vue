@@ -692,11 +692,8 @@ export default {
 
         // console.log('Players =====>', result);
         this.players = result.data.players;
-        // this.currentTurn = result.data.currentTurn;
+        this.currentTurn = result.data.currentTurn;
         this.nextTurn = result.data.nextTurn;
-
-        // XXX: TESTING:
-        // this.currentTurn = "tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEC";
 
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
