@@ -133,11 +133,6 @@ func SubmitProposal(c echo.Context) error {
 		return c.JSON(http.StatusOK, r)
 	}
 
-	// Update round storage (Redis)
-	if _, err := conn.Do("SET", roundKey, round); err != nil {
-		return err
-	}
-
 	// Code         string `json:"code" form:"code"`   // Nomsu code
 	// ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
 	// RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
@@ -166,6 +161,11 @@ func SubmitProposal(c echo.Context) error {
 	} else {
 		success = true
 		statusMsg = "OK!"
+	}
+
+	// Update round storage (Redis)
+	if _, err := conn.Do("SET", roundKey, round); err != nil {
+		return err
 	}
 
 	r := &ProposalResult{
