@@ -29,3 +29,13 @@ func RunCode(code string) ([]byte, error) {
 	out, err := cmd.CombinedOutput()
 	return out, err
 }
+
+//Hardcoded to only run master because we never need to run another file
+func RunMaster() ([]byte, error) {
+	command := "cd rules/; nomsu master.nom"
+	cmd := exec.Command("/bin/bash", "-c", command)
+
+	// return combined output or error
+	out, err := cmd.CombinedOutput()
+	return out, err
+}
