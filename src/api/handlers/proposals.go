@@ -28,7 +28,8 @@ type ProposalObject struct {
 func Proposal(c echo.Context) error {
 	round, err := strconv.Atoi(c.Param("round"))
 	if err != nil {
-		return err
+		r := new(ProposalObject)
+		return c.JSON(http.StatusOK, r)
 	}
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
