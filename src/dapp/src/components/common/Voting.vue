@@ -1,77 +1,62 @@
 <template>
-  <div>  
-    <!-- Modal -->
-    <div class="modal fade" id="voting-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="voting-modal-label" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="voting-modal-label"><strong>Time to vote!</strong></h5>
-            <Countdown
-              :duration="turnWindow"
-              v-on:ended="closeTurnWindow()"
-              ref="timer"
-            ></Countdown>
-            <!-- <div>
-              <h5 class="d-inline">Time remaining:</h5>
-              <h5
-                class="countdown d-inline h4 border rounded ml-2 p-2 text-monospace"
-                :class="[
-                  secondsLeft <= 10 ? [
-                    'critical',
-                    'text-danger',
-                    'border-danger'
-                  ] : 'border-dark'
-                ]"
-              >{{ hours }}:{{ minutes }}:{{ seconds }}</h5>
-            </div> -->
-          </div>
-          <div class="modal-body">
-            <!-- Notifications -->
-            <Notification 
-              :type="alert.type" 
-              :msg="alert.msg" 
-              v-on:reset="alert = {type: null, msg: null}"
-              :local="true"
-            ></Notification>
-            <pre v-if="votingCandidate" class="term-container">{{ votingCandidate.code }}</pre>
-          </div>
-          <div class="modal-footer container-fluid">
-            <div class="container-fluid p-0">
-              <div class="row">
-                <div class="col-3">
-                  <button
-                    type="button"
-                    class="btn btn-block btn-lg btn-secondary"
-                    @click="vote(voteTypes.ABSTAIN)"
-                    :class="{ 'disabled': votingWindowClosed } "
-                    :disabled="votingWindowClosed"
-                  >Abstain</button>
-                </div>
-                <div class="col-9">
-                  <div class="btn-group btn-block">
-                    <button
-                      type="button"
-                      class="btn btn-lg btn-danger"
-                      @click="vote(voteTypes.NO)"
-                      :class="{ 'disabled': votingWindowClosed } "
-                      :disabled="votingWindowClosed"
-                    >
-                      <span class="oi mirrored oi-thumb-down" title="Vote down"></span>
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-lg btn-success"
-                      @click="vote(voteTypes.YES)"
-                      :class="{ 'disabled': votingWindowClosed } "
-                      :disabled="votingWindowClosed"
-                    >
-                      <span class="oi oi-thumb-up" title="Vote up"></span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div>
+    <div class="border-dark border-top border-bottom py-3 my-3">
+      <div class="row">
+        <!-- Rule info -->
+        <div class="col-7 border-right border-dark">
+          <h3 class="mb-3"><strong>Time to vote!</strong></h3>
+          <h5 class="text-primary"><strong>{{ votingCandidate.proposal.toUpperCase() }} RULE</strong></h5>
+          <p class="mb-1">Proposed by: <strong class="text-info">{{ votingCandidate.author }}</strong></p>
+          <p v-if="votingCandidate.proposal !== 'create'">Rule number: <strong>{{ votingCandidate.index }}</strong></p>
+          <button class="btn btn-sm btn-warning" type="button" @click="codeVisible = codeVisible ? false : true" data-toggle="collapse" data-target="#rule-code" aria-expanded="false" aria-controls="rule-code">
+            {{ codeVisible ? 'Hide rule code' : 'Show rule code' }}
+          </button>
+        </div>
+
+        <div class="col-5 d-flex flex-column">
+          <button
+            type="button"
+            class="btn btn-block btn-success flex-grow-1"
+            @click="vote(voteTypes.YES)"
+          >
+            <span class="oi mirrored oi-thumb-up" title="Vote up"></span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-block btn-danger flex-grow-1"
+            @click="vote(voteTypes.NO)"
+          >
+            <span class="oi oi-thumb-down" title="Vote down"></span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-block btn-secondary flex-grow-1"
+            @click="vote(voteTypes.ABSTAIN)"
+          >Abstain</button>
+        </div>
+      </div>
+      <div
+        class="row collapse"
+        id="rule-code"
+        v-if="votingCandidate.proposal !== 'delete' && votingCandidate.original"
+      >
+        <div class="col-6 mt-4">
+          <h6 class="font-weight-bold">Current:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.original }}</pre>
+        </div>
+        <div class="col-6 mt-4">
+          <h6 class="font-weight-bold">Proposed:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.code }}</pre>
+        </div>
+      </div>
+      <div
+        class="row collapse"
+        id="rule-code"
+        v-else
+      >
+        <div class="col mt-4">
+          <h6 class="font-weight-bold" v-if="votingCandidate.proposal === 'delete'">To be deleted:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.proposal === 'delete' ? votingCandidate.original : votingCandidate.code }}</pre>
         </div>
       </div>
     </div>
@@ -81,24 +66,21 @@
 <script>
   const $ = window.jQuery;
 
-  import Countdown from '../common/Countdown.vue';
   import Notification from '../common/Notifications.vue';
 
   export default {
     components: {
-      Countdown,
       Notification
     },
     props: {
-      turnWindow: {
-        required: true,
-        type: Number
+      votingCandidate: {
+        type: Object,
+        default: () => ({})
       }
     },
     data: function () {
       return {
-        votingCandidate: null,
-        votingWindowClosed: false,
+        codeVisible: false,
         voteTypes: {
           YES: 1,
           NO: 0,
@@ -110,23 +92,7 @@
         },
       }
     },
-    mounted: function () {
-      // Start timer
-      $('#voting-modal').on('shown.bs.modal', this.startTimer.bind(this));
-      $('#voting-modal').on('hidden.bs.modal', this.resetModal.bind(this));
-    },
     methods: {
-      promptForVote: function (votingCandidate) {
-        if (!votingCandidate.code) {
-          return;
-        }
-
-        this.votingCandidate = votingCandidate
-        $('#voting-modal').modal('show');
-      },
-      closeModal: function () {
-        $('#voting-modal').modal('hide');
-      },
       vote: function (type) {
         if (
           typeof(type) !== 'number' || (
@@ -140,19 +106,6 @@
 
         this.$emit('vote-cast', type);
       },
-      closeTurnWindow: function () {
-        this.votingWindowClosed = true;
-        $emit('vote-cast', voteTypes.ABSTAIN);
-        $('#voting-modal').modal('hide');
-      },
-      startTimer: function () {
-        this.$refs.timer.start();
-      },
-      resetModal: function () {
-        this.votingCandidate = null;
-        this.$refs.timer.reset();
-        this._retireNotification();
-      },
       _retireNotification: function () {
         this.alert = {
           type: null,
@@ -162,3 +115,18 @@
     }
   }
 </script>
+
+<style scoped>
+#rule-code .term-container {
+  max-height: 330px;
+  overflow-y: auto;
+}
+
+.oi.mirrored {
+  -webkit-transform: scale(-1, 1);
+  -moz-transform: scale(-1, 1);
+  -ms-transform: scale(-1, 1);
+  -o-transform: scale(-1, 1);
+  transform: scale(-1, 1);
+}
+</style>

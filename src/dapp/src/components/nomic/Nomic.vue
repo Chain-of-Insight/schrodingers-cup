@@ -33,6 +33,16 @@
           ></Totals>
         </section>
 
+        <section>
+          <Voting
+            v-if="chatChannelJoined && votingCandidate"
+            v-bind:turn-window="turnWindow"
+            v-on:vote-cast="onVoteCast"
+            ref="voting"
+            :voting-candidate="votingCandidate"
+          ></Voting>
+        </section>
+
         <!-- Player Chat -->
         <section>
           <div ref="chatWindow" id="messages" class="message-container">
@@ -89,13 +99,6 @@
             </button> -->
           </div>
         </div>
-        <Voting
-          v-if="chatChannelJoined"
-          v-bind:turn-window="turnWindow"
-          v-on:vote-cast="onVoteCast"
-          ref="voting"
-          v-bind:voting-candidate="votingCandidate"
-        ></Voting>
         <RuleProposal
           v-if="chatChannelJoined"
           ref="proposal"
@@ -133,7 +136,8 @@ import {
   proposeRule,
   castVote,
   getRoundNumber,
-  getPlayers
+  getPlayers,
+  getProposedRule
 } from '../../services/apiProvider';
 
 // Child components
@@ -149,6 +153,15 @@ const voteTypes = {
   NO: 0,
   ABSTAIN: -1
 }
+
+const ruleChangeTypes = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  TRANSMUTE: 'transmute',
+  DELETE: 'delete',
+}
+
+const CURRENT_RULES = require('../practice/rules/currentRules.json');
 
 const TZ_WALLET_PATTERN = "(tz(?:1|2|3)[a-zA-Z0-9]{33})";
 
@@ -199,7 +212,11 @@ export default {
     },
     players: [],
     currentTurn: null,
-    nextTurn: null
+    nextTurn: null,
+    ruleSets: {
+      current: [],
+      saved: []
+    }
   }),
   computed: {
     msgPatterns: function () {
@@ -239,6 +256,8 @@ export default {
           await this.doLoginMessageSigning();
           // Get players
           await this.getCurrentPlayers();
+          // Get current rule set
+          this.getCurrentRules();
         }
       } catch (e) {
         // Auth failed
@@ -455,15 +474,17 @@ export default {
           // TODO: GET (/game/proposals?) to get latest proposed rule
           playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
 
-          if (playerAddress !== this.TwilioIdentity) {
-            // On another player proposing a rule
-            this.votingCandidate = {
-              name: 'testRule',
-              code: '$test_string = "this is test code"\nsay($test_string)'
-            }
-            console.log('Time to vote!');
-            this.$refs.voting.promptForVote(this.votingCandidate);
-          }
+          this.getLastProposed();
+
+          // if (playerAddress !== this.TwilioIdentity) {
+          //   // On another player proposing a rule
+          //   this.votingCandidate = {
+          //     name: 'testRule',
+          //     code: '$test_string = "this is test code"\nsay($test_string)'
+          //   }
+          //   console.log('Time to vote!');
+          //   this.$refs.voting.promptForVote(this.votingCandidate);
+          // }
           break;
         case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
           // On new turn
@@ -554,7 +575,7 @@ export default {
       this.showEditor = this.showEditor ? false : true;
     },
     onVoteCast: async function (vote) {
-      if (vote === voteTypes.ABSTAIN) {
+      if (vote === voteTypes.ABSTAIN || typeof this.votingCandidate !== 'object') {
         // Don't send anything on abstain
         return false;
       }
@@ -573,7 +594,6 @@ export default {
         }
 
         if (result.data.success) {
-          this.$refs.voting.closeModal();
           this.alert.type = 'success';
           this.alert.msg = 'Your vote was cast successfully';
           setTimeout(() => {
@@ -582,20 +602,21 @@ export default {
 
           // Update round number
           this.currentRound = result.data.round;
+          // clear voting candidate and voting ribbon
         } else {
           // Response OK but vote cast failed
-          this.$refs.voting.alert.type = 'danger';
-          this.$refs.voting.alert.msg = 'Vote cast unsuccessful: "' + result.data.message + '"... Please try again.';
+          this.alert.type = 'danger';
+          this.alert.msg = 'Vote cast unsuccessful: "' + result.data.message + '"... Please try again.';
           setTimeout(() => {
-            this.$refs.voting._retireNotification();
+            this._retireNotification();
           }, 5000);
         }
       } else if (result.status == 500) {
         console.error('Error while trying to propose rule: ', result);
-        this.$refs.voting.alert.type = 'danger';
-        this.$refs.voting.alert.msg = 'There was an error while trying to cast your vote... Please try again.';
+        this.alert.type = 'danger';
+        this.alert.msg = 'There was an error while trying to cast your vote... Please try again.';
         setTimeout(() => {
-          this.$refs.voting._retireNotification();
+          this._retireNotification();
         }, 5000);
       }
     },
@@ -642,7 +663,7 @@ export default {
           this.$refs.proposal.alert.type = 'danger';
           this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '"... Please try again.';
           setTimeout(() => {
-            this.$refs.voting._retireNotification();
+            this.$refs.proposal._retireNotification();
           }, 5000);
         }
       } else if (result.status == 500) {
@@ -650,7 +671,7 @@ export default {
         this.$refs.proposal.alert.type = 'danger';
         this.$refs.proposal.alert.msg = 'There was an error while trying to propose your rule... Please try again.';
         setTimeout(() => {
-          this.$refs.voting._retireNotification();
+          this.$refs.proposal._retireNotification();
         }, 5000);
       }
     },
@@ -695,7 +716,7 @@ export default {
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
           // TODO: how to keep track of whether or not user already has rule up for vote?
-          this.ruleProposalHandler();
+          // this.ruleProposalHandler();
         }
 
         // Start round timer
@@ -703,7 +724,39 @@ export default {
       } else if (result.status == 500) {
         console.error('Error while trying to get players: ', result);
       }
-    }
+    },
+    getLastProposed: async function () {
+      let result = null;
+      try {
+        result = await getProposedRule(this.jwtToken, this.currentRound);
+      } catch (error) {
+        result = error.response;
+      }
+
+      if (result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        // console.log('Proposed rule =====>', result);
+        const proposedRule = result.data;
+
+        if (
+          proposedRule.proposal !== ruleChangeTypes.CREATE &&
+          this.ruleSets.current.indexOf(proposedRule.index)
+        ) {
+          proposedRule.original = this.ruleSets.current[proposedRule.index].code;
+        }
+
+        this.votingCandidate = proposedRule;
+      } else if (result.status == 500) {
+        console.error('Error while trying to get proposed rule: ', result);
+      }
+    },
+    getCurrentRules: async function () {
+      this.ruleSets.current = CURRENT_RULES;
+    },
   }
 };
 </script>
