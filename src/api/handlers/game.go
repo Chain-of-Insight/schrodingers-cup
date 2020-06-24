@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"math"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gomodule/redigo/redis"
@@ -582,8 +583,21 @@ func processRound(round int) (bool, string) {
 		}
 	}
 
+	// Load players
+	playersListKey := "players:" + currentDay
+	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
+	if err != nil {
+		return false, "Error getting list of players from db"
+	}
+
+	totalPlayers := len(players)
+
 	var rulePassed bool;
-	if votedYes > int(quorumRatio) {
+	qMulter := quorumRatio * 0.01
+	playersThreshold := float64(totalPlayers) * qMulter
+	playersThreshold_i := int(math.Round(playersThreshold))
+
+	if votedYes > playersThreshold_i {
 		// Rule successfully passed
 		rulePassed = true
 	} else {
@@ -809,7 +823,8 @@ func processRound(round int) (bool, string) {
 
 func isValidQuorum(totalPlayers int, totalVotes int) bool {
 	// Shift percentage to ratio multer
-	q := quorumRatio * 0.01
+	// q := quorumRatio * 0.01
+	q := 100 * 0.01
 	var players float64 = float64(totalPlayers)
 	var votes float64 = float64(totalVotes)
 	var isQuorum bool
