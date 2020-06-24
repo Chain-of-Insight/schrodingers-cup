@@ -91,6 +91,22 @@ definitions:
       resultHtml:
         type: string
     type: object
+  handlers.VoteObject:
+    properties:
+      player:
+        type: string
+      timestamp:
+        type: string
+      vote:
+        type: string
+    type: object
+  handlers.VotesList:
+    properties:
+      votes:
+        items:
+          $ref: '#/definitions/handlers.VoteObject'
+        type: array
+    type: object
 info:
   contact: {}
   description: A game of Peter Suber's Nomic running on the Tezos network.
@@ -164,6 +180,22 @@ paths:
         type: string
       produces:
       - application/json
+  /game/votes/:round:
+    get:
+      description: Fetches votes for a specific round
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of votes for a target round
+          schema:
+            $ref: '#/definitions/handlers.VotesList'
   /ping:
     get:
       description: Ping/Health Check
