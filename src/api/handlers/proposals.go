@@ -43,7 +43,8 @@ func Proposal(c echo.Context) error {
 
 	p, err := redis.Strings(conn.Do("HMGET", proposalItemKey, "author", "code", "timestamp", "proposal", "ruletype", "ruleindex", "round", "success"))
 	if err != nil {
-		return err
+		r := new(ProposalObject)
+		return c.JSON(http.StatusOK, r)
 	}
 
 	// Create empty model
@@ -66,15 +67,18 @@ func Proposal(c echo.Context) error {
 	proposal.ruletype = p[4]
 	proposal.ruleindex, err = strconv.Atoi(p[5])
 	if err != nil {
-		return err
+		r := new(ProposalObject)
+		return c.JSON(http.StatusOK, r)
 	}
 	proposal.round, err = strconv.Atoi(p[6])
 	if err != nil {
-		return err
+		r := new(ProposalObject)
+		return c.JSON(http.StatusOK, r)
 	}
 	proposal.success, err = strconv.ParseBool(p[7])
 	if err != nil {
-		return err
+		r := new(ProposalObject)
+		return c.JSON(http.StatusOK, r)
 	}
 
 	// Return model / resp.
