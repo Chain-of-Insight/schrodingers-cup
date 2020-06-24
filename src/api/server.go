@@ -19,15 +19,12 @@ import (
 // @description A game of Peter Suber's Nomic running on the Tezos network.
 // @BasePath /
 func main() {
-
 	// config
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Sprintf("error reading config file: %v\n", err))
 	}
-
-
 
 	// set some defaults
 	viper.SetDefault("PORT", "1323")
@@ -61,7 +58,7 @@ func main() {
 	e.GET("/round", handlers.Round)
 	e.POST("/test", handlers.TestNomsu)
 	e.POST("/auth", handlers.Auth)
-
+	// Wildcard routes
 	e.GET("/proposal/:round", handlers.Proposal)
 	e.GET("/votes/:round", handlers.GetVotes)
 

@@ -375,10 +375,10 @@ var doc = `{
                     "type": "string"
                 },
                 "timestamp": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "vote": {
-                    "type": "string"
+                    "type": "boolean"
                 }
             }
         },
