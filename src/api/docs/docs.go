@@ -65,15 +65,6 @@ var doc = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "The target round integer for the proposal you are fetching",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RoundInput"
-                        }
                     }
                 ],
                 "responses": {
@@ -309,14 +300,6 @@ var doc = `{
                 },
                 "success": {
                     "type": "boolean"
-                }
-            }
-        },
-        "handlers.RoundInput": {
-            "type": "object",
-            "properties": {
-                "round": {
-                    "type": "integer"
                 }
             }
         },

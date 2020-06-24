@@ -64,11 +64,6 @@ definitions:
       success:
         type: boolean
     type: object
-  handlers.RoundInput:
-    properties:
-      round:
-        type: integer
-    type: object
   handlers.RuleProposal:
     properties:
       code:
@@ -129,12 +124,6 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: The target round integer for the proposal you are fetching
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.RoundInput'
       produces:
       - application/json
       responses:

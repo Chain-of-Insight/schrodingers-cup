@@ -24,7 +24,6 @@ type ProposalObject struct {
 // @router /game/proposal/:round [get]
 // @param Authorization header string true "Bearer token"
 // @success 200 {object} ProposalObject "A rule proposal object"
-// @param input body RoundInput true "The target round integer for the proposal you are fetching"
 // @produce json
 func Proposal(c echo.Context) error {
 	round, err := strconv.Atoi(c.Param("round"))
