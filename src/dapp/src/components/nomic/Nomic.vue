@@ -633,15 +633,15 @@ export default {
       } else {
         // Check if you already have a rule up for vote this round
 
-        if (!this.votingCandidate)
-          return false;
+        // if (!this.votingCandidate)
+        //   return false;
 
-        if (
-          this.votingCandidate.round === this.currentRound &&
-          this.votingCandidate.author === this.TwilioIdentity
-        ) {
-          return false;
-        }
+        // if (
+        //   this.votingCandidate.round === this.currentRound &&
+        //   this.votingCandidate.author === this.TwilioIdentity
+        // ) {
+        //   return false;
+        // }
 
         // Otherwise, prompt to propose a rule
         this.$refs.proposal.promptForProposal();
