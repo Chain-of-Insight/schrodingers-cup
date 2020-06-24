@@ -530,7 +530,6 @@ func processRound(round int) (bool, string) {
 	proposalItemKey := "proposals:" + currentDay + ":" + strconv.Itoa(round)
 	roundCounterKey := "round:" + currentDay
 	roundKey := "round" + currentDay + ":" + strconv.Itoa(round)
-	round = round + 1
 
 	p, err := redis.Strings(conn.Do("HMGET", proposalItemKey, "author", "code", "timestamp", "proposal", "ruletype", "ruleindex", "round", "success"))
 	if err != nil {
@@ -584,7 +583,7 @@ func processRound(round int) (bool, string) {
 	}
 
 	var rulePassed bool;
-	if votedYes > rulePassPts {
+	if votedYes > int(quorumRatio) {
 		// Rule successfully passed
 		rulePassed = true
 	} else {
@@ -800,6 +799,7 @@ func processRound(round int) (bool, string) {
 	}
 
 	// Update round storage (Redis)
+	round = round + 1
 	if _, err := conn.Do("SET", roundCounterKey, round); err != nil {
 		return false, "Error incrementing round storage in db"
 	}
