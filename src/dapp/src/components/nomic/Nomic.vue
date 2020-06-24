@@ -91,9 +91,9 @@
           <!-- For testing: -->
           <div class="btn-group" role="group" aria-label="">
             <!-- Test Voting -->
-            <!-- <button type="button" class="btn btn-outline-primary" @click="votingHandler()">
+            <button type="button" class="btn btn-outline-primary" @click="getLastProposed()">
               Test Voting
-            </button> -->
+            </button>
             <!-- Test Rule Proposal -->
             <!-- <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
               Test Rule Proposal
@@ -475,6 +475,7 @@ export default {
           // TODO: GET (/game/proposals?) to get latest proposed rule
           playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
 
+          this.currentRound += 1;
           this.votingCandidate = null;
           await this.getLastProposed();
 
@@ -732,7 +733,7 @@ export default {
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
           await this.getLastProposed();
-          this.ruleProposalHandler();
+          // this.ruleProposalHandler();
         } else {
           // Otherwise just prompt to vote
           await this.getLastProposed();
@@ -758,18 +759,16 @@ export default {
           return false;
         }
 
-        // console.log('Proposed rule =====>', result);
+
+        console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
         
-        if (typeof this.ruleSets.current[proposedRule.index] !== 'undefined') {
-          if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
-            proposedRule.original = this.ruleSets.current[proposedRule.index].code;
-          }
-
-          if (this.votingCandidate.author !== this.TwilioIdentity) {
-            this.votingCandidate = proposedRule;
-          }
+        if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
+          proposedRule.original = this.ruleSets.current[proposedRule.index].code;
         }
+
+        this.votingCandidate = proposedRule;
+        console.log('candidate:', this.votingCandidate);
       } else if (result.status == 500) {
         console.error('Error while trying to get proposed rule: ', result);
       }
