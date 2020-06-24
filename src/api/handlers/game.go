@@ -575,7 +575,7 @@ func processRound(round int) bool {
 	}
 
 	// 4) Replace vars.nom with updated values
-	b, err := ioutil.ReadFile("../nomsu/rules/vars.nom") // read the original file contents
+	b, err := ioutil.ReadFile("nomsu/rules/vars.nom") // read the original file contents
 	if err != nil {
 		return false
 	}
@@ -594,7 +594,7 @@ func processRound(round int) bool {
 		count++
 	}
 
-	f, err := os.Create("../nomsu/rules/vars.nom") // write the file
+	f, err := os.Create("nomsu/rules/vars.nom") // write the file
 	if err != nil {
 		return false
 	}
@@ -958,12 +958,12 @@ func userCan(players []string, times []string) string {
 func MoveUpFiles(index int, ruleType string) error {
 	for true {
 		// check if file exists
-		nextRuleFile := "../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa((index + 1)) + ".nom"
+		nextRuleFile := "nomsu/rules/" + ruleType + "/rule" + strconv.Itoa((index + 1)) + ".nom"
 		if _, err := os.Stat(nextRuleFile); os.IsNotExist(err) {
 			break
 		}
 		// rename it
-		currRuleFile := "../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"
+		currRuleFile := "nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"
 		err := os.Rename(nextRuleFile, currRuleFile)
 		if err != nil {
 			return err
@@ -985,7 +985,7 @@ func Update(code string, index int, ruleType string) (error, string) {
 	}
 
 	// check if file exists (otherwise it's not really Updating, is it?)
-	if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+	if _, err := os.Stat("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 		return err, ""
 	}
 
@@ -1010,7 +1010,7 @@ func Update(code string, index int, ruleType string) (error, string) {
 	newContents := contents[:idx1+11+idx2+1] + " " + strconv.Itoa(newVal)
 
 	// overwrite the file
-	f, err := os.Create("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	f, err := os.Create("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err, ""
 	}
@@ -1053,14 +1053,14 @@ func Create(code string, ruleType string) (error, int, string) {
 	// find the first free available index
 	index := 0
 	for true {
-		if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+		if _, err := os.Stat("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 			break
 		}
 		index += 1
 	}
 
 	// create the new rule file with the free index
-	f, err := os.Create("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	f, err := os.Create("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err, -1, ""
 	}
@@ -1078,12 +1078,12 @@ func Create(code string, ruleType string) (error, int, string) {
 
 func Delete(index int, ruleType string) error {
 	// check if the file exists
-	if _, err := os.Stat("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
+	if _, err := os.Stat("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
 		return err
 	}
 
 	// remove the file
-	err := os.Remove("../nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
+	err := os.Remove("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom")
 	if err != nil {
 		return err
 	}
@@ -1097,7 +1097,7 @@ func Delete(index int, ruleType string) error {
 
 func Transmute(indexFrom int, ruleTypeFrom string) (error, int) {
 	// check if the file exists
-	fileFrom := "../nomsu/rules/" + ruleTypeFrom + "/rule" + strconv.Itoa(indexFrom) + ".nom"
+	fileFrom := "nomsu/rules/" + ruleTypeFrom + "/rule" + strconv.Itoa(indexFrom) + ".nom"
 	if _, err := os.Stat(fileFrom); os.IsNotExist(err) {
 		return err, -1
 	}
@@ -1111,14 +1111,14 @@ func Transmute(indexFrom int, ruleTypeFrom string) (error, int) {
 	// find the first free available index in the new folder
 	indexTo := 0
 	for true {
-		if _, err := os.Stat("../nomsu/rules/" + ruleTypeTo + "/rule" + strconv.Itoa(indexTo) + ".nom"); os.IsNotExist(err) {
+		if _, err := os.Stat("nomsu/rules/" + ruleTypeTo + "/rule" + strconv.Itoa(indexTo) + ".nom"); os.IsNotExist(err) {
 			break
 		}
 		indexTo += 1
 	}
 
 	// move the file from the old folder to the new one
-	err := os.Rename(fileFrom, "../nomsu/rules/"+ruleTypeTo+"/rule"+strconv.Itoa(indexTo)+".nom")
+	err := os.Rename(fileFrom, "nomsu/rules/"+ruleTypeTo+"/rule"+strconv.Itoa(indexTo)+".nom")
 	if err != nil {
 		return err, -1
 	}
