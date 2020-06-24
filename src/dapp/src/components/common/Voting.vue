@@ -106,9 +106,6 @@
 
         this.$emit('vote-cast', type);
       },
-      toggleRuleCode: function () {
-        
-      },
       _retireNotification: function () {
         this.alert = {
           type: null,

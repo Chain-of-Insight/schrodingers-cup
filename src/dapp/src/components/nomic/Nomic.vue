@@ -575,7 +575,7 @@ export default {
       this.showEditor = this.showEditor ? false : true;
     },
     onVoteCast: async function (vote) {
-      if (vote === voteTypes.ABSTAIN || !this.votingCandidate !== 'object') {
+      if (vote === voteTypes.ABSTAIN || typeof this.votingCandidate !== 'object') {
         // Don't send anything on abstain
         return false;
       }
@@ -716,7 +716,7 @@ export default {
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
           // TODO: how to keep track of whether or not user already has rule up for vote?
-          this.ruleProposalHandler();
+          // this.ruleProposalHandler();
         }
 
         // Start round timer
