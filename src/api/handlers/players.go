@@ -24,7 +24,8 @@ func Players(c echo.Context) error {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		r := "Error connecting to Redis"
+		return c.JSON(http.StatusOK, r)
 	}
 
 	defer conn.Close()
@@ -35,7 +36,8 @@ func Players(c echo.Context) error {
 	// Load existing logged in players
 	players, err := redis.Strings(conn.Do("LRANGE", playersListKey, 0, -1))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		r := "Error getting players with LRANGE"
+		return c.JSON(http.StatusOK, r)
 	}
 
 	var playerList []string;
