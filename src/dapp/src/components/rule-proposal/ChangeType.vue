@@ -7,7 +7,7 @@
           <label
             class="btn btn-info btn-block p-3"
             :class="{ 'active': selectedType === type }"
-            v-for="type of Object.values(ruleChangeTypes)"
+            v-for="type of Object.values(proposalTypes)"
             :key="type"
           >
             <span class="oi oi-check float-left d-none"></span>
@@ -27,13 +27,8 @@
 </template>
 
 <script>
-
-const ruleChangeTypes = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  TRANSMUTE: 'transmute',
-  DELETE: 'delete',
-}
+// Constants
+import proposalTypes from '../../constants/constants.js';
 
 export default {
   props: {
@@ -42,7 +37,7 @@ export default {
   },
   data: function () {
     return {
-      ruleChangeTypes: ruleChangeTypes,
+      proposalTypes: proposalTypes,
       selectedType: this.changeType,
     }
   },

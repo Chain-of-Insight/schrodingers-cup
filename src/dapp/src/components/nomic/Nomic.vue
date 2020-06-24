@@ -94,10 +94,6 @@
             <button type="button" class="btn btn-outline-primary" @click="getLastProposed()">
               Test Voting
             </button>
-            <!-- Test Rule Proposal -->
-            <!-- <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
-              Test Rule Proposal
-            </button> -->
           </div>
         </div>
         <RuleProposal
@@ -149,22 +145,13 @@ import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
-const voteTypes = {
-  YES: 1,
-  NO: 0,
-  ABSTAIN: -1
-}
-
-const ruleChangeTypes = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  TRANSMUTE: 'transmute',
-  DELETE: 'delete',
-}
-
-const CURRENT_RULES = require('../practice/rules/currentRules.json');
-
-const TZ_WALLET_PATTERN = "(tz(?:1|2|3)[a-zA-Z0-9]{33})";
+// Constants
+import {
+  proposalTypes,
+  voteTypes,
+  TZ_WALLET_PATTERN,
+  CURRENT_RULES
+} from '../../constants/constants.js';
 
 export default {
   components: {
@@ -791,7 +778,7 @@ export default {
         const proposedRule = result.data;
         
         if (typeof proposedRule.code === 'string' && typeof proposedRule.index === 'number') {
-          if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
+          if (proposedRule.proposal !== proposalTypes.CREATE) {
             proposedRule.original = this.ruleSets.current[proposedRule.index].code;
           }
 
