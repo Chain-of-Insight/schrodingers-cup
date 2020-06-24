@@ -12,8 +12,8 @@ import (
 
 type VoteObject struct {
 	Address 	string `json:"player"`
-	Timestamp	string `json:"timestamp"`
-	Vote		string `json:"vote"`
+	Timestamp	int `json:"timestamp"`
+	Vote		bool `json:"vote"`
 }
 
 type VotesList struct {
@@ -60,12 +60,15 @@ func GetVotes(c echo.Context) error {
 		VoteObj := VoteObject{}
 		
 		VoteObj.Address = address_trimmed
-		VoteObj.Timestamp = time
+		VoteObj.Timestamp, err = strconv.Atoi(time)
+		if err != nil {
+			VoteObj.Timestamp = 0
+		}
 
 		if vote_trimmed == "true" {
-			VoteObj.Vote = "YES"
+			VoteObj.Vote = true
 		} else {
-			VoteObj.Vote = "NO"
+			VoteObj.Vote = false
 		}
 
 		v.Votes = append(v.Votes, VoteObj)
