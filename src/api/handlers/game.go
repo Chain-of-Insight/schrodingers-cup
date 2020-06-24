@@ -597,7 +597,7 @@ func processRound(round int) (bool, string) {
 	playersThreshold := float64(totalPlayers) * qMulter
 	playersThreshold_i := int(math.Round(playersThreshold))
 
-	if votedYes > playersThreshold_i {
+	if votedYes >= playersThreshold_i {
 		// Rule successfully passed
 		rulePassed = true
 	} else {
@@ -777,7 +777,6 @@ func processRound(round int) (bool, string) {
 	if !general {
 		return false, "Error releasing general Twilio message for round conclusion"
 	}
-	thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
 	if rulePassed {
 		gg := proposingPlayer + "'s rule has been successfully passed in round " + strconv.Itoa(round)
 		m := releaseNotification(gg)
@@ -789,6 +788,7 @@ func processRound(round int) (bool, string) {
 		if !m2 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + aChallengerApproaches
 		}
+		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
 		luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
 		m3 := releaseNotification(luckyOnesMsg)
 		if !m3 {
@@ -805,6 +805,7 @@ func processRound(round int) (bool, string) {
 		if !m1 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm2
 		}
+		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
 		bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
 		m2 := releaseNotification(bm3)
 		if !m2 {
