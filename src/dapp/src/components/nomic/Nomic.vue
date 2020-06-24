@@ -26,6 +26,7 @@
         <!-- Round totals -->
         <section>
           <Totals
+            v-if="currentRound !== -1"
             v-bind:round="currentRound"
             v-bind="currentTotals"
             :turn-window="turnWindow"
@@ -204,7 +205,7 @@ export default {
     showEditor: false,
     turnWindow: 300, // from rule 'external: $bl_turnWindowDuration = 300'
     votingCandidate: null,
-    currentRound: 1,
+    currentRound: -1,
     currentTotals: {
       yes: 0,
       no: 0,
@@ -465,7 +466,7 @@ export default {
         this.chatMessages.push(messageOutput);
       });
     },
-    onSystemMessage: function (message) {
+    onSystemMessage: async function (message) {
       let messageBody = message.body;
       let playerAddress = null;
 
@@ -474,7 +475,8 @@ export default {
           // TODO: GET (/game/proposals?) to get latest proposed rule
           playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
 
-          this.getLastProposed();
+          this.votingCandidate = null;
+          await this.getLastProposed();
 
           // if (playerAddress !== this.TwilioIdentity) {
           //   // On another player proposing a rule
@@ -603,6 +605,7 @@ export default {
           // Update round number
           this.currentRound = result.data.round;
           // clear voting candidate and voting ribbon
+          this.votingCandidate = null;
         } else {
           // Response OK but vote cast failed
           this.alert.type = 'danger';
@@ -628,6 +631,19 @@ export default {
           this._retireNotification();
         }, 3000);
       } else {
+        // Check if you already have a rule up for vote this round
+
+        // if (!this.votingCandidate)
+        //   return false;
+
+        // if (
+        //   this.votingCandidate.round === this.currentRound &&
+        //   this.votingCandidate.author === this.TwilioIdentity
+        // ) {
+        //   return false;
+        // }
+
+        // Otherwise, prompt to propose a rule
         this.$refs.proposal.promptForProposal();
       }
     },
@@ -715,12 +731,15 @@ export default {
 
         // If user's turn, prompt for rule proposal immediately?
         if (this.currentTurn === this.TwilioIdentity) {
-          // TODO: how to keep track of whether or not user already has rule up for vote?
-          // this.ruleProposalHandler();
+          await this.getLastProposed();
+          this.ruleProposalHandler();
+        } else {
+          // Otherwise just prompt to vote
+          await this.getLastProposed();
         }
 
         // Start round timer
-        this.$refs.totals.startTimer();
+        // this.$refs.totals.startTimer();
       } else if (result.status == 500) {
         console.error('Error while trying to get players: ', result);
       }
@@ -741,15 +760,16 @@ export default {
 
         // console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
+        
+        if (typeof this.ruleSets.current[proposedRule.index] !== 'undefined') {
+          if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
+            proposedRule.original = this.ruleSets.current[proposedRule.index].code;
+          }
 
-        if (
-          proposedRule.proposal !== ruleChangeTypes.CREATE &&
-          this.ruleSets.current.indexOf(proposedRule.index)
-        ) {
-          proposedRule.original = this.ruleSets.current[proposedRule.index].code;
+          if (this.votingCandidate.author !== this.TwilioIdentity) {
+            this.votingCandidate = proposedRule;
+          }
         }
-
-        this.votingCandidate = proposedRule;
       } else if (result.status == 500) {
         console.error('Error while trying to get proposed rule: ', result);
       }
