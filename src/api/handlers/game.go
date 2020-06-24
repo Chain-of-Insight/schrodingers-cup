@@ -1032,7 +1032,7 @@ func Update(code string, index int, ruleType string) (error, string) {
 	}
 
 	// read the file
-	byte_contents, err := ioutil.ReadFile("schrodinger/schrodingers-cup/src/api/nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom") // read the original file contents
+	byte_contents, err := ioutil.ReadFile("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom") // read the original file contents
 	if err != nil {
 		return err, ""
 	}
