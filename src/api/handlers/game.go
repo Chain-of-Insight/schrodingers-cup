@@ -16,13 +16,13 @@ import (
 )
 
 // XXX TODO: Set turn duration from Tezos
-const turnDuration = 300
+var turnDuration int = 300
 
 // XXX TODO: Set quorum ratio from Tezos
-const quorumRatio float64 = 100
+var quorumRatio float64 = 100
 
 // XXX TODO: Set points to win from Tezos
-const pointsToWin = 100
+var pointsToWin int = 100
 
 const DELETE = "delete"
 const CREATE = "create"
@@ -606,12 +606,170 @@ func processRound(round int) bool {
 		return false
 	}
 
-	// 5) (players loop) Apply point changes to each user (as necessary)
-	//rulePassPts := ruleSet[2]          // TODO: Uncomment these once there's a use for them
-	//voteAgainstPts := ruleSet[3]
-	//ruleFailedPenalty := ruleSet[4]
+	// 5 a) (players loop) Apply point changes to each user (as necessary)
+	
+	// say("Player starting points = " + $bl_startPoints)
+	// say("Points required to win the game = " + $bl_winPoints)
+	// say("Points gained for passing a rule = " + $bl_rulePassPts)
+	// say("Points gained for voting against a passed rule = " + $bl_voteAgainstPts)
+	// say("Points lost for a rule rejection = " + $bl_ruleFailedPenalty)
+	// say("Daily game window duration = " + $bl_gameWindowDuration)
+	// say("Game start hour (UTC) = " + $bl_gameWindowHourUTC)
+	// say("Player turn duration = " + $bl_turnWindowDuration)
+	// say("Percentage of votes required to pass a rule = " + $bl_voteRatioRequired)
+	// say("Percentage of votes required to transmutate a rule = " + $bl_transmutationVoteRatioRequired)
 
-	// 6) Store each players point changes for that round
+	playerStartPts := ruleSet[0]
+	// gameWinPts := ruleSet[1] //  <= @see checkGameover()
+	rulePassPts := ruleSet[2]
+	voteAgainstPts := ruleSet[3]
+	ruleFailedPenalty := ruleSet[4]
+	// gameWindowDuration := ruleSet[5]
+	// gameWindowStartUTC := ruleSet[6]
+	turnDuration = ruleSet[7]
+	quorumRatio = float64(ruleSet[8])
+
+	// Determine if passing / failing proposal
+	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
+	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
+	if err != nil {
+		return false
+	}
+
+	var votedYes int = 0;
+	var votedNo int = 0;
+	var votedAgainstPlayers []string;
+	for _, s := range votes {
+		split := strings.Split(s, " ")
+		address := split[0]
+		address_trimmed := strings.TrimLeft(address, "{")
+		vote := split[2]
+		vote_trimmed := strings.TrimRight(vote, "}")
+		if vote_trimmed == "true" {
+			votedYes++
+		} else {
+			votedNo++
+			// Store voted against ref.
+			votedAgainstPlayers = append(votedAgainstPlayers, address_trimmed)
+		}
+	}
+
+	var rulePassed bool;
+	if votedYes > rulePassPts {
+		// Rule successfully passed
+		rulePassed = true
+	} else {
+		rulePassed = false
+	}
+
+	// Get player refs and award points
+	type PlayerRoundResult struct {
+		player string `redis:"player"`
+		points int `redis:"points"`
+	}
+	proposingPlayer := proposal.author
+	roundKey := "round" + currentDay + ":" + strconv.Itoa(round)
+
+	// Parse points
+	// Proposing player
+	// Handle points if rule passed
+	pKey := proposingPlayer + ":points:" + currentDay
+	points, err := redis.Int(conn.Do("GET", pKey))
+	if err != nil {
+		points = playerStartPts
+	}
+	playerUpdate := new(PlayerRoundResult)
+	playerUpdate.player = proposingPlayer
+	if rulePassed {
+		// Points increase
+		playerUpdate.points = rulePassPts
+		points = points + rulePassPts
+	} else {
+		// Points decrease
+		playerUpdate.points = 0 - ruleFailedPenalty
+		points = points + (0 - ruleFailedPenalty)
+	}
+	// Proposing player points stored
+	if _, err := conn.Do("HSET", pKey, points); err != nil {
+		return false
+	}
+	// Update round deltas ref.
+	if _, err := conn.Do("LPUSH", roundKey, playerUpdate); err != nil {
+		return false
+	}
+
+	// Determine if player gains points
+	for _, s := range votedAgainstPlayers {				
+		if rulePassed {
+			if voteAgainstPts > 0 {
+				againstKey := s + ":points:" + currentDay
+				points, err := redis.Int(conn.Do("GET", againstKey))
+				if err != nil {
+					points = playerStartPts
+				}
+				playerUpdate := new(PlayerRoundResult)
+				playerUpdate.player = s
+				
+				// Points increase
+				playerUpdate.points = voteAgainstPts
+				points = points + voteAgainstPts
+
+				// Proposing player points stored
+				if _, err := conn.Do("HSET", againstKey, points); err != nil {
+					return false
+				}
+				// Update round deltas ref.
+				if _, err := conn.Do("LPUSH", roundKey, playerUpdate); err != nil {
+					return false
+				}
+			}
+		}
+	}
+
+
+	// 5 b) (rounds loop) TODO: Apply changes to rules (e.g. necro rule strategy)
+
+
+	// 6) Release chat notifications
+	general := releaseNotification("Round " + strconv.Itoa(round) + " has concluded")
+	if !general {
+		return false
+	}
+	thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
+	if rulePassed {
+		gg := proposingPlayer + "'s rule has been successfully passed in round " + strconv.Itoa(round)
+		m := releaseNotification(gg)
+		if !m {
+			return true
+		}
+		aChallengerApproaches := proposingPlayer + " gained " + strconv.Itoa(rulePassPts) + " points"
+		m2 := releaseNotification(aChallengerApproaches)
+		if !m2 {
+			return true
+		}
+		luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
+		m3 := releaseNotification(luckyOnesMsg)
+		if !m3 {
+			return true
+		}
+	} else {
+		bm := proposingPlayer + "'s rule was deemed useless by a jury of their peers in round " + strconv.Itoa(round)
+		m := releaseNotification(bm)
+		if !m {
+			return true
+		}
+		bm2 := proposingPlayer + "loses " + strconv.Itoa(ruleFailedPenalty) + " points carelessly"
+		//thePeanutGallery
+		m1 := releaseNotification(bm2)
+		if !m1 {
+			return true
+		}
+		bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
+		m2 := releaseNotification(bm3)
+		if !m2 {
+			return true
+		}
+	}
 
 	return true
 }
