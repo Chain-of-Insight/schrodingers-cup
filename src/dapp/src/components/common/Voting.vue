@@ -5,8 +5,9 @@
         <!-- Rule info -->
         <div class="col-7 border-right border-dark">
           <h3 class="mb-3"><strong>Time to vote!</strong></h3>
-          <h5 class="text-primary"><strong>UPDATE RULE</strong></h5>
-          <p>Proposed by: <strong class="text-info">tz1UbYZJosDay7WLMH5sn49uYVonZFQcjCEB</strong></p>
+          <h5 class="text-primary"><strong>{{ votingCandidate.proposal.toUpperCase() }} RULE</strong></h5>
+          <p class="mb-1">Proposed by: <strong class="text-info">{{ votingCandidate.author }}</strong></p>
+          <p v-if="votingCandidate.proposal !== 'create'">Rule number: <strong>{{ votingCandidate.index }}</strong></p>
           <button class="btn btn-sm btn-warning" type="button" @click="codeVisible = codeVisible ? false : true" data-toggle="collapse" data-target="#rule-code" aria-expanded="false" aria-controls="rule-code">
             {{ codeVisible ? 'Hide rule code' : 'Show rule code' }}
           </button>
@@ -34,8 +35,29 @@
           >Abstain</button>
         </div>
       </div>
-      <div class="collapse" id="rule-code">
-        <pre class="term-container rounded mb-0 mt-3">{{ votingCandidate.code }}</pre>
+      <div
+        class="row collapse"
+        id="rule-code"
+        v-if="votingCandidate.proposal !== 'delete' && votingCandidate.original"
+      >
+        <div class="col-6 mt-4">
+          <h6 class="font-weight-bold">Current:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.original }}</pre>
+        </div>
+        <div class="col-6 mt-4">
+          <h6 class="font-weight-bold">Proposed:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.code }}</pre>
+        </div>
+      </div>
+      <div
+        class="row collapse"
+        id="rule-code"
+        v-else
+      >
+        <div class="col mt-4">
+          <h6 class="font-weight-bold" v-if="votingCandidate.proposal === 'delete'">To be deleted:</h6>
+          <pre class="term-container rounded mb-0">{{ votingCandidate.proposal === 'delete' ? votingCandidate.original : votingCandidate.code }}</pre>
+        </div>
       </div>
     </div>
   </div>
@@ -50,12 +72,15 @@
     components: {
       Notification
     },
+    props: {
+      votingCandidate: {
+        type: Object,
+        default: () => ({})
+      }
+    },
     data: function () {
       return {
         codeVisible: false,
-        votingCandidate: {
-          code: "say(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\nsay(\"OK!\")\n"
-        },
         voteTypes: {
           YES: 1,
           NO: 0,
