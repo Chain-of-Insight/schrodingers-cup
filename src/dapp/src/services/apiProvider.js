@@ -146,7 +146,7 @@ async function getProposedRule(jwt, round) {
     }
   }
 
-  let apiEndpoint = API_URL + 'game/proposal/' + round;
+  let apiEndpoint = API_URL + 'proposal/' + round;
   const res = await axios.get(apiEndpoint, config);
 
   return res;

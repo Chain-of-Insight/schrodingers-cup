@@ -33,6 +33,16 @@
           ></Totals>
         </section>
 
+        <section>
+          <Voting
+            v-if="chatChannelJoined"
+            v-bind:turn-window="turnWindow"
+            v-on:vote-cast="onVoteCast"
+            ref="voting"
+            v-bind:voting-candidate="votingCandidate"
+          ></Voting>
+        </section>
+
         <!-- Player Chat -->
         <section>
           <div ref="chatWindow" id="messages" class="message-container">
@@ -89,13 +99,6 @@
             </button> -->
           </div>
         </div>
-        <Voting
-          v-if="chatChannelJoined"
-          v-bind:turn-window="turnWindow"
-          v-on:vote-cast="onVoteCast"
-          ref="voting"
-          v-bind:voting-candidate="votingCandidate"
-        ></Voting>
         <RuleProposal
           v-if="chatChannelJoined"
           ref="proposal"
