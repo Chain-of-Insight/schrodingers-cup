@@ -764,8 +764,6 @@ export default {
           await this.getLastProposed();
         }
 
-        // Start round timer
-        // this.$refs.totals.startTimer();
       } else {
         console.error('Error while trying to get players: ', result);
       }
@@ -792,13 +790,12 @@ export default {
         console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
         
-        if (proposedRule.code && proposedRule.index) {
+        if (typeof proposedRule.code === 'string' && typeof proposedRule.index === 'number') {
           if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
             proposedRule.original = this.ruleSets.current[proposedRule.index].code;
           }
 
           this.votingCandidate = proposedRule;
-          // console.log('candidate:', this.votingCandidate);
         }
       } else {
         console.error('Error while trying to get proposed rule:', result);
