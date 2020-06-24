@@ -590,10 +590,15 @@ export default {
       try {
         result = await castVote(this.jwtToken, Boolean(vote), this.currentRound);
       } catch (error) {
-        result = error.response;
+        console.error('Error while trying to cast vote:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
       }
 
-      if (result.status == 200) {
+      if (result.status && result.status == 200) {
         if (!result.data) {
           console.error('Response successful but no data present:', result);
           return false;
@@ -618,10 +623,10 @@ export default {
             this._retireNotification();
           }, 5000);
         }
-      } else if (result.status == 500) {
+      } else {
         console.error('Error while trying to propose rule: ', result);
         this.alert.type = 'danger';
-        this.alert.msg = 'There was an error while trying to cast your vote... Please try again.';
+        this.alert.msg = 'There was an error while trying to cast your vote';
         setTimeout(() => {
           this._retireNotification();
         }, 5000);
@@ -658,10 +663,15 @@ export default {
       try {
         result = await proposeRule(this.jwtToken, code, index, kind, type);
       } catch (error) {
-        result = error.response;
+        console.error('Error while trying to propose rule:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
       }
 
-      if (result.status == 200) {
+      if (result.status && result.status == 200) {
         if (!result.data) {
           console.error('Response successful but no data present:', result);
           return false;
@@ -683,15 +693,15 @@ export default {
         } else {
           // Response OK but rule proposal failed
           this.$refs.proposal.alert.type = 'danger';
-          this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '"... Please try again.';
+          this.$refs.proposal.alert.msg = 'Rule proposal unsuccessful: "' + result.data.message + '"';
           setTimeout(() => {
             this.$refs.proposal._retireNotification();
           }, 5000);
         }
-      } else if (result.status == 500) {
+      } else {
         console.error('Error while trying to propose rule: ', result);
         this.$refs.proposal.alert.type = 'danger';
-        this.$refs.proposal.alert.msg = 'There was an error while trying to propose your rule... Please try again.';
+        this.$refs.proposal.alert.msg = 'There was an error while trying to propose your rule';
         setTimeout(() => {
           this.$refs.proposal._retireNotification();
         }, 5000);
@@ -702,17 +712,22 @@ export default {
       try {
         result = await getRoundNumber();
       } catch (error) {
-        result = error.response;
+        console.error('Error while trying to get current round:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
       }
 
-      if (result.status == 200) {
+      if (result.status && result.status == 200) {
         if (!result.data) {
           console.error('Response successful but no data present:', result);
           return false;
         }
 
         this.currentRound = result.data.round;
-      } else if (result.status == 500) {
+      } else {
         console.error('Error while trying to get current round number: ', result);
       }
     },
@@ -721,10 +736,15 @@ export default {
       try {
         result = await getPlayers();
       } catch (error) {
-        result = error.response;
+        console.error('Error while trying to get players:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
       }
 
-      if (result.status == 200) {
+      if (result.status && result.status == 200) {
         if (!result.data) {
           console.error('Response successful but no data present:', result);
           return false;
@@ -746,19 +766,23 @@ export default {
 
         // Start round timer
         // this.$refs.totals.startTimer();
-      } else if (result.status == 500) {
+      } else {
         console.error('Error while trying to get players: ', result);
       }
     },
     getLastProposed: async function () {
       let result = null;
       try {
-        result = await getProposedRule(this.jwtToken, this.currentRound);
+        result = await getProposedRule(this.currentRound);
       } catch (error) {
-        result = error.response;
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
       }
 
-      if (result.status == 200) {
+      if (result.status && result.status == 200) {
         if (!result.data) {
           console.error('Response successful but no data present:', result);
           return false;
@@ -776,8 +800,8 @@ export default {
           this.votingCandidate = proposedRule;
           // console.log('candidate:', this.votingCandidate);
         }
-      } else if (result.status == 500) {
-        console.error('Error while trying to get proposed rule: ', result);
+      } else {
+        console.error('Error while trying to get proposed rule:', result);
       }
     },
     getCurrentRules: async function () {

@@ -8,7 +8,7 @@ const API_URL = process.env.API_BASE_URL;
  */
 async function testNomic(code) {
   if (typeof code !== 'string') {
-    return 'Payload rejected. String required, got ' + typeof code;
+    throw new Error('Payload rejected. String required, got ' + typeof code);
   }
 
   let apiEndpoint = API_URL + 'test';
@@ -22,15 +22,15 @@ async function testNomic(code) {
  */
 async function auth(msg, sig, pubKey, address) {
   if (typeof msg !== 'string') {
-    return 'msg rejected. String required, got ' + typeof msg;
+    throw new Error('msg rejected. String required, got ' + typeof msg);
   }
 
   if (typeof sig !== 'string') {
-    return 'sig rejected. String required, got ' + typeof sig;
+    throw new Error('sig rejected. String required, got ' + typeof sig);
   }
 
   if (typeof pubKey !== 'string') {
-    return 'pubKey rejected. String required, got ' + typeof pubKey;
+    throw new Error('pubKey rejected. String required, got ' + typeof pubKey);
   }
 
   let apiEndpoint = API_URL + 'auth';
@@ -44,23 +44,23 @@ async function auth(msg, sig, pubKey, address) {
  */
 async function proposeRule(jwt, code, index, kind, type) {
   if (typeof(jwt) !== 'string') {
-    return 'jwt rejected. String required, got ' + typeof jwt;
+    throw new Error('jwt rejected. String required, got ' + typeof jwt);
   }
 
   if (typeof code !== 'string') {
-    return 'code rejected. String required, got ' + typeof code;
+    throw new Error('code rejected. String required, got ' + typeof code);
   }
 
   if (typeof index !== 'number') {
-    return 'index rejected. Number required, got ' + typeof index;
+    throw new Error('index rejected. Number required, got ' + typeof index);
   }
 
   if (typeof code !== 'string') {
-    return 'kind rejected. String required, got ' + typeof kind;
+    throw new Error('kind rejected. String required, got ' + typeof kind);
   }
 
   if (typeof code !== 'string') {
-    return 'kind rejected. String required, got ' + typeof type;
+    throw new Error('kind rejected. String required, got ' + typeof type);
   }
 
   const config = {
@@ -105,15 +105,15 @@ async function getPlayers() {
  */
 async function castVote(jwt, vote, round) {
   if (typeof jwt !== 'string') {
-    return 'jwt rejected. String required, got ' + typeof jwt;
+    throw new Error('jwt rejected. String required, got ' + typeof jwt);
   }
 
   if (typeof vote !== 'boolean') {
-    return 'vote rejected. Boolean required, got ' + typeof vote;
+    throw new Error('vote rejected. Boolean required, got ' + typeof vote);
   }
 
   if (typeof round !== 'number') {
-    return 'round rejected. Number required, got ' + typeof round;
+    throw new Error('round rejected. Number required, got ' + typeof round);
   }
 
   const config = {
@@ -131,23 +131,13 @@ async function castVote(jwt, vote, round) {
   return res;
 };
 
-async function getProposedRule(jwt, round) {
-  if (typeof jwt !== 'string') {
-    return 'jwt rejected. String required, got ' + typeof jwt;
-  }
-
+async function getProposedRule(round) {
   if (typeof round !== 'number') {
-    return 'round rejected. Number required, got ' + typeof round;
-  }
-
-  const config = {
-    headers: {
-      'Authorization': 'Bearer ' + jwt
-    }
+    throw new Error('round rejected. Number required, got ' + typeof round);
   }
 
   let apiEndpoint = API_URL + 'proposal/' + round;
-  const res = await axios.get(apiEndpoint, config);
+  const res = await axios.get(apiEndpoint);
 
   return res;
 }
