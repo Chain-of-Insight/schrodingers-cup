@@ -152,7 +152,7 @@ func CreatePlayerEntry(jwt string, playerAddress string, timestamp string) {
 	player.tzid = playerAddress
 	player.timestamp = timestamp
 	
-	if _, err := conn.Do("LPUSH", playersListKey, player); err != nil {
+	if _, err := conn.Do("RPUSH", playersListKey, player); err != nil {
 		return
 	}
 }

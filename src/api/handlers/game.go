@@ -719,7 +719,7 @@ func processRound(round int) (bool, string) {
 		points = points + (0 - ruleFailedPenalty)
 	}
 	// Proposing player points stored
-	if _, err := conn.Do("HSET", pKey, points); err != nil {
+	if _, err := conn.Do("SET", pKey, points); err != nil {
 		return false, "Error setting proposing player's points in the db to " + strconv.Itoa(points)
 	}
 	// Update round deltas ref.
@@ -744,7 +744,7 @@ func processRound(round int) (bool, string) {
 				points = points + voteAgainstPts
 
 				// Vote against player points stored
-				if _, err := conn.Do("HSET", againstKey, points); err != nil {
+				if _, err := conn.Do("SET", againstKey, points); err != nil {
 					return false, "Error setting vote against points on " + againstKey + " for " + strconv.Itoa(points) + " points"
 				}
 				// Update round deltas ref.
