@@ -239,6 +239,9 @@ export default {
       this.connected = true;
       this.address = returningUser;
 
+      // Get current rule set
+      this.getCurrentRules();
+
       // Get current round number
       await this.getCurrentRound();
 
@@ -257,8 +260,6 @@ export default {
           await this.doLoginMessageSigning();
           // Get players
           await this.getCurrentPlayers();
-          // Get current rule set
-          this.getCurrentRules();
         }
       } catch (e) {
         // Auth failed
@@ -475,8 +476,10 @@ export default {
           // TODO: GET (/game/proposals?) to get latest proposed rule
           playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
 
-          this.currentRound += 1;
           this.votingCandidate = null;
+
+          await this.getCurrentRound();
+          console.log('Current round:', this.currentRound);
           await this.getLastProposed();
 
           // if (playerAddress !== this.TwilioIdentity) {
@@ -610,7 +613,7 @@ export default {
         } else {
           // Response OK but vote cast failed
           this.alert.type = 'danger';
-          this.alert.msg = 'Vote cast unsuccessful: "' + result.data.message + '"... Please try again.';
+          this.alert.msg = 'Vote cast unsuccessful: "' + result.data.message + '"';
           setTimeout(() => {
             this._retireNotification();
           }, 5000);
@@ -643,6 +646,8 @@ export default {
         // ) {
         //   return false;
         // }
+
+        this.votingCandidate = null;
 
         // Otherwise, prompt to propose a rule
         this.$refs.proposal.promptForProposal();
@@ -763,12 +768,14 @@ export default {
         console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
         
-        if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
-          proposedRule.original = this.ruleSets.current[proposedRule.index].code;
-        }
+        if (proposedRule.code && proposedRule.index) {
+          if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
+            proposedRule.original = this.ruleSets.current[proposedRule.index].code;
+          }
 
-        this.votingCandidate = proposedRule;
-        console.log('candidate:', this.votingCandidate);
+          this.votingCandidate = proposedRule;
+          // console.log('candidate:', this.votingCandidate);
+        }
       } else if (result.status == 500) {
         console.error('Error while trying to get proposed rule: ', result);
       }
