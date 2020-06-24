@@ -66,7 +66,7 @@ func main() {
 	g := e.Group("/game")
 	g.Use(middleware.JWT([]byte(viper.GetString("JWT_SECRET"))))
 	g.POST("/vote", handlers.CastVote)
-	// g.POST("/settle", handlers.SettleGame)
+	e.POST("/proposal/:round", handlers.Proposal)
 	g.POST("/propose", handlers.SubmitProposal)
 
 	// swagger docs

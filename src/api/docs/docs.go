@@ -52,6 +52,40 @@ var doc = `{
                 }
             }
         },
+        "/game/proposal/:round": {
+            "get": {
+                "description": "Fetches a specific rule proposal",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "The target round integer for the proposal you are fetching",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RoundInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A rule proposal object",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ProposalObject"
+                        }
+                    }
+                }
+            }
+        },
         "/game/propose": {
             "post": {
                 "description": "Submit a new rule proposal",
@@ -233,6 +267,35 @@ var doc = `{
                 }
             }
         },
+        "handlers.ProposalObject": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "index": {
+                    "type": "integer"
+                },
+                "passed": {
+                    "type": "boolean"
+                },
+                "proposal": {
+                    "type": "string"
+                },
+                "round": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ProposalResult": {
             "type": "object",
             "properties": {
@@ -246,6 +309,14 @@ var doc = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.RoundInput": {
+            "type": "object",
+            "properties": {
+                "round": {
+                    "type": "integer"
                 }
             }
         },

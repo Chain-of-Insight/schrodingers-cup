@@ -34,6 +34,25 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.ProposalObject:
+    properties:
+      author:
+        type: string
+      code:
+        type: string
+      index:
+        type: integer
+      passed:
+        type: boolean
+      proposal:
+        type: string
+      round:
+        type: integer
+      timestamp:
+        type: string
+      type:
+        type: string
+    type: object
   handlers.ProposalResult:
     properties:
       message:
@@ -44,6 +63,11 @@ definitions:
         type: integer
       success:
         type: boolean
+    type: object
+  handlers.RoundInput:
+    properties:
+      round:
+        type: integer
     type: object
   handlers.RuleProposal:
     properties:
@@ -96,6 +120,28 @@ paths:
           description: JWT token
           schema:
             $ref: '#/definitions/handlers.AuthResult'
+  /game/proposal/:round:
+    get:
+      description: Fetches a specific rule proposal
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: The target round integer for the proposal you are fetching
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RoundInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A rule proposal object
+          schema:
+            $ref: '#/definitions/handlers.ProposalObject'
   /game/propose:
     post:
       description: Submit a new rule proposal

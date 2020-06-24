@@ -526,7 +526,10 @@ func processRound(round int) bool {
 	if err != nil {
 		return false
 	}
-	proposal.success = false
+	proposal.success, err = strconv.ParseBool(p[7])
+	if err != nil {
+		return false
+	}
 
 	// 1) Call your file system functions to change the target rule (see: proposal)
 	switch proposal.proposal {
