@@ -62,11 +62,13 @@ func main() {
 	e.POST("/test", handlers.TestNomsu)
 	e.POST("/auth", handlers.Auth)
 
+	e.GET("/proposal/:round", handlers.Proposal)
+	e.GET("/votes/:round", handlers.GetVotes)
+
 	// Game requires auth
 	g := e.Group("/game")
 	g.Use(middleware.JWT([]byte(viper.GetString("JWT_SECRET"))))
 	g.POST("/vote", handlers.CastVote)
-	e.GET("/proposal/:round", handlers.Proposal)
 	g.POST("/propose", handlers.SubmitProposal)
 
 	// swagger docs

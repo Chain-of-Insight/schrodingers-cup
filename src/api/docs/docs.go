@@ -128,6 +128,31 @@ var doc = `{
                 ]
             }
         },
+        "/game/votes/:round": {
+            "get": {
+                "description": "Fetches votes for a specific round",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of votes for a target round",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VotesList"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Ping/Health Check",
@@ -340,6 +365,31 @@ var doc = `{
                 },
                 "resultHtml": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.VoteObject": {
+            "type": "object",
+            "properties": {
+                "player": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "vote": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.VotesList": {
+            "type": "object",
+            "properties": {
+                "votes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.VoteObject"
+                    }
                 }
             }
         }
