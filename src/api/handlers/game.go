@@ -962,7 +962,7 @@ func userCan(players []string, times []string) string {
 	} else {
 		// No wrap
 		if round < totalPlayers {
-			turn = players[round]
+			turn = players[round - 1]
 			// Wrap last
 		} else if round == totalPlayers {
 			turn = players[0]
