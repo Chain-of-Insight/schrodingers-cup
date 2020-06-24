@@ -15,14 +15,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-// XXX TODO: Set turn duration from Tezos
+// XXX TODO: Set all these vars from Tezos
 var turnDuration int = 300
-
-// XXX TODO: Set quorum ratio from Tezos
 var quorumRatio float64 = 100
-
-// XXX TODO: Set points to win from Tezos
 var pointsToWin int = 100
+var playerStartPts int = 0
+var rulePassPts int = 10
+var voteAgainstPts int = 10
+var ruleFailedPenalty int = 10
 
 const DELETE = "delete"
 const CREATE = "create"
@@ -273,7 +273,7 @@ func CastVote(c echo.Context) error {
 	vote.vote = input.Vote
 
 	// Update vote
-	if _, err := conn.Do("LPUSH", voteKey, vote); err != nil {
+	if _, err := conn.Do("RPUSH", voteKey, vote); err != nil {
 		return err
 	}
 
@@ -289,7 +289,7 @@ func CastVote(c echo.Context) error {
 	if isQuorum {
 		// Handle round proccessing
 		// XXX TODO: THIS
-		processRound := processRound(round)
+		processRound, respMsg := processRound(round)
 		// @pogo @drew
 
 		// State of paradox :o
@@ -302,7 +302,7 @@ func CastVote(c echo.Context) error {
 				statusMsg = "Error releasing notification"
 			} else {
 				success = true
-				statusMsg = "OK!"
+				statusMsg = respMsg
 			}
 			EndNomic(tzid)
 			r := &VoteResult{
@@ -317,25 +317,44 @@ func CastVote(c echo.Context) error {
 		if isGameOver {
 			EndNomic(tzid)
 		}
-	}
 
-	// Release notification
-	var statusMsg string
-	notification := releaseNotification(message)
-	if notification == false {
-		statusMsg = "Error releasing notification"
+		// Release notification
+		var statusMsg string
+		notification := releaseNotification(message)
+		if notification == false {
+			statusMsg = "Error releasing notification"
+		} else {
+			statusMsg = respMsg
+		}
+
+		// HTTP repsonse
+		r := &VoteResult{
+			Success: success,
+			Round:   round,
+			Message: statusMsg,
+		}
+
+		return c.JSON(http.StatusOK, r)
 	} else {
-		statusMsg = "OK!"
-	}
+		respMsg := "OK!"
+		// Release notification
+		var statusMsg string
+		notification := releaseNotification(message)
+		if notification == false {
+			statusMsg = "Error releasing notification"
+		} else {
+			statusMsg = respMsg
+		}
 
-	// HTTP repsonse
-	r := &VoteResult{
-		Success: success,
-		Round:   round,
-		Message: statusMsg,
-	}
+		// HTTP repsonse
+		r := &VoteResult{
+			Success: success,
+			Round:   round,
+			Message: statusMsg,
+		}
 
-	return c.JSON(http.StatusOK, r)
+		return c.JSON(http.StatusOK, r)
+	}
 }
 
 // @description Settle game window
@@ -430,7 +449,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	}
 
 	// Update vote
-	if _, err := conn.Do("LPUSH", voteKey, vote); err != nil {
+	if _, err := conn.Do("RPUSH", voteKey, vote); err != nil {
 		return false
 	}
 
@@ -485,14 +504,14 @@ func releaseNotification(notification string) bool {
 }
 
 // XXX TODO - Process round
-func processRound(round int) bool {
+func processRound(round int) (bool, string) {
 	if round < 1 {
-		return false
+		return false, "Game has not started. Current round is " + strconv.Itoa(round)
 	}
 
 	conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
-		return false
+		return false, "Error connecting to db"
 	}
 
 	var proposal struct {
@@ -506,12 +525,16 @@ func processRound(round int) bool {
 		success   bool   `redis:"passed"`
 	}
 
+	// Set some defaults
 	currentDay := time.Now().Format("2006-01-02")
 	proposalItemKey := "proposals:" + currentDay + ":" + strconv.Itoa(round)
+	roundCounterKey := "round:" + currentDay
+	roundKey := "round" + currentDay + ":" + strconv.Itoa(round)
+	round = round + 1
 
 	p, err := redis.Strings(conn.Do("HMGET", proposalItemKey, "author", "code", "timestamp", "proposal", "ruletype", "ruleindex", "round", "success"))
 	if err != nil {
-		return false
+		return false, "Error getting proposal at key " + proposalItemKey
 	}
 	proposal.author = p[0]
 	proposal.code = p[1]
@@ -520,120 +543,26 @@ func processRound(round int) bool {
 	proposal.ruletype = p[4]
 	proposal.ruleindex, err = strconv.Atoi(p[5])
 	if err != nil {
-		return false
+		return false, "Error converting proposal.ruleindex to int"
 	}
 	proposal.round, err = strconv.Atoi(p[6])
 	if err != nil {
-		return false
+		return false, "Error converting proposal.round to int"
 	}
 	proposal.success, err = strconv.ParseBool(p[7])
 	if err != nil {
-		return false
+		return false, "Error converting proposal.success to bool"
 	}
 
-	// 1) Call your file system functions to change the target rule (see: proposal)
-	switch proposal.proposal {
-	case UPDATE:
-		err, _ := Update(proposal.code, proposal.ruleindex, proposal.ruletype)
-		if err != nil {
-			return false
-		}
-	case CREATE:
-		err, _, _ := Create(proposal.code, proposal.ruletype)
-		if err != nil {
-			return false
-		}
-	case DELETE:
-		err := Delete(proposal.ruleindex, proposal.ruletype)
-		if err != nil {
-			return false
-		}
-	case TRANSMUTE:
-		err, _ := Transmute(proposal.ruleindex, proposal.ruletype)
-		if err != nil {
-			return false
-		}
-	}
+	proposingPlayer := proposal.author
 
-	// 2) (rules loop) Run updated ruleset using master.nom
-	output, err := nomsu.RunMaster()
-	if err != nil {
-		return false
-	}
-
-	// 3) Use the output from master to get replacement values for vars.nom
-	var ruleSet []int
-	words := strings.Fields(string(output))
-	for idx, word := range words {
-		if word == "=" {
-			val, err := strconv.Atoi(words[idx+1])
-			if err != nil {
-				return false
-			}
-			ruleSet = append(ruleSet, val)
-		}
-	}
-
-	// 4) Replace vars.nom with updated values
-	b, err := ioutil.ReadFile("nomsu/rules/vars.nom") // read the original file contents
-	if err != nil {
-		return false
-	}
-
-	// replace the integer values
-	newVars := ""
-	count := 0
-	words = strings.Fields(string(b))
-	for _, word := range words {
-		_, err := strconv.Atoi(word)
-		if err != nil {
-			newVars += word + " "
-			continue
-		}
-		newVars += strconv.Itoa(ruleSet[count]) + "\n"
-		count++
-	}
-
-	f, err := os.Create("nomsu/rules/vars.nom") // write the file
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-
-	// write the code string
-	_, err = f.WriteString(newVars)
-	if err != nil {
-		return false
-	}
-
-	// 5 a) (players loop) Apply point changes to each user (as necessary)
+	// 0) Determine if the vote was voted in or voted down by the quorum
 	
-	// say("Player starting points = " + $bl_startPoints)
-	// say("Points required to win the game = " + $bl_winPoints)
-	// say("Points gained for passing a rule = " + $bl_rulePassPts)
-	// say("Points gained for voting against a passed rule = " + $bl_voteAgainstPts)
-	// say("Points lost for a rule rejection = " + $bl_ruleFailedPenalty)
-	// say("Daily game window duration = " + $bl_gameWindowDuration)
-	// say("Game start hour (UTC) = " + $bl_gameWindowHourUTC)
-	// say("Player turn duration = " + $bl_turnWindowDuration)
-	// say("Percentage of votes required to pass a rule = " + $bl_voteRatioRequired)
-	// say("Percentage of votes required to transmutate a rule = " + $bl_transmutationVoteRatioRequired)
-
-	playerStartPts := ruleSet[0]
-	// gameWinPts := ruleSet[1] //  <= @see checkGameover()
-	rulePassPts := ruleSet[2]
-	voteAgainstPts := ruleSet[3]
-	ruleFailedPenalty := ruleSet[4]
-	// gameWindowDuration := ruleSet[5]
-	// gameWindowStartUTC := ruleSet[6]
-	turnDuration = ruleSet[7]
-	quorumRatio = float64(ruleSet[8])
-
 	// Determine if passing / failing proposal
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
 	if err != nil {
-		return false
+		return false, "Error retrieving votes from db with LRANGE for key " + voteKey
 	}
 
 	var votedYes int = 0;
@@ -662,13 +591,113 @@ func processRound(round int) bool {
 		rulePassed = false
 	}
 
+	// 1) Call your file system functions to change the target rule (see: proposal)
+	
+	if rulePassed {
+		switch proposal.proposal {
+		case UPDATE:
+			err, _ := Update(proposal.code, proposal.ruleindex, proposal.ruletype)
+			if err != nil {
+				return false, "Error performing nomsu UPDATE with proposal.code " + proposal.code + "at proposal.ruleindex " + strconv.Itoa(proposal.ruleindex) + " for proposal.ruletype " + proposal.ruletype
+			}
+		case CREATE:
+			err, _, _ := Create(proposal.code, proposal.ruletype)
+			if err != nil {
+				return false, "Error performing nomsu CREATE with proposal.code " + proposal.code + " for proposal.ruletype " + proposal.ruletype
+			}
+		case DELETE:
+			err := Delete(proposal.ruleindex, proposal.ruletype)
+			if err != nil {
+				return false, "Error performing nomsu DELETE with proposal.ruleindex " + strconv.Itoa(proposal.ruleindex) + " for proposal.ruletype " + proposal.ruletype
+			}
+		case TRANSMUTE:
+			err, _ := Transmute(proposal.ruleindex, proposal.ruletype)
+			if err != nil {
+				return false, "Error performing nomsu TRANSMUTE with proposal.ruleindex " + strconv.Itoa(proposal.ruleindex) + " for proposal.ruletype " + proposal.ruletype
+			}
+		}
+		
+		// 2) (rules loop) Run updated ruleset using master.nom
+		output, err := nomsu.RunMaster()
+		if err != nil {
+			return false, "Error running nomsu.RunMaster()"
+		}
+
+		// 3) Use the output from master to get replacement values for vars.nom
+		var ruleSet []int
+		words := strings.Fields(string(output))
+		for idx, word := range words {
+			if word == "=" {
+				val, err := strconv.Atoi(words[idx+1])
+				if err != nil {
+					return false, "Error converting master.nom output to integer at word index " + strconv.Itoa(idx + 1) + " with value: " + words[idx+1]
+				}
+				ruleSet = append(ruleSet, val)
+			}
+		}
+
+		// 4) Replace vars.nom with updated values
+		b, err := ioutil.ReadFile("nomsu/rules/vars.nom") // read the original file contents
+		if err != nil {
+			return false, "Error reading vars.nom file with ioutil.ReadFile()"
+		}
+
+		// replace the integer values
+		newVars := ""
+		count := 0
+		words = strings.Fields(string(b))
+		for _, word := range words {
+			_, err := strconv.Atoi(word)
+			if err != nil {
+				newVars += word + " "
+				continue
+			}
+			newVars += strconv.Itoa(ruleSet[count]) + "\n"
+			count++
+		}
+
+		f, err := os.Create("nomsu/rules/vars.nom") // write the file
+		if err != nil {
+			return false, "Error creating file vars.nom using os.Create()"
+		}
+		defer f.Close()
+
+		// write the code string
+		_, err = f.WriteString(newVars)
+		if err != nil {
+			return false, "Error writing to file vars.nom with f.WriteString(newVars)"
+		}
+
+		// Updated vars.nom values if rule was changed
+		playerStartPts = ruleSet[0]
+		pointsToWin = ruleSet[1] //  <= @see checkGameover()
+		rulePassPts = ruleSet[2]
+		voteAgainstPts = ruleSet[3]
+		ruleFailedPenalty = ruleSet[4]
+		// gameWindowDuration := ruleSet[5]
+		// gameWindowStartUTC := ruleSet[6]
+		turnDuration = ruleSet[7]
+		quorumRatio = float64(ruleSet[8])
+	}
+
+	// 5 a) (players loop) Apply point changes to each user (as necessary)
+	
+	// say("Player starting points = " + $bl_startPoints)
+	// say("Points required to win the game = " + $bl_winPoints)
+	// say("Points gained for passing a rule = " + $bl_rulePassPts)
+	// say("Points gained for voting against a passed rule = " + $bl_voteAgainstPts)
+	// say("Points lost for a rule rejection = " + $bl_ruleFailedPenalty)
+	// say("Daily game window duration = " + $bl_gameWindowDuration)
+	// say("Game start hour (UTC) = " + $bl_gameWindowHourUTC)
+	// say("Player turn duration = " + $bl_turnWindowDuration)
+	// say("Percentage of votes required to pass a rule = " + $bl_voteRatioRequired)
+	// say("Percentage of votes required to transmutate a rule = " + $bl_transmutationVoteRatioRequired)
+
 	// Get player refs and award points
 	type PlayerRoundResult struct {
 		player string `redis:"player"`
 		points int `redis:"points"`
 	}
-	proposingPlayer := proposal.author
-	roundKey := "round" + currentDay + ":" + strconv.Itoa(round)
 
 	// Parse points
 	// Proposing player
@@ -691,11 +720,11 @@ func processRound(round int) bool {
 	}
 	// Proposing player points stored
 	if _, err := conn.Do("HSET", pKey, points); err != nil {
-		return false
+		return false, "Error setting proposing player's points in the db to " + strconv.Itoa(points)
 	}
 	// Update round deltas ref.
-	if _, err := conn.Do("LPUSH", roundKey, playerUpdate); err != nil {
-		return false
+	if _, err := conn.Do("RPUSH", roundKey, playerUpdate); err != nil {
+		return false, "Error pushing playerUpdate into " + roundKey + " using RPUSH for proposing player"
 	}
 
 	// Determine if player gains points
@@ -714,13 +743,13 @@ func processRound(round int) bool {
 				playerUpdate.points = voteAgainstPts
 				points = points + voteAgainstPts
 
-				// Proposing player points stored
+				// Vote against player points stored
 				if _, err := conn.Do("HSET", againstKey, points); err != nil {
-					return false
+					return false, "Error setting vote against points on " + againstKey + " for " + strconv.Itoa(points) + " points"
 				}
 				// Update round deltas ref.
-				if _, err := conn.Do("LPUSH", roundKey, playerUpdate); err != nil {
-					return false
+				if _, err := conn.Do("RPUSH", roundKey, playerUpdate); err != nil {
+					return false, "Error pushing playerUpdate into " + roundKey + " using RPUSH for vote against player: " + s + " for " + strconv.Itoa(points) + " points"
 				}
 			}
 		}
@@ -733,52 +762,49 @@ func processRound(round int) bool {
 	// 6) Release chat notifications
 	general := releaseNotification("Round " + strconv.Itoa(round) + " has concluded")
 	if !general {
-		return false
+		return false, "Error releasing general Twilio message for round conclusion"
 	}
 	thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
 	if rulePassed {
 		gg := proposingPlayer + "'s rule has been successfully passed in round " + strconv.Itoa(round)
 		m := releaseNotification(gg)
 		if !m {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + gg
 		}
 		aChallengerApproaches := proposingPlayer + " gained " + strconv.Itoa(rulePassPts) + " points"
 		m2 := releaseNotification(aChallengerApproaches)
 		if !m2 {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + aChallengerApproaches
 		}
 		luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
 		m3 := releaseNotification(luckyOnesMsg)
 		if !m3 {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
 		}
 	} else {
 		bm := proposingPlayer + "'s rule was deemed useless by a jury of their peers in round " + strconv.Itoa(round)
 		m := releaseNotification(bm)
 		if !m {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm
 		}
 		bm2 := proposingPlayer + "loses " + strconv.Itoa(ruleFailedPenalty) + " points carelessly"
-		//thePeanutGallery
 		m1 := releaseNotification(bm2)
 		if !m1 {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm2
 		}
 		bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
 		m2 := releaseNotification(bm3)
 		if !m2 {
-			return true
+			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
 		}
 	}
 
 	// Update round storage (Redis)
-	roundCounterKey := "round:" + currentDay
-	round = round + 1
 	if _, err := conn.Do("SET", roundCounterKey, round); err != nil {
-		return false
+		return false, "Error incrementing round storage in db"
 	}
 
-	return true
+	return true, "OK!"
 }
 
 func isValidQuorum(totalPlayers int, totalVotes int) bool {
