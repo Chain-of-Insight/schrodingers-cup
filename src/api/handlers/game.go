@@ -771,6 +771,13 @@ func processRound(round int) bool {
 		}
 	}
 
+	// Update round storage (Redis)
+	roundCounterKey := "round:" + currentDay
+	round = round + 1
+	if _, err := conn.Do("SET", roundCounterKey, round); err != nil {
+		return false
+	}
+
 	return true
 }
 
