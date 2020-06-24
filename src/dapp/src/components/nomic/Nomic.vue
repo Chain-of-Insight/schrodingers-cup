@@ -133,7 +133,8 @@ import {
   proposeRule,
   castVote,
   getRoundNumber,
-  getPlayers
+  getPlayers,
+  getProposedRule
 } from '../../services/apiProvider';
 
 // Child components
@@ -455,15 +456,17 @@ export default {
           // TODO: GET (/game/proposals?) to get latest proposed rule
           playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
 
-          if (playerAddress !== this.TwilioIdentity) {
-            // On another player proposing a rule
-            this.votingCandidate = {
-              name: 'testRule',
-              code: '$test_string = "this is test code"\nsay($test_string)'
-            }
-            console.log('Time to vote!');
-            this.$refs.voting.promptForVote(this.votingCandidate);
-          }
+          this.getLastProposed();
+
+          // if (playerAddress !== this.TwilioIdentity) {
+          //   // On another player proposing a rule
+          //   this.votingCandidate = {
+          //     name: 'testRule',
+          //     code: '$test_string = "this is test code"\nsay($test_string)'
+          //   }
+          //   console.log('Time to vote!');
+          //   this.$refs.voting.promptForVote(this.votingCandidate);
+          // }
           break;
         case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
           // On new turn
@@ -702,6 +705,25 @@ export default {
         this.$refs.totals.startTimer();
       } else if (result.status == 500) {
         console.error('Error while trying to get players: ', result);
+      }
+    },
+    getLastProposed: async function () {
+      let result = null;
+      try {
+        result = await getProposedRule(this.jwtToken, this.currentRound);
+      } catch (error) {
+        result = error.response;
+      }
+
+      if (result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        console.log('Proposed rule =====>', result);
+      } else if (result.status == 500) {
+        console.error('Error while trying to get proposed rule: ', result);
       }
     }
   }

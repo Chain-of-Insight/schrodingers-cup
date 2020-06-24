@@ -131,11 +131,33 @@ async function castVote(jwt, vote, round) {
   return res;
 };
 
+async function getProposedRule(jwt, round) {
+  if (typeof jwt !== 'string') {
+    return 'jwt rejected. String required, got ' + typeof jwt;
+  }
+
+  if (typeof round !== 'number') {
+    return 'round rejected. Number required, got ' + typeof round;
+  }
+
+  const config = {
+    headers: {
+      'Authorization': 'Bearer ' + jwt
+    }
+  }
+
+  let apiEndpoint = API_URL + 'game/proposal/' + round;
+  const res = await axios.get(apiEndpoint, config);
+
+  return res;
+}
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
   proposeRule: proposeRule,
   castVote: castVote,
   getRoundNumber: getRoundNumber,
-  getPlayers: getPlayers
+  getPlayers: getPlayers,
+  getProposedRule: getProposedRule
 };
