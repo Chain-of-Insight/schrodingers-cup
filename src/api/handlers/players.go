@@ -121,7 +121,7 @@ func getTurnsData(players []string, times []string) (string, string, string) {
 		timeRemaining := ""
 		return turn, nextTurn, timeRemaining
 	} else {
-		nextRuleProposal := (turnDuration * (round + 1)) + gameStart
+		nextRuleProposal := ((turnDuration * 1000000000) * (round + 1)) + gameStart
 		m := int64(nextRuleProposal)
 		t := time.Until(time.Unix(0, m))
 		timeRemaining := t.String()
