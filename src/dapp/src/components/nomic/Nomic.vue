@@ -172,7 +172,7 @@ export default {
   },
   data: () => ({
     title: "Nomic Battlegrounds",
-    subtitle: "Pwned or be pwned, the choice is yours",
+    subtitle: "Pwn or be pwned, the choice is yours",
     alert: {
       type: null,
       msg: null
@@ -720,11 +720,9 @@ export default {
       }
     },
     onRuleProposed: async function (code, index, kind, type) {
-      // Prepend 'use "vars"' to all code going out for proposal
-      // const codeFormatted = 'use "vars"\n\n' + code;
       let result = null;
       try {
-        result = await api.proposeRule(this.jwtToken, codeFormatted, index, kind, type);
+        result = await api.proposeRule(this.jwtToken, code, index, kind, type);
       } catch (error) {
         console.error('Error while trying to propose rule:', error);
         if (error.response) {
