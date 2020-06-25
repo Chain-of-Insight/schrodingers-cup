@@ -6,6 +6,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/anchorageoss/tezosprotocol/v2 v2.2.0
+	github.com/btcsuite/btcd v0.0.0-20190926002857-ba530c4abb35
 	github.com/buildkite/terminal-to-html v3.2.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -16,6 +17,7 @@ require (
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.0 // indirect
 	github.com/swaggo/echo-swagger v1.0.0
