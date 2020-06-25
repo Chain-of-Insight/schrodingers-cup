@@ -18,7 +18,8 @@
               :value="type"
               v-model="selectedType"
               @click="selectChangeType(type)"
-            ><h4 class="m-0">{{ typeHeadings[type] }}</h4>
+            >
+            <h4 class="m-0">{{ typeHeadings[type] }}</h4>
           </label>
         </div>
       </div>
@@ -28,7 +29,7 @@
 
 <script>
 // Constants
-import proposalTypes from '../../constants/constants.js';
+import { proposalTypes } from '../../constants/constants.js';
 
 export default {
   props: {

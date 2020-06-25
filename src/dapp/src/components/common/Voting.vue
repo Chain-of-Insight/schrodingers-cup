@@ -67,7 +67,7 @@
 const $ = window.jQuery;
 
 // Constants
-import voteTypes from '../../constants/constants.js';
+import { voteTypes } from '../../constants/constants.js';
 
 import Notification from '../common/Notifications.vue';
 
