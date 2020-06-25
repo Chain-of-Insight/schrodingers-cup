@@ -570,9 +570,9 @@ export default {
           // Parse round number
           round = parseInt(matches[1]);
 
+          // Increment to next round
+          this.currentRound ++;
           if (round === this.currentRound) {
-            // Increment to next round
-            this.currentRound ++;
             // Re-run setup methods to sync with state of game in API
             this.gameSetup();
           }
@@ -685,10 +685,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     ruleProposalHandler: function (testing) {
-      // if (this.proposedThisRound && !testing) {
-      //   console.log('You already proposed this round! Skipping proposal prompt...');
-      //   return;
-      // }
+      if (this.proposedThisRound && !testing) {
+        console.log('You already proposed this round! Skipping proposal prompt...');
+        return;
+      }
 
       if (!this.jwtToken) {
         this.alert.type = 'danger';
@@ -810,10 +810,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     getLastProposed: async function (testing) {
-      // if (this.votedThisRound && !testing) {
-      //   console.log('You already voted this round! Skipping fetch for proposed rule...');
-      //   return;
-      // }
+      if (this.votedThisRound && !testing) {
+        console.log('You already voted this round! Skipping fetch for proposed rule...');
+        return;
+      }
 
       let result = null;
       try {
