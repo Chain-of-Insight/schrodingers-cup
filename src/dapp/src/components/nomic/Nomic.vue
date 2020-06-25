@@ -277,12 +277,12 @@ export default {
     }
 
     // Testing getting the contract instance...
-    const contractAddress = this.gameContract;
-    console.log('Contract address =====>', gameContract);
-    this.contractInstance = await this.getContractInstance(contractAddress);
-    console.log('Contract instance =====>', this.contractInstance);
-    const gameInfo = await this.contractInstance.storage();
-    console.log('Game info =====>', gameInfo);
+    // const contractAddress = this.gameContract;
+    // console.log('Contract address =====>', gameContract);
+    // this.contractInstance = await this.getContractInstance(contractAddress);
+    // console.log('Contract instance =====>', this.contractInstance);
+    // const gameInfo = await this.contractInstance.storage();
+    // console.log('Game info =====>', gameInfo);
   },
   methods: {
     gameSetup: async function () {
