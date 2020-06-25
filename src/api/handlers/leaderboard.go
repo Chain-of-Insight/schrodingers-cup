@@ -24,7 +24,7 @@ type PointsList []PointsItem
 func Leaderboard(c echo.Context) error {
 	pointsList, err := getPlayerPoints()
 	if err != nil {
-		return err
+		pointsList = &PointsList{}
 	}
 
 	sort.Slice(*pointsList, func(i, j int) bool {
