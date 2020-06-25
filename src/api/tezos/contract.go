@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/anchorageoss/tezosprotocol/v2"
 	"github.com/spf13/viper"
@@ -64,6 +65,65 @@ func UpdateGameVars(k1 string, turnDuration int, quorumRatio float64, pointsToWi
 	            "parameters": %[5]s
 	} ] }`
 	opParams := fmt.Sprintf(UPDATE_VARS_PARAMS, playerStartPts, pointsToWin, rulePassPts, voteAgainstPts, ruleFailedPenalty, 7200, 4, turnDuration, int(quorumRatio), 100)
+	opStr = fmt.Sprintf(opStr, head["hash"], walletAddr, k1, counter+1, opParams)
+
+	// forge operation
+	forgedOp, err := gt.ForgeOperation("head", []byte(opStr))
+	if err != nil {
+		return "", err
+	}
+
+	// sign forged operation
+	signedOp, err := signForgedOperation(forgedOp)
+	if err != nil {
+		return "", err
+	}
+
+	// inject operation
+	opHash, err := gt.InjectionOperation(signedOp)
+	if err != nil {
+		return "", err
+	}
+
+	return opHash, nil
+}
+
+const UPDATE_SCORE_MAP_ITEM = `{"prim":"Elt","args":[{"string":"%[1]s"},{"int":"%[2]d"}]}`
+const UPDATE_SCORE_PARAMS = `{"entrypoint":"default","value":{"prim":"Right","args":[{"prim":"Right","args":[[%s]]}]}}`
+
+func UpdateGameScore(k1 string, pointsMap map[string]int) (string, error) {
+	gt, err := NewTzClient(viper.GetString("TZ_RPC_NODE"))
+	if err != nil {
+		return "", err
+	}
+
+	// get HEAD hash
+	head, err := gt.Head()
+	if err != nil {
+		return "", err
+	}
+
+	walletAddr := viper.GetString("TZ_WALLET_PKHSH")
+
+	// get current counter of sender
+	counter, err := gt.Counter("head", walletAddr)
+
+	// construct operation
+	opStr := `{"branch": "%[1]s",
+	"contents": [ { "kind": "transaction",
+	            "source": "%[2]s", "fee": "9000",
+	            "counter": "%[4]d", "gas_limit": "2000000", "storage_limit": "480000",
+	            "amount": "0",
+	            "destination": "%[3]s",
+	            "parameters": %[5]s
+	} ] }`
+
+	var scoreMap []string
+	for player, points := range pointsMap {
+		scoreMap = append(scoreMap, fmt.Sprintf(UPDATE_SCORE_MAP_ITEM, player, points))
+	}
+
+	opParams := fmt.Sprintf(UPDATE_SCORE_PARAMS, strings.Join(scoreMap, ","))
 	opStr = fmt.Sprintf(opStr, head["hash"], walletAddr, k1, counter+1, opParams)
 
 	// forge operation
