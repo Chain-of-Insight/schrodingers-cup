@@ -838,9 +838,9 @@ export default {
         
         // Make sure the response data has the important stuff...
         if (
-          !proposedRule.author ||
-          !proposedRule.proposal ||
-          (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
+          // !proposedRule.author ||
+          // !proposedRule.proposal ||
+          // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
           typeof proposedRule.index !== 'number'
         )
           return;
