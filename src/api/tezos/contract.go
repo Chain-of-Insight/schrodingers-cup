@@ -124,7 +124,7 @@ func UpdateGameScore(k1 string, pointsMap map[string]int) (string, error) {
 	}
 
 	opParams := fmt.Sprintf(UPDATE_SCORE_PARAMS, strings.Join(scoreMap, ","))
-	opStr = fmt.Sprintf(opStr, head["hash"], walletAddr, k1, counter+1, opParams)
+	opStr = fmt.Sprintf(opStr, head["hash"], walletAddr, k1, counter+2, opParams)
 
 	// forge operation
 	forgedOp, err := gt.ForgeOperation("head", []byte(opStr))
