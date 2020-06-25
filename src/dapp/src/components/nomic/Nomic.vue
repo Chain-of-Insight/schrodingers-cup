@@ -650,6 +650,7 @@ export default {
         }, 5000);
       }
     },
+    // XXX: remove 'testing' param later. For testing with buttons only
     ruleProposalHandler: function (testing) {
       if (this.proposedThisRound && !testing) {
         console.log('You already proposed this round! Skipping proposal prompt...');
@@ -774,6 +775,7 @@ export default {
         console.error('Error while trying to get players: ', result);
       }
     },
+    // XXX: remove 'testing' param later. For testing with buttons only
     getLastProposed: async function (testing) {
       if (this.votedThisRound && !testing) {
         console.log('You already voted this round! Skipping fetch for proposed rule...');
