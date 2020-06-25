@@ -721,8 +721,7 @@ export default {
     },
     onRuleProposed: async function (code, index, kind, type) {
       // Prepend 'use "vars"' to all code going out for proposal
-      const codeFormatted = 'use "vars"\n\n' + code;
-      console.log('code!', codeFormatted);
+      // const codeFormatted = 'use "vars"\n\n' + code;
       let result = null;
       try {
         result = await api.proposeRule(this.jwtToken, codeFormatted, index, kind, type);
