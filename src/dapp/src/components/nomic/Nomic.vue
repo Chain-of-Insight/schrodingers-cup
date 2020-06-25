@@ -570,9 +570,9 @@ export default {
           // Parse round number
           round = parseInt(matches[1]);
 
+          // Increment to next round
+          this.currentRound ++;
           if (round === this.currentRound) {
-            // Increment to next round
-            this.currentRound ++;
             // Re-run setup methods to sync with state of game in API
             this.gameSetup();
           }
