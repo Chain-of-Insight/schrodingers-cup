@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 	"strings"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/gomodule/redigo/redis"
@@ -43,8 +44,19 @@ func Players(c echo.Context) error {
 	var playerList []string;
 	var times []string;
 
+	// Check game over
+	gameOver := os.Getenv("GAME_OVER")
+
 	// Return empty if no players exist in the game session
 	if len(players) == 0 {
+		r := &PlayerList{
+			Players: playerList, 
+			Turn: "", 
+			NextTurn: "", 
+			TurnRemaining: ""}
+
+		return c.JSON(http.StatusOK, r)
+	} else if gameOver == "1" {
 		r := &PlayerList{
 			Players: playerList, 
 			Turn: "", 
