@@ -921,6 +921,7 @@ func processRound(round int) (bool, string) {
 		fmt.Println("[TEZOS] ERR:", err)
 	} else {
 		var pointsMap map[string]int
+		pointsMap = make(map[string]int, len(*pointsList))
 		for _, p := range *pointsList {
 			pointsMap[p.Player] = p.Points
 		}
@@ -1106,7 +1107,10 @@ func userCan(players []string, times []string) string {
 		// No wrap
 		if round < totalPlayers {
 			turn = players[round-1]
-		// Calc. wrap
+			// Wrap last
+		} else if round == totalPlayers {
+			turn = players[0]
+			// Calc. wrap
 		} else {
 			wrap_i := round % totalPlayers
 			if wrap_i == 0 {
