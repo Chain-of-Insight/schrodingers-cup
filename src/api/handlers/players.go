@@ -123,7 +123,7 @@ func getTurnsData(players []string, times []string) (string, string, string) {
 	} else {
 		nextRuleProposal := (turnDuration * (round + 1)) + gameStart
 		m := int64(nextRuleProposal)
-		t := time.Until(time.Unix(m, 0))
+		t := time.Until(time.Unix(0, m))
 		timeRemaining := t.String()
 		// No wrap
 		if (round < totalPlayers) {
