@@ -153,6 +153,22 @@ var doc = `{
                 }
             }
         },
+        "/leaderboard": {
+            "get": {
+                "description": "Leaderboard",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of players sorted by points",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.pointsList"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Ping/Health Check",
@@ -196,6 +212,22 @@ var doc = `{
                         "description": "The current round, 0 if game has not started, or -1 if no players are online",
                         "schema": {
                             "$ref": "#/definitions/handlers.CurrentRound"
+                        }
+                    }
+                }
+            }
+        },
+        "/rules/list": {
+            "get": {
+                "description": "Rules",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Current list of rules and their contents",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RuleList"
                         }
                     }
                 }
@@ -328,6 +360,37 @@ var doc = `{
                 }
             }
         },
+        "handlers.RuleList": {
+            "type": "object",
+            "properties": {
+                "immutable": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RuleObject"
+                    }
+                },
+                "mutable": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RuleObject"
+                    }
+                }
+            }
+        },
+        "handlers.RuleObject": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.RuleProposal": {
             "type": "object",
             "properties": {
@@ -389,6 +452,20 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/handlers.VoteObject"
+                    }
+                }
+            }
+        },
+        "handlers.pointsList": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "player": {
+                        "type": "string"
+                    },
+                    "points": {
+                        "type": "integer"
                     }
                 }
             }
