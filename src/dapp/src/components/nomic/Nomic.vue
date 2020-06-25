@@ -810,10 +810,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     getLastProposed: async function (testing) {
-      if (this.votedThisRound && !testing) {
-        console.log('You already voted this round! Skipping fetch for proposed rule...');
-        return;
-      }
+      // if (this.votedThisRound && !testing) {
+      //   console.log('You already voted this round! Skipping fetch for proposed rule...');
+      //   return;
+      // }
 
       let result = null;
       try {
@@ -837,21 +837,22 @@ export default {
         const proposedRule = result.data;
         
         // Make sure the response data has the important stuff...
-        if (
-          // !proposedRule.author ||
-          // !proposedRule.proposal ||
-          // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
-          typeof proposedRule.index !== 'number' ||
-          !proposedRule.kind ||
-          proposedRule.kind !== 'mutable' ||
-          proposedRule.kind !== 'immutable'
-        )
-          return;
+        // if (
+        //   // !proposedRule.author ||
+        //   // !proposedRule.proposal ||
+        //   // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
+        //   typeof proposedRule.index !== 'number' ||
+        //   // !proposedRule.type ||
+        //   // proposedRule.type !== 'mutable' ||
+        //   // proposedRule.type !== 'immutable'
+        //   typeof proposedRule.type !== 'string'
+        // )
+        //   return;
 
-        if (proposedRule.proposal !== proposalTypes.CREATE) {
-          // Store current rule code for voting display
-          proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
-        }
+        // if (proposedRule.proposal !== proposalTypes.CREATE) {
+        //   // Store current rule code for voting display
+        //   proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
+        // }
         // Store proposed rule for voting (triggers showing of voting 'ribbon')
         this.votingCandidate = proposedRule;
       } else {
