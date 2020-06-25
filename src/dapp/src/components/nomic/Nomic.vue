@@ -588,7 +588,7 @@ export default {
           const checkLoop = setInterval(async () => {
             console.log('Checking for round number update...');
             await this.getCurrentRound();
-            if (nextRound === this.currentRound) {
+            if (this.currentRound >= nextRound) {
               clearInterval(checkLoop)
               await this.gameSetup();
             }
