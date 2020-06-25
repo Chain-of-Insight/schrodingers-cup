@@ -118,7 +118,9 @@ import {
   mountProvider,
   getBalance,
   signMessage,
-  validateAddress
+  validateAddress,
+  getContractInstance,
+  gameContract
 } from '../../services/tezProvider';
 
 import { 
@@ -209,7 +211,10 @@ export default {
       rulePassPts: 0,
       turnDuration: 0,
       voteAgainstPts: 0
-    }
+    },
+    getContractInstance: getContractInstance,
+    contractInstance: null,
+    gameContract: gameContract
   }),
   watch: {
     currentVotes: function (votes) {
@@ -253,6 +258,14 @@ export default {
       // Start fresh or sync up with running game
       await this.gameSetup();
     }
+
+    // Testing getting the contract instance...
+    const contractAddress = this.gameContract;
+    console.log('Contract address =====>', gameContract);
+    this.contractInstance = await this.getContractInstance(contractAddress);
+    console.log('Contract instance =====>', this.contractInstance);
+    const gameInfo = await this.contractInstance.storage();
+    console.log('Game info =====>', gameInfo);
   },
   methods: {
     gameSetup: async function () {
