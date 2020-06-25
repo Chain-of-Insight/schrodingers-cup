@@ -363,6 +363,10 @@ func CastVote(c echo.Context) error {
 // 	return c.String(http.StatusOK, "todo settle game")
 // }
 
+
+// Helper functions
+
+// Store a rule proposal
 func CreateRuleEntry(author string, code string, pType string, rKind string, rIndex int, round int) bool {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
@@ -455,6 +459,7 @@ func CreateRuleEntry(author string, code string, pType string, rKind string, rIn
 	return true
 }
 
+// Update game chat
 func releaseNotification(notification string) bool {
 	viper.SetConfigFile(".env")
 
@@ -498,11 +503,12 @@ func releaseNotification(notification string) bool {
 	}
 	defer resp.Body.Close()
 
-	// Et voila
 	return true
 }
 
-// XXX TODO - Process round
+// Main worker for settling a round
+// @see CastVote
+// @see isValidQuorum
 func processRound(round int) (bool, string) {
 	if round < 1 {
 		return false, "Game has not started. Current round is " + strconv.Itoa(round)
@@ -710,9 +716,8 @@ func processRound(round int) (bool, string) {
 		points int `redis:"points"`
 	}
 
-	// Parse points
-	// Proposing player
-	// Handle points if rule passed
+	// Parse points - Proposing player
+	// Handle points if rule passed / failed
 	pKey := proposingPlayer + ":points:" + currentDay
 	points, err := redis.Int(conn.Do("GET", pKey))
 	if err != nil {
@@ -738,7 +743,7 @@ func processRound(round int) (bool, string) {
 		return false, "Error pushing playerUpdate into " + roundKey + " using RPUSH for proposing player"
 	}
 
-	// Determine if player gains points
+	// Parse points - Vote against players
 	for _, s := range votedAgainstPlayers {				
 		if rulePassed {
 			if voteAgainstPts > 0 {
@@ -786,11 +791,13 @@ func processRound(round int) (bool, string) {
 		if !m2 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + aChallengerApproaches
 		}
-		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-		luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
-		m3 := releaseNotification(luckyOnesMsg)
-		if !m3 {
-			return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
+		if len(votedAgainstPlayers) > 0 {
+			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
+			luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
+			m3 := releaseNotification(luckyOnesMsg)
+			if !m3 {
+				return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
+			}
 		}
 	} else {
 		bm := proposingPlayer + "'s rule was deemed useless by a jury of their peers in round " + strconv.Itoa(round)
@@ -803,11 +810,13 @@ func processRound(round int) (bool, string) {
 		if !m1 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm2
 		}
-		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-		bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
-		m2 := releaseNotification(bm3)
-		if !m2 {
-			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
+		if len(votedAgainstPlayers) > 0 {
+			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
+			bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
+			m2 := releaseNotification(bm3)
+			if !m2 {
+				return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
+			}
 		}
 	}
 
@@ -820,6 +829,9 @@ func processRound(round int) (bool, string) {
 	return true, "OK!"
 }
 
+// Checks if everyone has voted
+// XXX TODO: use a timeout to automatically call this when
+// and if a votiing window expires
 func isValidQuorum(totalPlayers int, totalVotes int) bool {
 	// Shift percentage to ratio multer
 	// q := quorumRatio * 0.01
@@ -837,6 +849,7 @@ func isValidQuorum(totalPlayers int, totalVotes int) bool {
 	return isQuorum
 }
 
+// Check a user has permission to vote
 func userCanVote(playerAddress string, round int) bool {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
@@ -878,6 +891,7 @@ func userCanVote(playerAddress string, round int) bool {
 	return true
 }
 
+// Check if recent changes have triggered a gameover event
 func checkGameOver() bool {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
@@ -921,11 +935,12 @@ func checkGameOver() bool {
 	return gameover
 }
 
-/*
-TODO: finish this...
-- Update chat with game result
-- Add environment variables middleware to disable the server when Nomic is won
-*/
+// {Event} Gameover 
+// @see CastVote
+// @see isValidQuorum
+// DONE - Update chat with game result
+// DONE - Add environment variables middleware to disable the server when Nomic is won
+// XXX TODO - Use GAME_OVER env var to block game actions (submit proposal / vote)
 func EndNomic(player string) {
 	os.Setenv("GAME_OVER", "1")
 	gameoverMsg := "This game of nomic has just been concluded by " + player
@@ -940,6 +955,7 @@ func EndNomic(player string) {
 	}
 }
 
+// Parse slice for a specific string
 func ItemExists(slice []string, entry string) bool {
 	for _, s := range slice {
 		if strings.Contains(s, entry) {
@@ -949,6 +965,7 @@ func ItemExists(slice []string, entry string) bool {
 	return false
 }
 
+// Returns the address of the current turn player
 func userCan(players []string, times []string) string {
 	// Redis init
 	conn, err := redis.Dial("tcp", ":6379")
@@ -976,7 +993,7 @@ func userCan(players []string, times []string) string {
 	} else {
 		// No wrap
 		if round < totalPlayers {
-			turn = players[round - 1]
+			turn = players[round-1]
 			// Wrap last
 		} else if round == totalPlayers {
 			turn = players[0]
@@ -994,7 +1011,7 @@ func userCan(players []string, times []string) string {
 	}
 }
 
-// helper function to loop through the next files to move them up
+// Loop through files in a folder to move them up
 func MoveUpFiles(index int, ruleType string) error {
 	for true {
 		// check if file exists
@@ -1013,6 +1030,7 @@ func MoveUpFiles(index int, ruleType string) error {
 	return nil
 }
 
+// Update a rule in the file system
 func Update(code string, index int, ruleType string) (error, string) {
 	// cleanup code
 	code = strings.TrimSpace(code)
@@ -1066,6 +1084,7 @@ func Update(code string, index int, ruleType string) (error, string) {
 	return nil, code
 }
 
+// Create a rule in the file system
 func Create(code string, ruleType string) (error, int, string) {
 	// cleanup code
 	code = strings.TrimSpace(code)
@@ -1116,6 +1135,7 @@ func Create(code string, ruleType string) (error, int, string) {
 	return nil, index, code
 }
 
+// Delete a rule in the file system
 func Delete(index int, ruleType string) error {
 	// check if the file exists
 	if _, err := os.Stat("nomsu/rules/" + ruleType + "/rule" + strconv.Itoa(index) + ".nom"); os.IsNotExist(err) {
@@ -1135,6 +1155,7 @@ func Delete(index int, ruleType string) error {
 	return nil
 }
 
+// Transmute a rule in the file system
 func Transmute(indexFrom int, ruleTypeFrom string) (error, int) {
 	// check if the file exists
 	fileFrom := "nomsu/rules/" + ruleTypeFrom + "/rule" + strconv.Itoa(indexFrom) + ".nom"
