@@ -80,7 +80,7 @@
 
           <!-- Send test chat messages with fake API wallet address -->
           <p class="h5 mt-3">Testing:</p>
-          <button class="btn btn-primary" type="button" @click="ruleProposalHandler()">Proposal</button>
+          <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
         </section>
 
         <!-- IDE -->
@@ -91,7 +91,7 @@
           <!-- For testing: -->
           <div class="btn-group" role="group" aria-label="">
             <!-- Test Voting -->
-            <button type="button" class="btn btn-outline-primary" @click="getLastProposed()">
+            <button type="button" class="btn btn-outline-primary" @click="getLastProposed(true)">
               Test Voting
             </button>
           </div>
@@ -317,13 +317,14 @@ export default {
       }
     },
     doLoginMessageSigning: async function () {
-      const jwt = sessionStorage.getItem('jwt');
-      // don't try to sign again if jwt already present
-      // TODO: handle jwt expiry?
-      if (jwt != null) {
-        this.jwtToken = jwt;
-        return;
-      }
+      // XXX: Commented out for now because there seems to be an issue with JWT expiring way too soon...
+      // const jwt = sessionStorage.getItem('jwt');
+      // // don't try to sign again if jwt already present
+      // // TODO: handle jwt expiry?
+      // if (jwt != null) {
+      //   this.jwtToken = jwt;
+      //   return;
+      // }
 
       let timestamp = new Date().getTime();
       let signedMsg = await this.signMessage(timestamp);
@@ -649,8 +650,8 @@ export default {
         }, 5000);
       }
     },
-    ruleProposalHandler: function () {
-      if (this.proposedThisRound) {
+    ruleProposalHandler: function (testing) {
+      if (this.proposedThisRound && !testing) {
         console.log('You already proposed this round! Skipping proposal prompt...');
         return;
       }
@@ -773,8 +774,8 @@ export default {
         console.error('Error while trying to get players: ', result);
       }
     },
-    getLastProposed: async function () {
-      if (this.votedThisRound) {
+    getLastProposed: async function (testing) {
+      if (this.votedThisRound && !testing) {
         console.log('You already voted this round! Skipping fetch for proposed rule...');
         return;
       }
@@ -803,15 +804,15 @@ export default {
         // Make sure the response data has the important stuff...
         if (
           !proposedRule.code ||
-          !proposdRule.authro ||
+          !proposedRule.author ||
           !proposedRule.proposal ||
-          typeof proposedRule.index === 'number'
+          typeof proposedRule.index !== 'number'
         )
           return;
 
         if (proposedRule.proposal !== proposalTypes.CREATE) {
           // Store current rule code for voting display
-          proposedRule.original = this.currentRules.mutable[proposedRule.index].code;
+          proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
         }
         // Store proposed rule for voting (triggers showing of voting 'ribbon')
         this.votingCandidate = proposedRule;

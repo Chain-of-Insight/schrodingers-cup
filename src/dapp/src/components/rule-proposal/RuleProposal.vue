@@ -108,7 +108,7 @@ export default {
     ruleCandidate: {
       code: null,
       index: null,
-      kind: 'immutable'
+      kind: null
     },
     queuedIndex: 0,
   }),
@@ -200,6 +200,7 @@ export default {
     proposeRule: function () {
       if (this.changeType === proposalTypes.CREATE) {
         this.ruleCandidate.index = -1;
+        this.ruleCandidate.kind = ruleTypes.MUTABLE;
       } else if (typeof(this.ruleCandidate.index) !== 'number') {
         this.alert.type = 'danger';
         this.alert.msg = 'You must select a current rule to change.';
@@ -234,7 +235,7 @@ export default {
       this.changeType = null;
       this.ruleCandidate.code = null;
       this.ruleCandidate.index = null;
-      this.ruleCandidate.kind = ruleTypes.MUTABLE;
+      this.ruleCandidate.kind = null;
       this.$refs.timer.reset();
       this._retireNotification();
     },
