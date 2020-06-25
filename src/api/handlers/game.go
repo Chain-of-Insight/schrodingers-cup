@@ -886,7 +886,12 @@ func processRound(round int) (bool, string) {
 		}
 		if len(votedAgainstPlayers) > 0 {
 			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-			luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
+			var luckyOnesMsg string;
+			if len(votedAgainstPlayers) == 1 {
+				luckyOnesMsg = thePeanutGallery + " gains " + strconv.Itoa(voteAgainstPts) + " points and nobody else quite knows why 🤨"
+			} else {
+				luckyOnesMsg = thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
+			}
 			m3 := releaseNotification(luckyOnesMsg)
 			if !m3 {
 				return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
@@ -905,7 +910,12 @@ func processRound(round int) (bool, string) {
 		}
 		if len(votedAgainstPlayers) > 0 {
 			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-			bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
+			var bm3 string;
+			if len(votedAgainstPlayers) == 1 {
+				bm3 = thePeanutGallery + " falls over laughing hysterically 😂"
+			} else {
+				bm3 = thePeanutGallery + " each snicker and stomp their feet in delight"
+			}
 			m2 := releaseNotification(bm3)
 			if !m2 {
 				return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
