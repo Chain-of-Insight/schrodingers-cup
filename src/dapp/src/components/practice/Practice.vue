@@ -374,12 +374,12 @@ export default {
   watch: {
     immutableRules: function (rules) {
       rules.forEach((rule, index) => {
-        rule.code = rule.code.replace(/use "vars"\n?/gm, '');
+        rule.code = rule.code.replace(/use "vars"\n*/gm, '');
       });
     },
     mutableRules: function (rules) {
       rules.forEach((rule, index) => {
-        rule.code = rule.code.replace(/use "vars"\n?/gm, '');
+        rule.code = rule.code.replace(/use "vars"\n*/gm, '');
       });
     }
   },
