@@ -36,7 +36,7 @@
 
         <section>
           <Voting
-            v-if="votingCandidate"
+            v-if="chatChannelJoined && votingCandidate"
             v-bind:turn-window="gameVars.turnDuration"
             v-on:vote-cast="onVoteCast"
             ref="voting"
@@ -235,6 +235,10 @@ export default {
   }),
   watch: {
     currentVotes: function (votes) {
+      // Reset totals etc. on change
+      this.roundReset();
+
+      // Check for player's address in votes and increment for each
       votes.forEach(castVote => {
         if (typeof castVote.player !== 'string' || typeof castVote.vote !== 'boolean')
           return;
@@ -286,7 +290,7 @@ export default {
   },
   methods: {
     gameSetup: async function () {
-      this.resetVoteTotals();
+      this.roundReset();
       // Get current rule set
       await this.getCurrentRules();
       // Get current game vars
@@ -470,11 +474,11 @@ export default {
        * Subscribe to incoming messages sent to the channel
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
-      this.chatChannel.on('messageAdded', (message) => {
+      this.chatChannel.on('messageAdded', async (message) => {
         // console.log('chat message!', message);
 
         if (message.author === 'system') {
-          this.systemMsgHandler(message);
+          await this.systemMsgHandler(message);
         } else {
           this.userMsgHandler(message);
         }
@@ -532,15 +536,21 @@ export default {
           // Parse round number for incrementing
           round = parseInt(matches[2]);
 
+          console.log('RULE PROPOSED!');
+
           // Update round number
-          this.currentRound ++;
           await this.getCurrentRound();
-          // Increment YES vote once for the player who proposed
-          if (player !== this.address && round === this.currentRound) {
-            this.currentTotals.yes ++;
+          // Update votes
+          await this.getCurrentVotes();
+          // Get proposed rule
+          await this.getLastProposed();
+          
+          // XXX: disabled for testing
+          // if (player !== this.address && round === this.currentRound) {
+            // this.currentTotals.yes ++;
             // Get proposed rule for voting
-            await this.getLastProposed();
-          }
+            // await this.getLastProposed();
+          // }
           break;
 
         // VOTE CAST
@@ -571,8 +581,22 @@ export default {
           round = parseInt(matches[1]);
 
           // Increment to next round
-          this.currentRound ++;
-          this.gameSetup();
+          // XXX: this should have a check if the round in the msg is same as current, but disabled for now for testing
+          // this.currentRound ++;
+          
+          const nextRound = round + 1;
+
+          // force checking until the round is updated/incremented in the API
+          const checkLoop = setInterval(async () => {
+            console.log('Checking for round number update...');
+            await this.getCurrentRound();
+            if (nextRound === this.currentRound) {
+              clearInterval(checkLoop)
+              await this.gameSetup();
+            }
+          }, 1000);
+
+          // this.gameSetup();
           break;
       }
 
@@ -729,7 +753,7 @@ export default {
 
           // Update round number and reset vote totals
           this.currentRound = result.data.round;
-          this.resetVoteTotals();
+          this.roundReset();
 
           this.currentTotals.yes = 1; // You vote YES on your own rule by default
 
@@ -832,24 +856,25 @@ export default {
 
         console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
-        
-        // Make sure the response data has the important stuff...
-        // if (
-        //   // !proposedRule.author ||
-        //   // !proposedRule.proposal ||
-        //   // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
-        //   typeof proposedRule.index !== 'number' ||
-        //   // !proposedRule.type ||
-        //   // proposedRule.type !== 'mutable' ||
-        //   // proposedRule.type !== 'immutable'
-        //   typeof proposedRule.type !== 'string'
-        // )
-        //   return;
 
-        // if (proposedRule.proposal !== proposalTypes.CREATE) {
-        //   // Store current rule code for voting display
-        //   proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
-        // }
+        // Don't store empty fetched rules
+        // XXX: need this check as API defaults to sending proposed rule object with empty props
+        //      rather than error when no proposed rule available
+        if (
+          !proposedRule.author ||
+          !proposedRule.proposal ||
+          !proposedRule.type
+        ) return false;
+
+        if (
+          proposedRule.proposal !== proposalTypes.CREATE && 
+          typeof proposedRule.index === 'number' &&
+          proposedRule.type
+        ) {
+          // Store current rule code for voting display
+          proposedRule.original = this.currentRules[proposedRule.type][proposedRule.index].code;
+        }
+
         // Store proposed rule for voting (triggers showing of voting 'ribbon')
         this.votingCandidate = proposedRule;
       } else {
@@ -875,7 +900,7 @@ export default {
           return false;
         }
 
-        // console.log('Rules =====>', result);
+        console.log('Rules =====>', result);
         if (result.data.Immutable instanceof Array) {
           this.currentRules.immutable = result.data.Immutable;
         }
@@ -905,7 +930,7 @@ export default {
           return false;
         }
 
-        // console.log('Votes =====>', result);
+        console.log('Votes =====>', result);
         if (result.data.Votes instanceof Array) {
           this.currentVotes = result.data.Votes;
         }
@@ -948,10 +973,14 @@ export default {
         console.error('Error while trying to get vars: ', result);
       }
     },
-    resetVoteTotals: function () {
+    roundReset: function () {
+      // Vote totals
       this.currentTotals.yes = 0;
       this.currentTotals.no = 0;
       this.currentTotals.abstain = 0;
+      // Register as not voted this new round
+      this.votedThisRound = false;
+      this.proposedThisRound = false;
     }
   }
 };
