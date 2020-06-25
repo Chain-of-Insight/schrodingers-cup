@@ -127,24 +127,16 @@ func getTurnsData(players []string, times []string) (string, string, string) {
 		timeRemaining := t.String()
 		// No wrap
 		if (round < totalPlayers) {
-			turn = players[round - 1]
+			turn = players[round-1]
 			nextTurn = players[round]
-		// Wrap last
-		} else if (round == totalPlayers) {
-			turn = players[0]
-			if totalPlayers > 1 {
-				nextTurn = players[1]
-			} else {
-				nextTurn = ""
-			}
 		// Calc. wrap
 		} else {
 			wrap_i := round % totalPlayers;
 			if (wrap_i == 0) {
-				turn = players[totalPlayers - 1]
+				turn = players[totalPlayers-1]
 				nextTurn = players[0]
 			} else {
-				turn = players[wrap_i - 1]
+				turn = players[wrap_i-1]
 				nextTurn = players[wrap_i]
 			}
 		}
