@@ -841,7 +841,10 @@ export default {
           // !proposedRule.author ||
           // !proposedRule.proposal ||
           // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
-          typeof proposedRule.index !== 'number'
+          typeof proposedRule.index !== 'number' ||
+          !proposedRule.kind ||
+          proposedRule.kind !== 'mutable' ||
+          proposedRule.kind !== 'immutable'
         )
           return;
 
