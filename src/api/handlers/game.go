@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -886,7 +887,7 @@ func processRound(round int) (bool, string) {
 		}
 		if len(votedAgainstPlayers) > 0 {
 			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-			var luckyOnesMsg string;
+			var luckyOnesMsg string
 			if len(votedAgainstPlayers) == 1 {
 				luckyOnesMsg = thePeanutGallery + " gains " + strconv.Itoa(voteAgainstPts) + " points and nobody else quite knows why 🤨"
 			} else {
@@ -910,7 +911,7 @@ func processRound(round int) (bool, string) {
 		}
 		if len(votedAgainstPlayers) > 0 {
 			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-			var bm3 string;
+			var bm3 string
 			if len(votedAgainstPlayers) == 1 {
 				bm3 = thePeanutGallery + " falls over laughing hysterically 😂"
 			} else {
@@ -929,6 +930,9 @@ func processRound(round int) (bool, string) {
 	if err != nil {
 		fmt.Println("[TEZOS] ERR:", err)
 	} else {
+		sort.Slice(*pointsList, func(i, j int) bool {
+			return (*pointsList)[i].Player < (*pointsList)[j].Player
+		})
 		var pointsMap map[string]int
 		pointsMap = make(map[string]int, len(*pointsList))
 		for _, p := range *pointsList {
