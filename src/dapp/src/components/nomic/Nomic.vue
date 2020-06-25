@@ -46,41 +46,58 @@
 
         <!-- Player Chat -->
         <section>
-          <div ref="chatWindow" id="messages" class="message-container">
-            <!-- Chat Messages -->
-            <p
-              v-for="(message, index) in chatMessages"
-              v-bind:key="index"
-              v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']"
-            >
-              <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
-              <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
-            </p>
-          </div>
+          <div class="container-fluid p-0">
+            <div class="row">
+              <div class="col-4">
+                <h6 class="font-weight-bold">Players:</h6>
+                <ul v-if="players.length > 0" class="list-group list-group-flush">
+                  <li
+                    v-for="player in players"
+                    :key="player"
+                    class="list-group-item border-0 p-1"
+                    :class="{ 'active': player === currentTurn }"
+                  ><small>{{ player }}</small></li>
+                </ul>
+              </div>
+              <div class="col-8">
+                <div ref="chatWindow" id="messages" class="message-container">
+                  <!-- Chat Messages -->
+                  <p
+                    v-for="(message, index) in chatMessages"
+                    v-bind:key="index"
+                    v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']"
+                  >
+                    <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
+                    <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
+                  </p>
+                </div>
 
-          <!-- Chat Form Input -->
-          <div class="input-group chat-controls">
-            <input 
-              id="chat-input" 
-              type="text" 
-              class="form-control"
-              aria-label="Send a chat message..."
-              aria-describedby="Nomic player chat"
-              placeholder="Send a chat message..." 
-              v-model="chatInput.value"
-              @focus="chatInput.focused = true"
-              @blur="chatInput.focused = false"
-              v-on:keyup="chatKeyListener($event)"
-            />
-            <!-- Send Message -->
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+                <!-- Chat Form Input -->
+                <div class="input-group chat-controls">
+                  <input 
+                    id="chat-input" 
+                    type="text" 
+                    class="form-control"
+                    aria-label="Send a chat message..."
+                    aria-describedby="Nomic player chat"
+                    placeholder="Send a chat message..." 
+                    v-model="chatInput.value"
+                    @focus="chatInput.focused = true"
+                    @blur="chatInput.focused = false"
+                    v-on:keyup="chatKeyListener($event)"
+                  />
+                  <!-- Send Message -->
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+                  </div>
+                </div>
+
+                <!-- Send test chat messages with fake API wallet address -->
+                <p class="h5 mt-3">Testing:</p>
+                <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
+              </div>
             </div>
           </div>
-
-          <!-- Send test chat messages with fake API wallet address -->
-          <p class="h5 mt-3">Testing:</p>
-          <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
         </section>
 
         <!-- IDE -->
