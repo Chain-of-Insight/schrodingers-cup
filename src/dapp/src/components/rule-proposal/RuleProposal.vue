@@ -63,23 +63,12 @@
 <script>
 const $ = window.jQuery;
 
-const ruleChangeTypes = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  TRANSMUTE: 'transmute',
-  DELETE: 'delete',
-}
-
-const ruleTypes = {
-  MUTABLE: 'mutable',
-  IMMUTABLE: 'immutable'
-}
-
-const ruleSetTypes = {
-  SAVED: 'SAVED',
-  CURRENT: 'CURRENT',
-  QUEUED: 'QUEUED'
-}
+// Constants
+import {
+  ruleTypes,
+  ruleSetTypes,
+  proposalTypes,
+} from '../../constants/constants.js';
 
 import Practice from '../practice/Practice.vue';
 import ChangeType from '../rule-proposal/ChangeType.vue';
@@ -106,10 +95,10 @@ export default {
     currentView: 'ChangeType',
     changeType: null,
     typeHeadings: {
-      [ruleChangeTypes.CREATE]: 'Create a New Rule',
-      [ruleChangeTypes.UPDATE]: 'Update an Existing Rule',
-      [ruleChangeTypes.TRANSMUTE]: 'Transmute a Rule',
-      [ruleChangeTypes.DELETE]: 'Delete a Rule'
+      [proposalTypes.CREATE]: 'Create a New Rule',
+      [proposalTypes.UPDATE]: 'Update an Existing Rule',
+      [proposalTypes.TRANSMUTE]: 'Transmute a Rule',
+      [proposalTypes.DELETE]: 'Delete a Rule'
     },
     proposalWindowClosed: false,
     alert: {
@@ -125,7 +114,7 @@ export default {
   }),
   computed: {
     submitEnabled: function () {
-      if (this.changeType === ruleChangeTypes.CREATE) {
+      if (this.changeType === proposalTypes.CREATE) {
         return this.currentView === 'Practice' ? true : false;
       } else {
         return this.currentView === 'RuleSelect' ? true : false
@@ -136,8 +125,8 @@ export default {
     nextEnabled: function () {
       if (
         (
-          this.changeType === ruleChangeTypes.UPDATE ||
-          this.changeType === ruleChangeTypes.TRANSMUTE
+          this.changeType === proposalTypes.UPDATE ||
+          this.changeType === proposalTypes.TRANSMUTE
         ) && this.currentView === 'Practice'
       ) {
         return true;
@@ -159,13 +148,13 @@ export default {
       $('#proposal-modal').modal('hide');
     },
     selectChangeType: function (changeType) {
-      const validType = Object.values(ruleChangeTypes).includes(changeType);
+      const validType = Object.values(proposalTypes).includes(changeType);
       if (!changeType || !validType) 
         return false;
       
       this.changeType = changeType
       
-      if (this.changeType === ruleChangeTypes.DELETE) {
+      if (this.changeType === proposalTypes.DELETE) {
         this.currentView = 'RuleSelect';
       } else {
         this.currentView = 'Practice';
@@ -181,7 +170,7 @@ export default {
       this.queuedIndex = queuedIndex;
     },
     submitRule: async function () {
-      if (!this.ruleCandidate.code && this.changeType !== ruleChangeTypes.DELETE) {
+      if (!this.ruleCandidate.code && this.changeType !== proposalTypes.DELETE) {
         await this.$refs.proposal.testRuleSet();
       } else {
         this.proposeRule();
@@ -207,7 +196,7 @@ export default {
       }
     },
     proposeRule () {
-      if (this.changeType === ruleChangeTypes.CREATE) {
+      if (this.changeType === proposalTypes.CREATE) {
         this.ruleCandidate.index = -1;
       } else if (typeof(this.ruleCandidate.index) !== 'number') {
         this.alert.type = 'danger';
@@ -218,7 +207,7 @@ export default {
         return;
       }
 
-      if (this.changeType === ruleChangeTypes.DELETE) {
+      if (this.changeType === proposalTypes.DELETE) {
         this.ruleCandidate.code = "";
       }
 
@@ -252,7 +241,7 @@ export default {
       this.ruleCandidate.code = null;
       this.ruleCandidate.index = null;
 
-      if (this.changeType !== ruleChangeTypes.DELETE && this.currentView === 'RuleSelect') {
+      if (this.changeType !== proposalTypes.DELETE && this.currentView === 'RuleSelect') {
         this.currentView = 'Practice';
         return;
       }

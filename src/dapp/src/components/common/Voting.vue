@@ -64,56 +64,55 @@
 </template>
 
 <script>
-  const $ = window.jQuery;
+const $ = window.jQuery;
 
-  import Notification from '../common/Notifications.vue';
+// Constants
+import { voteTypes } from '../../constants/constants.js';
 
-  export default {
-    components: {
-      Notification
-    },
-    props: {
-      votingCandidate: {
-        type: Object,
-        default: () => ({})
-      }
-    },
-    data: function () {
-      return {
-        codeVisible: false,
-        voteTypes: {
-          YES: 1,
-          NO: 0,
-          ABSTAIN: -1
-        },
-        alert: {
-          type: null,
-          msg: null
-        },
-      }
-    },
-    methods: {
-      vote: function (type) {
-        if (
-          typeof(type) !== 'number' || (
-            type !== this.voteTypes.YES &&
-            type !== this.voteTypes.NO &&
-            type !== this.voteTypes.ABSTAIN
-          )
-        ) {
-          return false;
-        }
+import Notification from '../common/Notifications.vue';
 
-        this.$emit('vote-cast', type);
-      },
-      _retireNotification: function () {
-        this.alert = {
-          type: null,
-          msg: null
-        };
+export default {
+  components: {
+    Notification
+  },
+  props: {
+    votingCandidate: {
+      type: Object,
+      default: () => ({})
+    }
+  },
+  data: function () {
+    return {
+      codeVisible: false,
+      voteTypes: voteTypes,
+      alert: {
+        type: null,
+        msg: null
       },
     }
+  },
+  methods: {
+    vote: function (type) {
+      if (
+        typeof(type) !== 'number' || (
+          type !== voteTypes.YES &&
+          type !== voteTypes.NO &&
+          type !== voteTypes.ABSTAIN
+        )
+      ) {
+        return false;
+      }
+
+      this.$emit('vote-cast', type);
+    },
+    _retireNotification: function () {
+      this.alert = {
+        type: null,
+        msg: null
+      };
+    },
   }
+}
 </script>
 
 <style scoped>

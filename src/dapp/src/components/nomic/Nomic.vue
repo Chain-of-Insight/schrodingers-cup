@@ -94,14 +94,9 @@
             <button type="button" class="btn btn-outline-primary" @click="getLastProposed()">
               Test Voting
             </button>
-            <!-- Test Rule Proposal -->
-            <!-- <button type="button" class="btn btn-outline-primary" @click="ruleProposalHandler()">
-              Test Rule Proposal
-            </button> -->
           </div>
         </div>
         <RuleProposal
-          v-if="chatChannelJoined"
           ref="proposal"
           v-on:rule-proposed="onRuleProposed"
           :turn-window="turnWindow"
@@ -132,14 +127,7 @@ import {
 } from '../../services/twilioProvider';
 
 // API
-import {
-  PerformAuth,
-  proposeRule,
-  castVote,
-  getRoundNumber,
-  getPlayers,
-  getProposedRule
-} from '../../services/apiProvider';
+import * as api from '../../services/apiProvider';
 
 // Child components
 import Notification from '../common/Notifications.vue';
@@ -149,22 +137,14 @@ import Totals from '../common/Totals.vue';
 // IDE Component
 import Practice from '../practice/Practice.vue';
 
-const voteTypes = {
-  YES: 1,
-  NO: 0,
-  ABSTAIN: -1
-}
+// Constants
+import {
+  proposalTypes,
+  voteTypes,
+  TZ_WALLET_PATTERN,
+  CURRENT_RULES
+} from '../../constants/constants.js';
 
-const ruleChangeTypes = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  TRANSMUTE: 'transmute',
-  DELETE: 'delete',
-}
-
-const CURRENT_RULES = require('../practice/rules/currentRules.json');
-
-const TZ_WALLET_PATTERN = "(tz(?:1|2|3)[a-zA-Z0-9]{33})";
 
 export default {
   components: {
@@ -222,52 +202,44 @@ export default {
   computed: {
     msgPatterns: function () {
       return {
-        NEW_TURN_PATTERN: `^It's ${TZ_WALLET_PATTERN}'s turn to propose a rule change$`,
-        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (${this.currentRound})$`,
-        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (${this.currentRound})$`,
-        // YES_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted YES in round ${this.currentRound}$`,
-        // NO_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} voted NO in round ${this.currentRound}$`,
-        // ABSTAIN_VOTE_PATTERN: `^${TZ_WALLET_PATTERN} abstained in round ${this.currentRound}$`
+        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (\\d+)$`,
+        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (\\d+)$`,
       }
     }
   },
   mounted: async function () {
     await this.mountProvider();
     console.log('Nomic mounted', this.network);
-    let returningUser = sessionStorage.getItem('tzAddress');
-    if (returningUser) {
+
+    // Check if user already logged in with TezBridge
+    this.address = sessionStorage.getItem('tzAddress');
+    if (this.address != null) {
       this.connected = true;
-      this.address = returningUser;
-
-      // Get current rule set
-      this.getCurrentRules();
-
-      // Get current round number
-      await this.getCurrentRound();
-
-      // Request Twilio token
-      try {
-        // Request auth
-        let tokenResponse = await this.getToken(this.address);
-        if (tokenResponse) {
-          // Valid auth
-          this.TwilioToken = tokenResponse.token
-          this.TwilioIdentity = tokenResponse.identity;
-          console.log('Twilio Chat Params =>', [this.TwilioToken, this.TwilioIdentity]);
-          console.log('TwilioChat', this.TwilioChat);
-          // Connect to chat room
-          this.connectChat();
-          await this.doLoginMessageSigning();
-          // Get players
-          await this.getCurrentPlayers();
-        }
-      } catch (e) {
-        // Auth failed
-        console.log('Error requesting Twilio Auth Token', e);
-      }
+      await this.gameSetup();
     }
   },
   methods: {
+    gameSetup: async function () {
+      // Get current rule set
+      this.getCurrentRules();
+      // Get current round number
+      await this.getCurrentRound();
+      // Get players
+      await this.getCurrentPlayers();
+      // Get Twilio token
+      await this.twilioAuth();
+      // Connect to chat room
+      this.connectChat();
+      // Sign login auth message for API
+      await this.doLoginMessageSigning();
+      // If user's turn, prompt for rule proposal immediately
+      if (this.currentTurn === this.address) {
+        this.ruleProposalHandler();
+      } else {
+        // Otherwise just prompt to vote
+        await this.getLastProposed();
+      }
+    },
     connectUser: async function () {
       // Connect as required
       if (this.connected)
@@ -277,37 +249,41 @@ export default {
       this.address = await tezbridge.request({method: 'get_source'});
       
       // Fetch balance / Connection callbacks
-      if (typeof this.address == 'string') {
-        if (this.address.length === 36) {
-          console.log('User XTZ Address =>', this.address);
-          sessionStorage.setItem('tzAddress', this.address);
-          this.connected = true;
-          let balance = await this.getBalance(this.address);
-          console.log("User balance =>", balance);
-          // Request Twilio token
-          try {
-            // Request authvotingHandler()
-            let tokenResponse = await this.getToken(this.address);
-            if (tokenResponse) {
-              // Valid auth
-              this.TwilioToken = tokenResponse.token
-              this.TwilioIdentity = tokenResponse.identity;
-              console.log('Twilio Chat Params =>', [this.TwilioToken, this.TwilioIdentity]);
-              console.log('TwilioChat', this.TwilioChat);
-              // Connect to chat room
-              this.connectChat();
-
-              // Sign login auth message for API
-              await this.doLoginMessageSigning();
-            }
-          } catch (e) {
-            // Auth failed
-            console.log('Error requesting Twilio Auth Token', e);
-          }
+      if (typeof this.address == 'string' && this.address.length === 36) {
+        console.log('User XTZ Address =>', this.address);
+        sessionStorage.setItem('tzAddress', this.address);
+        this.connected = true;
+        await this.gameSetup();
+        let balance = await this.getBalance(this.address);
+        console.log("User balance =>", balance);
+      }
+    },
+    twilioAuth: async function () {
+      // Request Twilio token
+      try {
+        // Request authvotingHandler()
+        let tokenResponse = await this.getToken(this.address);
+        if (tokenResponse) {
+          // Valid auth
+          this.TwilioToken = tokenResponse.token
+          this.TwilioIdentity = tokenResponse.identity;
+          console.log('Twilio Chat Params =>', [this.TwilioToken, this.TwilioIdentity]);
+          console.log('TwilioChat', this.TwilioChat);
         }
+      } catch (e) {
+        // Auth failed
+        console.error('Error requesting Twilio Auth Token', e);
       }
     },
     doLoginMessageSigning: async function () {
+      const jwt = sessionStorage.getItem('jwt');
+      // don't try to sign again if jwt already present
+      // TODO: handle jwt expiry?
+      if (jwt != null) {
+        this.jwtToken = jwt;
+        return;
+      }
+
       let timestamp = new Date().getTime();
       let signedMsg = await this.signMessage(timestamp);
       this.loginSigned = signedMsg
@@ -326,7 +302,7 @@ export default {
       // auth and get JWT token
       let result;
       try {
-        result = await PerformAuth(this.loginSigned.bytes, this.loginSigned.prefixSig, pubKey, this.address);
+        result = await api.PerformAuth(this.loginSigned.bytes, this.loginSigned.prefixSig, pubKey, this.address);
       } catch(e) {
         // unauthorized if we are here
         result = e.response;
@@ -334,6 +310,7 @@ export default {
 
       if (result.data && result.data.token) {
         this.jwtToken = result.data.token;
+        sessionStorage.setItem('jwt', this.jwtToken);
       }
       console.log("JWT token", this.jwtToken);
     },
@@ -422,13 +399,12 @@ export default {
        * @param {Object} message : A Twilio Message object container the {String} properties: `author` and `body`
        */
       this.chatChannel.on('messageAdded', (message) => {
-        console.log('chat message!', message);
+        // console.log('chat message!', message);
 
         if (message.author === 'system') {
-          // TODO: replace above condition with `message.author == this.apiWallet` when api wallet set up
-          this.onSystemMessage(message);
+          this.systemMsgHandler(message);
         } else {
-          this.onUserMessage(message);
+          this.userMsgHandler(message);
         }
 
         // auto-scroll to bottom to show new message
@@ -467,47 +443,40 @@ export default {
         this.chatMessages.push(messageOutput);
       });
     },
-    onSystemMessage: async function (message) {
-      let messageBody = message.body;
-      let playerAddress = null;
+    systemMsgHandler: async function (message) {
+      let matches = null;
+      let round = null;
+      let vote = null;
+      let player = null;
 
-      switch (messageBody) {
-        case (messageBody.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
-          // TODO: GET (/game/proposals?) to get latest proposed rule
-          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
+      // GAME EVENTS
+      switch (message.body) {
 
-          this.votingCandidate = null;
+        // NEW RULE PROPOSED
+        case (message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
+          matches = message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN));
+          // Parse player wallet address
+          player = matches[1];
+          // Parse round number for incrementing
+          round = parseInt(matches[2]);
 
+          // Update round number
           await this.getCurrentRound();
-          console.log('Current round:', this.currentRound);
-          await this.getLastProposed();
-
-          // if (playerAddress !== this.TwilioIdentity) {
-          //   // On another player proposing a rule
-          //   this.votingCandidate = {
-          //     name: 'testRule',
-          //     code: '$test_string = "this is test code"\nsay($test_string)'
-          //   }
-          //   console.log('Time to vote!');
-          //   this.$refs.voting.promptForVote(this.votingCandidate);
-          // }
-          break;
-        case (messageBody.match(RegExp(this.msgPatterns.NEW_TURN_PATTERN)) || {}).input:
-          // On new turn
-          // Extract player's address from string
-          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(messageBody)[0];
-          // Check if it's logged in player
-          if (playerAddress === this.TwilioIdentity) {
-            // Format message
-            messageBody = "It's your turn to propose a rule!";
-            // Trigger proposal modal
-            this.$refs.proposal.promptForProposal();
+          // Increment YES vote once for the player who proposed
+          if (player !== this.address && round === this.currentRound) {
+            this.currentTotals.yes ++;
+            // Get proposed rule for voting
+            await this.getLastProposed();
           }
           break;
-        case (messageBody.match(RegExp(this.msgPatterns.VOTE_PATTERN)) || {}).input:
-          const matches = messageBody.match(RegExp(this.msgPatterns.VOTE_PATTERN));
-          const vote = matches[2];
-          const round = parseInt(matches[3]);
+
+        // VOTE CAST
+        case (message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN)) || {}).input:
+          matches = message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN));
+          // Parse vote (YES/NO)
+          vote = matches[2];
+          // Parse round number for incrementing
+          round = parseInt(matches[3]);
 
           // If vote msg applies to this round, increment vote counter
           if (round === this.currentRound) {
@@ -520,21 +489,17 @@ export default {
                 break;
             }
           }
-          
-          // If msg applies to your vote:
-          messageBody = messageBody.replace(this.TwilioIdentity, 'You');
           break;
       }
 
-      // Parse message args
+      // Release message to UI
       let messageOutput = {
         type: 'system',
-        msg: messageBody // XXX: replace this with message.body later
+        msg: message.body
       };
-      // Release message to UI
       this.chatMessages.push(messageOutput);
     },
-    onUserMessage: function (message) {
+    userMsgHandler: function (message) {
         let messageType = message.author == this.TwilioIdentity ? 'local' : 'remote';
         // Parse message args
         let messageOutput = {
@@ -581,14 +546,15 @@ export default {
       this.showEditor = this.showEditor ? false : true;
     },
     onVoteCast: async function (vote) {
-      if (vote === voteTypes.ABSTAIN || typeof this.votingCandidate !== 'object') {
-        // Don't send anything on abstain
+      if (vote === voteTypes.ABSTAIN) {
+        // Don't send anything on abstain, just 'close' voting section
+        this.votingCandidate = null;
         return false;
       }
 
       let result = null;
       try {
-        result = await castVote(this.jwtToken, Boolean(vote), this.currentRound);
+        result = await api.castVote(this.jwtToken, Boolean(vote), this.currentRound);
       } catch (error) {
         console.error('Error while trying to cast vote:', error);
         if (error.response) {
@@ -612,7 +578,8 @@ export default {
           }, 5000);
 
           // Update round number
-          this.currentRound = result.data.round;
+          // this.currentRound = result.data.round;
+
           // clear voting candidate and voting ribbon
           this.votingCandidate = null;
         } else {
@@ -632,26 +599,14 @@ export default {
         }, 5000);
       }
     },
-    ruleProposalHandler: async function () {
+    ruleProposalHandler: function () {
       if (!this.jwtToken) {
         this.alert.type = 'danger';
-        this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Have you signed a message in TezBridge yet?";
-        setTimeout(async () => {
+        this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Have you signed a message in TezBridge?";
+        setTimeout(() => {
           this._retireNotification();
         }, 3000);
       } else {
-        // Check if you already have a rule up for vote this round
-
-        // if (!this.votingCandidate)
-        //   return false;
-
-        // if (
-        //   this.votingCandidate.round === this.currentRound &&
-        //   this.votingCandidate.author === this.TwilioIdentity
-        // ) {
-        //   return false;
-        // }
-
         this.votingCandidate = null;
 
         // Otherwise, prompt to propose a rule
@@ -661,7 +616,7 @@ export default {
     onRuleProposed: async function (code, index, kind, type) {
       let result = null;
       try {
-        result = await proposeRule(this.jwtToken, code, index, kind, type);
+        result = await api.proposeRule(this.jwtToken, code, index, kind, type);
       } catch (error) {
         console.error('Error while trying to propose rule:', error);
         if (error.response) {
@@ -687,7 +642,7 @@ export default {
 
           // Update round number and reset vote totals
           this.currentRound = result.data.round;
-          this.currentTotals.yes = 0;
+          this.currentTotals.yes = 1; // You vote YES on your own rule by default
           this.currentTotals.no = 0;
           this.currentTotals.abstain = 0;
         } else {
@@ -710,7 +665,7 @@ export default {
     getCurrentRound: async function () {
       let result = null;
       try {
-        result = await getRoundNumber();
+        result = await api.getRoundNumber();
       } catch (error) {
         console.error('Error while trying to get current round:', error);
         if (error.response) {
@@ -734,7 +689,7 @@ export default {
     getCurrentPlayers: async function () {
       let result = null;
       try {
-        result = await getPlayers();
+        result = await api.getPlayers();
       } catch (error) {
         console.error('Error while trying to get players:', error);
         if (error.response) {
@@ -754,18 +709,6 @@ export default {
         this.players = result.data.players;
         this.currentTurn = result.data.currentTurn;
         this.nextTurn = result.data.nextTurn;
-
-        // If user's turn, prompt for rule proposal immediately?
-        if (this.currentTurn === this.TwilioIdentity) {
-          await this.getLastProposed();
-          // this.ruleProposalHandler();
-        } else {
-          // Otherwise just prompt to vote
-          await this.getLastProposed();
-        }
-
-        // Start round timer
-        // this.$refs.totals.startTimer();
       } else {
         console.error('Error while trying to get players: ', result);
       }
@@ -773,7 +716,7 @@ export default {
     getLastProposed: async function () {
       let result = null;
       try {
-        result = await getProposedRule(this.currentRound);
+        result = await api.getProposedRule(this.currentRound);
       } catch (error) {
         if (error.response) {
           result = error.response;
@@ -789,22 +732,23 @@ export default {
         }
 
 
-        console.log('Proposed rule =====>', result);
+        // console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
         
-        if (proposedRule.code && proposedRule.index) {
-          if (proposedRule.proposal !== ruleChangeTypes.CREATE) {
+        // Make sure the response data has the important stuff...
+        if (typeof proposedRule.code === 'string' && typeof proposedRule.index === 'number') {
+          if (proposedRule.proposal !== proposalTypes.CREATE) {
+            // Store current rule code for voting display
             proposedRule.original = this.ruleSets.current[proposedRule.index].code;
           }
-
+          // Store proposed rule for voting (triggers showing of voting 'ribbon')
           this.votingCandidate = proposedRule;
-          // console.log('candidate:', this.votingCandidate);
         }
       } else {
         console.error('Error while trying to get proposed rule:', result);
       }
     },
-    getCurrentRules: async function () {
+    getCurrentRules: function () {
       this.ruleSets.current = CURRENT_RULES;
     },
   }

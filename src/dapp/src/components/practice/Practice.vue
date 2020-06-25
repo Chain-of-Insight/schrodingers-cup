@@ -250,15 +250,13 @@ import RuleSetList from '../ide/RuleSetList.vue'
 import 'codemirror/mode/shell/shell';
 import 'codemirror/theme/dracula.css';
 
+// Constants
+import {
+  ruleSetTypes,
+  CURRENT_RULES
+} from '../../constants/constants.js';
+
 const $ = window.jQuery;
-
-const ruleSetTypes = {
-  SAVED: 'SAVED',
-  CURRENT: 'CURRENT',
-  QUEUED: 'QUEUED'
-}
-
-const CURRENT_RULES = require('./rules/currentRules.json');
 
 export default {
   components: {

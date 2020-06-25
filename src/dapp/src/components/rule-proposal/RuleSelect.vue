@@ -18,7 +18,7 @@
 import RuleSetList from '../ide/RuleSetList.vue';
 import Practice from '../practice/Practice.vue';
 
-const ruleChangeTypes = {
+const proposalTypes = {
   CREATE: 'create',
   UPDATE: 'update',
   TRANSMUTE: 'transmute',
@@ -43,7 +43,7 @@ export default {
   data: function () {
     return {
       ideView: 'RuleSetList',
-      ruleChangeTypes: ruleChangeTypes,
+      proposalTypes: proposalTypes,
       ruleSetTypes: ruleSetTypes
     }
   },
