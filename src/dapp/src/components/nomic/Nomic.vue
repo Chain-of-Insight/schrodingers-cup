@@ -202,8 +202,8 @@ export default {
   computed: {
     msgPatterns: function () {
       return {
-        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (${this.currentRound})$`,
-        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (${this.currentRound})$`,
+        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (\\d+)$`,
+        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (\\d+)$`,
       }
     }
   },
@@ -444,25 +444,39 @@ export default {
       });
     },
     systemMsgHandler: async function (message) {
-      let playerAddress = null;
+      let matches = null;
+      let round = null;
+      let vote = null;
+      let player = null;
 
       // GAME EVENTS
       switch (message.body) {
+
         // NEW RULE PROPOSED
         case (message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
-          // Parse relevant player's wallet address
-          playerAddress = RegExp(TZ_WALLET_PATTERN).exec(message.body)[0];
+          matches = message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN));
+          // Parse player wallet address
+          player = matches[1];
+          // Parse round number for incrementing
+          round = parseInt(matches[2]);
+
           // Update round number
           await this.getCurrentRound();
-          // Get proposed rule for voting
-          await this.getLastProposed();
+          // Increment YES vote once for the player who proposed
+          if (player !== this.address && round === this.currentRound) {
+            this.currentTotals.yes ++;
+            // Get proposed rule for voting
+            await this.getLastProposed();
+          }
           break;
+
+        // VOTE CAST
         case (message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN)) || {}).input:
-          const matches = message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN));
+          matches = message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN));
           // Parse vote (YES/NO)
-          const vote = matches[2];
+          vote = matches[2];
           // Parse round number for incrementing
-          const round = parseInt(matches[3]);
+          round = parseInt(matches[3]);
 
           // If vote msg applies to this round, increment vote counter
           if (round === this.currentRound) {
@@ -586,7 +600,6 @@ export default {
       }
     },
     ruleProposalHandler: function () {
-      console.log('refs?', this.$refs.proposal);
       if (!this.jwtToken) {
         this.alert.type = 'danger';
         this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Have you signed a message in TezBridge?";
