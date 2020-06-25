@@ -32,4 +32,4 @@ export const eventMessages = {
   ROUND_OVER: `^Round (\\d+) has concluded`
 }
 
-export const CURRENT_RULES = require('../rules/currentRules.json');
+// export const CURRENT_RULES = require('../rules/currentRules.json');

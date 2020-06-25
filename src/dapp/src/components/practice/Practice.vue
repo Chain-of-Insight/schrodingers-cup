@@ -57,7 +57,8 @@
               <div class="col mh-100">
                 <RuleSetList
                   :loaded-rule="selectedRule"
-                  :current-rules="currentRules"
+                  :immutable-rules="immutableRules"
+                  :mutable-rules="mutableRules"
                   :saved-rules="savedRules"
                   :un-queued-rules="unQueuedRules"
                   :queued-rules="queuedRules"
@@ -305,10 +306,8 @@ export default {
         msg: null
       },
       ruleSetTypes: ruleSetTypes,
-      currentRules: {
-        immutable: [],
-        mutable: []
-      },
+      mutableRules: [],
+      immutableRules: [],
       savedRules: [],
       ide: {
         input: '',
@@ -370,6 +369,18 @@ export default {
         .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
         .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
         .map(([index, ruleSet]) => index);
+    }
+  },
+  watch: {
+    immutableRules: function (rules) {
+      rules.forEach((rule, index) => {
+        rule.code = rule.code.replace(/use "vars"\n?/gm, '');
+      });
+    },
+    mutableRules: function (rules) {
+      rules.forEach((rule, index) => {
+        rule.code = rule.code.replace(/use "vars"\n?/gm, '');
+      });
     }
   },
   methods: {
@@ -467,10 +478,10 @@ export default {
 
         // console.log('Rules =====>', result);
         if (result.data.Immutable instanceof Array) {
-          this.currentRules.immutable = result.data.Immutable;
+          this.immutableRules = result.data.Immutable;
         }
         if (result.data.Mutable instanceof Array) {
-          this.currentRules.mutable = result.data.Mutable;
+          this.mutableRules = result.data.Mutable;
         }
       } else {
         console.error('Error while trying to get rules: ', result);
@@ -579,17 +590,17 @@ export default {
 
       switch (ruleType) {
         case ruleSetTypes.IMMUTABLE:
-          ruleSetList = this.currentRules.immutable;
+          ruleSetList = this.immutableRules;
           break;
         case ruleSetTypes.MUTABLE:
-          ruleSetList = this.currentRules.mutable;
+          ruleSetList = this.mutableRules;
           break;
         case ruleSetTypes.SAVED:
         case ruleSetTypes.QUEUED:
           ruleSetList = this.savedRules;
           break;
         default:
-          ruleSetList = this.currentRules.immutable;
+          ruleSetList = this.immutableRules;
           break;
       }
 

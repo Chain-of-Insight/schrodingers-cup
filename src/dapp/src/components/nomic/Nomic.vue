@@ -158,8 +158,7 @@ import Practice from '../practice/Practice.vue';
 import {
   proposalTypes,
   voteTypes,
-  eventMessages,
-  CURRENT_RULES
+  eventMessages
 } from '../../constants/constants.js';
 
 
@@ -534,8 +533,6 @@ export default {
           // Parse round number for incrementing
           round = parseInt(matches[2]);
 
-          console.log('RULE PROPOSED!');
-
           // Update round number
           await this.getCurrentRound();
           // Update votes
@@ -723,9 +720,11 @@ export default {
       }
     },
     onRuleProposed: async function (code, index, kind, type) {
+      // Prepend 'use "vars"' to all code going out for proposal
+      const codeFormatted = 'use "vars"\n' + code;
       let result = null;
       try {
-        result = await api.proposeRule(this.jwtToken, code, index, kind, type);
+        result = await api.proposeRule(this.jwtToken, codeFormatted, index, kind, type);
       } catch (error) {
         console.error('Error while trying to propose rule:', error);
         if (error.response) {

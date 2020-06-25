@@ -65,7 +65,7 @@
           >
             <p
               class="list-group-item border-0 text-muted"
-              v-if="currentRules.immutable.length === 0"
+              v-if="immutableRules.length === 0"
             >No immutable rules loaded...</p>
             <a
               class="ruleset btn btn-outline-primary list-group-item list-group-item-action"
@@ -77,7 +77,7 @@
                   loadedRule.index === index
               }"
               v-bind:key="index"
-              v-for="(ruleSet, index) in currentRules.immutable"
+              v-for="(ruleSet, index) in immutableRules"
               v-on:click="selectRule(index, ruleSetTypes.IMMUTABLE)"
               style="cursor:pointer;"
             >
@@ -93,7 +93,7 @@
           >
             <p
               class="list-group-item border-0 text-muted"
-              v-if="currentRules.mutable.length === 0"
+              v-if="mutableRules.length === 0"
             >No mutable rules loaded...</p>
             <a
               class="ruleset btn btn-outline-primary list-group-item list-group-item-action"
@@ -105,7 +105,7 @@
                   loadedRule.index === index
               }"
               v-bind:key="index"
-              v-for="(ruleSet, index) in currentRules.mutable"
+              v-for="(ruleSet, index) in mutableRules"
               v-on:click="selectRule(index, ruleSetTypes.MUTABLE)"
               style="cursor:pointer;"
             >
@@ -206,12 +206,13 @@ export default {
         type: ruleSetTypes.IMMUTABLE
       })
     },
-    currentRules: {
-      type: Object,
-      default: () => ({
-        immutable: [],
-        mutable: []
-      })
+    immutableRules: {
+      type: Array,
+      default: () => []
+    },
+    mutableRules: {
+      type: Array,
+      default: () => []
     },
     savedRules: {
       type: Array,
