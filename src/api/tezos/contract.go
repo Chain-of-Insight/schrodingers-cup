@@ -112,7 +112,7 @@ func UpdateGameScore(k1 string, pointsMap map[string]int) (string, error) {
 	opStr := `{"branch": "%[1]s",
 	"contents": [ { "kind": "transaction",
 	            "source": "%[2]s", "fee": "9000",
-	            "counter": "%[4]d", "gas_limit": "2000000", "storage_limit": "480000",
+	            "counter": "%[4]d", "gas_limit": "75000", "storage_limit": "0",
 	            "amount": "0",
 	            "destination": "%[3]s",
 	            "parameters": %[5]s
