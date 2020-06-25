@@ -197,7 +197,10 @@ export default {
     ruleSets: {
       current: [],
       saved: []
-    }
+    },
+    currentVotes: [],
+    votedThisRound: false,
+    proposedThisRound: false,
   }),
   computed: {
     msgPatterns: function () {
@@ -205,6 +208,31 @@ export default {
         PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (\\d+)$`,
         VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (\\d+)$`,
       }
+    }
+  },
+  watch: {
+    currentVotes: function (votes) {
+      votes.forEach(castVote => {
+        if (typeof castVote.player !== 'string' || typeof castVote.vote !== 'boolean')
+          return;
+
+        if (castVote.player === this.address) {
+          this.votedThisRound = true;
+
+          if (this.currentTurn === this.address) {
+            this.proposedThisRound = true;
+          }
+        }
+
+        switch (castVote.vote) {
+          case true:
+            this.currentTotals.yes ++;
+            break;
+          case false:
+            this.currentTotals.no ++;
+            break;
+        }
+      });
     }
   },
   mounted: async function () {
@@ -226,18 +254,19 @@ export default {
       await this.getCurrentRound();
       // Get players
       await this.getCurrentPlayers();
+      // Get votes
+      await this.getCurrentVotes();
       // Get Twilio token
       await this.twilioAuth();
       // Connect to chat room
       this.connectChat();
       // Sign login auth message for API
       await this.doLoginMessageSigning();
+      // Get last proposed rule if applicable
+      await this.getLastProposed();
       // If user's turn, prompt for rule proposal immediately
       if (this.currentTurn === this.address) {
         this.ruleProposalHandler();
-      } else {
-        // Otherwise just prompt to vote
-        await this.getLastProposed();
       }
     },
     connectUser: async function () {
@@ -577,9 +606,6 @@ export default {
             this._retireNotification();
           }, 5000);
 
-          // Update round number
-          // this.currentRound = result.data.round;
-
           // clear voting candidate and voting ribbon
           this.votingCandidate = null;
         } else {
@@ -600,6 +626,11 @@ export default {
       }
     },
     ruleProposalHandler: function () {
+      if (this.proposedThisRound) {
+        console.log('You already proposed this round! Skipping proposal prompt...');
+        return;
+      }
+
       if (!this.jwtToken) {
         this.alert.type = 'danger';
         this.alert.msg = "It's your turn to propose a rule, but you havent' been authenticated yet! Have you signed a message in TezBridge?";
@@ -645,6 +676,8 @@ export default {
           this.currentTotals.yes = 1; // You vote YES on your own rule by default
           this.currentTotals.no = 0;
           this.currentTotals.abstain = 0;
+          this.votedThisRound = true;
+          this.proposedThisRound = true;
         } else {
           // Response OK but rule proposal failed
           this.$refs.proposal.alert.type = 'danger';
@@ -714,6 +747,11 @@ export default {
       }
     },
     getLastProposed: async function () {
+      if (this.votedThisRound) {
+        console.log('You already voted this round! Skipping fetch for proposed rule...');
+        return;
+      }
+
       let result = null;
       try {
         result = await api.getProposedRule(this.currentRound);
@@ -751,6 +789,33 @@ export default {
     getCurrentRules: function () {
       this.ruleSets.current = CURRENT_RULES;
     },
+    getCurrentVotes: async function () {
+      let result = null;
+      try {
+        result = await api.getVotes(this.currentRound);
+      } catch (error) {
+        console.error('Error while trying to get votes:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
+      }
+
+      if (result.status && result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        console.log('Votes =====>', result);
+        if (result.data.Votes instanceof Array) {
+          this.currentVotes = result.data.Votes;
+        }
+      } else {
+        console.error('Error while trying to get votes: ', result);
+      }
+    }
   }
 };
 </script>

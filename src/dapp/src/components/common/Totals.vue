@@ -3,7 +3,7 @@
     <p class="h2 m-0">Round {{ round }}</p>
     <p class="h2 m-0">Yes: <span class="badge badge-pill badge-success">{{ yes }}</span></p>
     <p class="h2 m-0">No: <span class="badge badge-pill badge-danger">{{ no }}</span></p>
-    <p class="h2 m-0">Abstain: <span class="badge badge-pill badge-secondary">{{ abstain }}</span></p>
+    <!-- <p class="h2 m-0">Abstain: <span class="badge badge-pill badge-secondary">{{ abstain }}</span></p> -->
   </div>
 </template>
 
