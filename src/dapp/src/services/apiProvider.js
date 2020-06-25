@@ -142,6 +142,17 @@ async function getProposedRule(round) {
   return res;
 }
 
+async function getVotes(round) {
+  if (typeof round !== 'number') {
+    throw new Error('round rejected. Number required, got ' + typeof round);
+  }
+
+  let apiEndpoint = API_URL + 'votes/' + round;
+  const res = await axios.get(apiEndpoint);
+
+  return res;
+}
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
@@ -149,5 +160,6 @@ module.exports = {
   castVote: castVote,
   getRoundNumber: getRoundNumber,
   getPlayers: getPlayers,
-  getProposedRule: getProposedRule
+  getProposedRule: getProposedRule,
+  getVotes: getVotes
 };
