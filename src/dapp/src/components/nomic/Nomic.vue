@@ -141,7 +141,7 @@ import Practice from '../practice/Practice.vue';
 import {
   proposalTypes,
   voteTypes,
-  TZ_WALLET_PATTERN,
+  eventMessages,
   CURRENT_RULES
 } from '../../constants/constants.js';
 
@@ -202,14 +202,6 @@ export default {
     votedThisRound: false,
     proposedThisRound: false,
   }),
-  computed: {
-    msgPatterns: function () {
-      return {
-        PROPOSAL_PATTERN: `^${TZ_WALLET_PATTERN} proposed a rule in round (\\d+)$`,
-        VOTE_PATTERN: `^${TZ_WALLET_PATTERN} successfully voted (YES|NO) in round (\\d+)$`,
-      }
-    }
-  },
   watch: {
     currentVotes: function (votes) {
       votes.forEach(castVote => {
@@ -243,11 +235,19 @@ export default {
     this.address = sessionStorage.getItem('tzAddress');
     if (this.address != null) {
       this.connected = true;
+      // Get Twilio token
+      await this.twilioAuth();
+      // Connect to chat room
+      this.connectChat();
+      // Sign login auth message for API
+      await this.doLoginMessageSigning();
+      // Start fresh or sync up with running game
       await this.gameSetup();
     }
   },
   methods: {
     gameSetup: async function () {
+      this.resetVoteTotals();
       // Get current rule set
       this.getCurrentRules();
       // Get current round number
@@ -256,12 +256,6 @@ export default {
       await this.getCurrentPlayers();
       // Get votes
       await this.getCurrentVotes();
-      // Get Twilio token
-      await this.twilioAuth();
-      // Connect to chat room
-      this.connectChat();
-      // Sign login auth message for API
-      await this.doLoginMessageSigning();
       // Get last proposed rule if applicable
       await this.getLastProposed();
       // If user's turn, prompt for rule proposal immediately
@@ -282,6 +276,13 @@ export default {
         console.log('User XTZ Address =>', this.address);
         sessionStorage.setItem('tzAddress', this.address);
         this.connected = true;
+        // Get Twilio token
+        await this.twilioAuth();
+        // Connect to chat room
+        this.connectChat();
+        // Sign login auth message for API
+        await this.doLoginMessageSigning();
+        // Start fresh or sync up with running game
         await this.gameSetup();
         let balance = await this.getBalance(this.address);
         console.log("User balance =>", balance);
@@ -482,8 +483,8 @@ export default {
       switch (message.body) {
 
         // NEW RULE PROPOSED
-        case (message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN)) || {}).input:
-          matches = message.body.match(RegExp(this.msgPatterns.PROPOSAL_PATTERN));
+        case (message.body.match(RegExp(eventMessages.RULE_PROPOSED)) || {}).input:
+          matches = message.body.match(RegExp(eventMessages.RULE_PROPOSED));
           // Parse player wallet address
           player = matches[1];
           // Parse round number for incrementing
@@ -500,8 +501,8 @@ export default {
           break;
 
         // VOTE CAST
-        case (message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN)) || {}).input:
-          matches = message.body.match(RegExp(this.msgPatterns.VOTE_PATTERN));
+        case (message.body.match(RegExp(eventMessages.VOTE_CAST)) || {}).input:
+          matches = message.body.match(RegExp(eventMessages.VOTE_CAST));
           // Parse vote (YES/NO)
           vote = matches[2];
           // Parse round number for incrementing
@@ -517,6 +518,18 @@ export default {
                 this.currentTotals.no ++;
                 break;
             }
+          }
+          break;
+
+        // ROUND CONCLUDED
+        case (message.body.match(RegExp(eventMessages.ROUND_OVER)) || {}).input:
+          matches = message.body.match(RegExp(eventMessages.ROUND_OVER));
+          // Parse round number
+          round = parseInt(matches[1]);
+
+          if (round === this.currentRound) {
+            // Re-run setup methods to sync with state of game in API
+            this.gameSetup();
           }
           break;
       }
@@ -673,9 +686,11 @@ export default {
 
           // Update round number and reset vote totals
           this.currentRound = result.data.round;
+          this.resetVoteTotals();
+
           this.currentTotals.yes = 1; // You vote YES on your own rule by default
-          this.currentTotals.no = 0;
-          this.currentTotals.abstain = 0;
+
+          // Log having already voted and proposed this round
           this.votedThisRound = true;
           this.proposedThisRound = true;
         } else {
@@ -815,6 +830,11 @@ export default {
       } else {
         console.error('Error while trying to get votes: ', result);
       }
+    },
+    resetVoteTotals: function () {
+      this.currentTotals.yes = 0;
+      this.currentTotals.no = 0;
+      this.currentTotals.abstain = 0;
     }
   }
 };
