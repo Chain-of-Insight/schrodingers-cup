@@ -2,15 +2,12 @@ package handlers
 
 import (
 	"net/http"
-	"nomsu-api/tezos"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 )
 
 type pointsList []struct {
@@ -51,7 +48,7 @@ func Leaderboard(c echo.Context) error {
 	// Return empty if no players exist in the game session
 	if len(players) == 0 {
 		// TODO: More code here
-		
+
 		return c.JSON(http.StatusOK, pointsList)
 	}
 
