@@ -38,6 +38,8 @@ func init() {
 		panic(fmt.Sprintf("error reading config file: %v\n", err))
 	}
 
+	fmt.Printf("[TEZOS] Reading gameVars from contract %s\n", viper.GetString("TZ_CONTRACT_GAME"))
+
 	// read vars from tezos contract
 	storage, _ := tezos.GetContractStorage(viper.GetString("TZ_CONTRACT_GAME"))
 	for _, element := range storage["children"].([]interface{}) {
@@ -67,6 +69,15 @@ func init() {
 			}
 		}
 	}
+
+	fmt.Println("[TEZOS] Initialized gameVars as:")
+	fmt.Printf("[TEZOS]   turnDuration = %d\n", turnDuration)
+	fmt.Printf("[TEZOS]   quorumRatio = %d\n", int(quorumRatio))
+	fmt.Printf("[TEZOS]   pointsToWin = %d\n", pointsToWin)
+	fmt.Printf("[TEZOS]   playerStartPts = %d\n", playerStartPts)
+	fmt.Printf("[TEZOS]   rulePassPts = %d\n", rulePassPts)
+	fmt.Printf("[TEZOS]   voteAgainstPts = %d\n", voteAgainstPts)
+	fmt.Printf("[TEZOS]   ruleFailedPenalty = %d\n", ruleFailedPenalty)
 }
 
 const DELETE = "delete"
@@ -765,6 +776,15 @@ func processRound(round int) (bool, string) {
 		// gameWindowStartUTC := ruleSet[6]
 		turnDuration = ruleSet[7]
 		quorumRatio = float64(ruleSet[8])
+
+		// Update vars in Tezos contract
+		fmt.Println("[TEZOS] Updating gameVars in contract", viper.GetString("TZ_CONTRACT_GAME"))
+		op, err := tezos.UpdateGameVars(viper.GetString("TZ_CONTRACT_GAME"), turnDuration, quorumRatio, pointsToWin, playerStartPts, rulePassPts, voteAgainstPts, ruleFailedPenalty)
+		if err != nil {
+			fmt.Println("[TEZOS] ERR:", err)
+		} else {
+			fmt.Println("[TEZOS] Operation Hash:", op)
+		}
 	}
 
 	// 5 a) (players loop) Apply point changes to each user (as necessary)

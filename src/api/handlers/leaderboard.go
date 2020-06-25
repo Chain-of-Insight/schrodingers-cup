@@ -12,7 +12,7 @@ import (
 
 type pointsList []struct {
 	Player string `json:"player"`
-	Points int `json:"points"`
+	Points int    `json:"points"`
 }
 
 // @description Leaderboard
@@ -26,8 +26,6 @@ func Leaderboard(c echo.Context) error {
 		return err
 	}
 	defer conn.Close()
-
-	playerStartPts := 10 // TODO: placeholder, for now
 
 	currentDay := time.Now().Format("2006-01-02")
 	playersListKey := "players:" + currentDay
@@ -49,6 +47,8 @@ func Leaderboard(c echo.Context) error {
 
 	// Return empty if no players exist in the game session
 	if len(players) == 0 {
+		// TODO: More code here
+
 		return c.JSON(http.StatusOK, pointsList)
 	}
 
