@@ -62,10 +62,10 @@ func main() {
 	e.GET("/rules/list", handlers.ListRules)
 	e.POST("/test", handlers.TestNomsu)
 	e.POST("/auth", handlers.Auth)
+	e.GET("/game/vars", handlers.GetVars)
 	// Wildcard routes
 	e.GET("/proposal/:round", handlers.Proposal)
 	e.GET("/votes/:round", handlers.GetVotes)
-	e.GET("/game/vars", handlers.GetVars)
 
 	// Game requires auth
 	g := e.Group("/game")

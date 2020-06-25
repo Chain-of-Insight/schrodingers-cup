@@ -179,7 +179,7 @@ var doc = `{
                     "200": {
                         "description": "List of players sorted by points",
                         "schema": {
-                            "$ref": "#/definitions/handlers.pointsList"
+                            "$ref": "#/definitions/handlers.PointsList"
                         }
                     }
                 }
@@ -329,6 +329,23 @@ var doc = `{
                         "type": "string"
                     }
                 }
+            }
+        },
+        "handlers.PointsItem": {
+            "type": "object",
+            "properties": {
+                "player": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.PointsList": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/handlers.PointsItem"
             }
         },
         "handlers.ProposalObject": {
@@ -494,20 +511,6 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/handlers.VoteObject"
-                    }
-                }
-            }
-        },
-        "handlers.pointsList": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "player": {
-                        "type": "string"
-                    },
-                    "points": {
-                        "type": "integer"
                     }
                 }
             }

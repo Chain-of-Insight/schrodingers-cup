@@ -18,7 +18,7 @@ type PointsItem struct {
 type PointsList []PointsItem
 
 // @description Leaderboard
-// @success 200 {object} pointsList "List of players sorted by points"
+// @success 200 {object} PointsList "List of players sorted by points"
 // @router /leaderboard [get]
 // @produce json
 func Leaderboard(c echo.Context) error {
