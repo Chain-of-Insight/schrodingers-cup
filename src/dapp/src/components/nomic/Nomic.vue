@@ -44,6 +44,14 @@
           ></Voting>
         </section>
 
+        <section>
+          <div class="w-100 py-3 mb-3 border-bottom border-top border-dark">
+            <!-- <p class="h5 mt-3">Testing:</p> -->
+            <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true /* <-- for testing */)">Propose Rule</button>
+            <button type="button" class="btn btn-outline-primary" @click="getLastProposed(true /* <-- for testing */)">Vote</button>
+          </div>
+        </section>
+
         <!-- Player Chat -->
         <section>
           <div class="container-fluid p-0">
@@ -60,6 +68,7 @@
                 </ul>
               </div>
               <div class="col-8">
+                <h6 class="font-weight-bold">Chat:</h6>
                 <div ref="chatWindow" id="messages" class="message-container">
                   <!-- Chat Messages -->
                   <p
@@ -92,26 +101,15 @@
                   </div>
                 </div>
 
-                <!-- Send test chat messages with fake API wallet address -->
-                <p class="h5 mt-3">Testing:</p>
-                <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
               </div>
             </div>
           </div>
         </section>
 
         <!-- IDE -->
-        <div class="editor-toggle">
+        <div class="editor-toggle w-100 py-1 my-3 border-bottom border-top border-dark">
           <!-- IDE Shown -->
           <button class="btn btn-inverse toggle-rules-editor" @click="toggleEditor()">{{ showEditor ? "Hide Rules Editor" : "Show Rules Editor" }}</button>
-          
-          <!-- For testing: -->
-          <div class="btn-group" role="group" aria-label="">
-            <!-- Test Voting -->
-            <button type="button" class="btn btn-outline-primary" @click="getLastProposed(true)">
-              Test Voting
-            </button>
-          </div>
         </div>
         <RuleProposal
           ref="proposal"
