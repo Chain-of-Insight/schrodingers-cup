@@ -2,6 +2,7 @@
   <div class="container-fluid p-0 h-100">
     <div class="row h-100">
       <div class="col">
+        <p class="lead font-weight-bold">Choose the current rule you're proposing to change:</p>
         <Practice
           :rule-proposal="true"
           :current-only="true"
@@ -18,18 +19,10 @@
 import RuleSetList from '../ide/RuleSetList.vue';
 import Practice from '../practice/Practice.vue';
 
-const proposalTypes = {
-  CREATE: 'create',
-  UPDATE: 'update',
-  TRANSMUTE: 'transmute',
-  DELETE: 'delete',
-}
-
-const ruleSetTypes = {
-  SAVED: 'SAVED',
-  CURRENT: 'CURRENT',
-  QUEUED: 'QUEUED'
-}
+import {
+  proposalTypes,
+  ruleSetTypes
+} from '../../constants/constants.js';
 
 export default {
   components: {
@@ -52,11 +45,14 @@ export default {
       await this.$refs.ide.testRuleSet();
     },
     selectCurrentRule: function (index, ruleSetType) {
-      if (ruleSetType !== ruleSetTypes.CURRENT) {
+      if (
+        ruleSetType !== ruleSetTypes.IMMUTABLE &&
+        ruleSetType !== ruleSetTypes.MUTABLE
+      ) {
         return false;
       }
 
-      this.$emit('current-selected', index);
+      this.$emit('current-selected', index, ruleSetType);
     }
   }
 }

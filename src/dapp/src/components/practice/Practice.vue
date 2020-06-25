@@ -35,6 +35,7 @@
 
       <!-- Connected -->
       <template v-else>
+        <p v-if="ruleProposal && !currentOnly" class="lead font-weight-bold">Choose from your queued rules:</p>
         <div class="row flex-shrink-1 flex-grow-1 overflow-hidden">
 
           <!-- Rule Lists -->
@@ -48,7 +49,7 @@
             <div class="row">
               <div class="col">
                 <label>
-                  <strong>Rules:</strong>
+                  <strong>{{ currentOnly ? 'Current Rules:' : 'Rules:' }}</strong>
                 </label>
               </div>
             </div>
@@ -56,11 +57,11 @@
               <div class="col mh-100">
                 <RuleSetList
                   :loaded-rule="selectedRule"
-                  :current-rules="ruleSetLists.current"
-                  :saved-rules="ruleSetLists.saved"
+                  :current-rules="currentRules"
+                  :saved-rules="savedRules"
                   :un-queued-rules="unQueuedRules"
                   :queued-rules="queuedRules"
-                  v-on:select-rule="selectRule"
+                  v-on:rule-selected="selectRule"
                   v-on:queue-rule="queueRule"
                   v-on:unqueue-rule="unQueueRule"
                   :queued-only="queuedOnly"
@@ -239,7 +240,7 @@ import {
 } from '../../services/tezProvider';
 
 // API
-import { testNomic } from '../../services/apiProvider';
+import * as api from '../../services/apiProvider';
 
 // Child components
 import Notification from '../common/Notifications.vue';
@@ -304,18 +305,14 @@ export default {
         msg: null
       },
       ruleSetTypes: ruleSetTypes,
-      ruleSetLists: {
-        current: [],
-        saved: [],
+      currentRules: {
+        immutable: [],
+        mutable: []
       },
+      savedRules: [],
       ide: {
         input: '',
         output: null,
-        ruleSetPane: ruleSetTypes.CURRENT,
-        savedRuleSets: {
-          player: [],
-          nomic: []
-        },
         ruleSetName: '',
         nameError: false,
         options: {
@@ -331,11 +328,11 @@ export default {
         state: {
           loading: false
         },
-        execute: testNomic
+        execute: api.testNomic
       },
       compilerError: false,
       selectedRule: {
-        type: ruleSetTypes.CURRENT,
+        type: ruleSetTypes.IMMUTABLE,
         index: 0
       }
     }
@@ -349,19 +346,26 @@ export default {
       this.address = returningUser;
     }
     // Get list of saved ruleset names from localStorage
-    this.getSavedRuleSets();
-    this.getCurrentRuleSets();
+    await this.getSavedRules();
+    await this.getCurrentRules();
+
+    // Auto-select Rule 0
+    if (!this.queuedOnly) {
+      this.$nextTick(() => {
+        this.selectRule(0, ruleSetTypes.IMMUTABLE);
+      })
+    }
   },
   computed: {
     unQueuedRules: function () {
-      const ruleSetEntries = Array.from(this.ruleSetLists.saved.entries());
+      const ruleSetEntries = Array.from(this.savedRules.entries());
       return ruleSetEntries
         .filter(([index, ruleSet]) => !ruleSet.hasOwnProperty('queued'))
         .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
         .map(([index, ruleSet]) => index);
     },
     queuedRules: function () {
-      const ruleSetEntries = Array.from(this.ruleSetLists.saved.entries());
+      const ruleSetEntries = Array.from(this.savedRules.entries());
       return ruleSetEntries
         .filter(([index, ruleSet]) => ruleSet.hasOwnProperty('queued'))
         .sort(([indexA, ruleSetA], [indexB, ruleSetB]) => ruleSetA.queued - ruleSetB.queued)
@@ -442,15 +446,42 @@ export default {
         this.ide.output = "Warning: compilation passed but compiler output was empty 😅";
       }
     },
-    getCurrentRuleSets: async function () {
-      this.ruleSetLists.current = CURRENT_RULES;
+    getCurrentRules: async function () {
+      let result = null;
+      try {
+        result = await api.getRules();
+      } catch (error) {
+        console.error('Error while trying to get rules:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
+      }
+
+      if (result.status && result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        // console.log('Rules =====>', result);
+        if (result.data.Immutable instanceof Array) {
+          this.currentRules.immutable = result.data.Immutable;
+        }
+        if (result.data.Mutable instanceof Array) {
+          this.currentRules.mutable = result.data.Mutable;
+        }
+      } else {
+        console.error('Error while trying to get rules: ', result);
+      }
     },
-    getSavedRuleSets: async function (index = false) {
+    getSavedRules: async function (index = false) {
       // Load rule sets if exists
       let storedRuleSets = await localStorage.getItem('ruleSets');
       if (storedRuleSets) {
         storedRuleSets = await JSON.parse(storedRuleSets);
-        this.ruleSetLists.saved = storedRuleSets;
+        this.savedRules = storedRuleSets;
       }
     },
     saveRuleSetHandler: function () {
@@ -459,7 +490,8 @@ export default {
         case ruleSetTypes.SAVED:
           this.saveRuleSet(this.selectedRule.index);
           break;
-        case ruleSetTypes.CURRENT:
+        case ruleSetTypes.IMMUTABLE:
+        case ruleSetTypes.MUTABLE:
         case typeof(this.selectedRule.index) !== 'number':
         default:
           $('#save-modal').modal('show');
@@ -514,9 +546,9 @@ export default {
 
       // Update rule sets
       if (index === null) {
-        if (this.ruleSetLists.saved) {
-          if (this.ruleSetLists.saved.length) {
-            index = this.ruleSetLists.saved.length;
+        if (this.savedRules) {
+          if (this.savedRules.length) {
+            index = this.savedRules.length;
           } else {
             index = 0;
           }
@@ -525,9 +557,8 @@ export default {
         }
       }
 
-      await this.getSavedRuleSets();
+      await this.getSavedRules();
       this.selectRule(index, ruleSetTypes.SAVED);
-      this.ide.ruleSetPane = ruleSetTypes.SAVED;
 
       // Reset app state
       this.alert.type = 'success';
@@ -547,14 +578,18 @@ export default {
       let ruleSetList = null;
 
       switch (ruleType) {
-        case ruleSetTypes.CURRENT:
-          ruleSetList = this.ruleSetLists.current;
+        case ruleSetTypes.IMMUTABLE:
+          ruleSetList = this.currentRules.immutable;
           break;
-        case ruleSetTypes.SAVED || ruleSetTypes.QUEUED:
-          ruleSetList = this.ruleSetLists.saved;
+        case ruleSetTypes.MUTABLE:
+          ruleSetList = this.currentRules.mutable;
+          break;
+        case ruleSetTypes.SAVED:
+        case ruleSetTypes.QUEUED:
+          ruleSetList = this.savedRules;
           break;
         default:
-          ruleSetList = this.ruleSetLists.current;
+          ruleSetList = this.currentRules.immutable;
           break;
       }
 
@@ -592,15 +627,15 @@ export default {
     },
     updateRuleSets: async function (index, data) {
       // Update rule sets in localStorage and refresh
-      await localStorage.setItem('ruleSets', JSON.stringify(this.ruleSetLists.saved));
-      await this.getSavedRuleSets();
+      await localStorage.setItem('ruleSets', JSON.stringify(this.savedRules));
+      await this.getSavedRules();
     },
     queueRule: async function (savedIndex) {
       // console.log('Queueing rule!', this.selectedRule);
       // const savedIndex = this.selectedRule.index
       if (typeof(savedIndex) !== 'number')
         return false;
-      const rule = this.ruleSetLists.saved[savedIndex];
+      const rule = this.savedRules[savedIndex];
 
       rule.queued = this.queuedRules.length + 1;
       await this.updateRuleSets();
@@ -616,14 +651,14 @@ export default {
       // const savedIndex = this.queuedRules[queuedIndex];
       if (typeof(savedIndex) !== 'number')
         return false;
-      const rule = this.ruleSetLists.saved[savedIndex];
+      const rule = this.savedRules[savedIndex];
       
       // Remove queued order/flag
       delete rule.queued;
       // Shift other queued rule sets' orders
       const toBeShifted = this.queuedRules.slice(queuedIndex + 1);
       toBeShifted.forEach(savedIndex => {
-        this.ruleSetLists.saved[savedIndex].queued -= 1;
+        this.savedRules[savedIndex].queued -= 1;
       });
       await this.updateRuleSets();
 

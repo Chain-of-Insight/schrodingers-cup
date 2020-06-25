@@ -786,9 +786,8 @@ func processRound(round int) (bool, string) {
 		points int    `redis:"points"`
 	}
 
-	// Parse points
-	// Proposing player
-	// Handle points if rule passed
+	// Parse points - Proposing player
+	// Handle points if rule passed / failed
 	pKey := proposingPlayer + ":points:" + currentDay
 	points, err := redis.Int(conn.Do("GET", pKey))
 	if err != nil {
@@ -860,11 +859,13 @@ func processRound(round int) (bool, string) {
 		if !m2 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + aChallengerApproaches
 		}
-		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-		luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
-		m3 := releaseNotification(luckyOnesMsg)
-		if !m3 {
-			return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
+		if len(votedAgainstPlayers) > 0 {
+			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
+			luckyOnesMsg := thePeanutGallery + " each gain " + strconv.Itoa(voteAgainstPts) + " points for challenging the mentality of the herd"
+			m3 := releaseNotification(luckyOnesMsg)
+			if !m3 {
+				return true, "Round concluded successfully but encountered an error updating chat with message : " + luckyOnesMsg
+			}
 		}
 	} else {
 		bm := proposingPlayer + "'s rule was deemed useless by a jury of their peers in round " + strconv.Itoa(round)
@@ -877,11 +878,13 @@ func processRound(round int) (bool, string) {
 		if !m1 {
 			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm2
 		}
-		thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
-		bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
-		m2 := releaseNotification(bm3)
-		if !m2 {
-			return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
+		if len(votedAgainstPlayers) > 0 {
+			thePeanutGallery := strings.Join(votedAgainstPlayers, ", ")
+			bm3 := thePeanutGallery + " each snicker and stomp their feet in delight"
+			m2 := releaseNotification(bm3)
+			if !m2 {
+				return true, "Round concluded successfully but encountered an error updating chat with message : " + bm3
+			}
 		}
 	}
 

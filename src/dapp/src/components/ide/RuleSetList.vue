@@ -1,7 +1,7 @@
 <template>
   <!-- IDE Saved Rule Sets -->
   <div id="ide-saved" class="ide-pane h-100 d-flex flex-column">
-    <nav class="nav nav-tabs">
+    <nav v-if="!currentOnly" class="nav nav-tabs">
       <a
         class="nav-link active"
         id="nav-current-tab"
@@ -28,7 +28,10 @@
         v-if="!currentOnly"
       >Queued</a>
     </nav>
-    <div class="tab-content border rounded-bottom border-top-0 flex-grow-1 flex-shrink-1 overflow-auto">
+    <div
+      class="tab-content border rounded-bottom flex-grow-1 flex-shrink-1 overflow-auto"
+      :class="{ 'border-top-0': !currentOnly }"
+    >
       <!-- CURRENT RULES -->
       <div
         id="rules-current"
@@ -36,26 +39,80 @@
         role="tab-panel"
         v-if="!queuedOnly"
       >
-        <p
-          class="list-group-item border-0 text-muted"
-          v-if="currentRules.length === 0"
-        >No current rule sets loaded...</p>
-        <a
-          class="ruleset btn btn-outline-success list-group-item list-group-item-action"
-          role="button"
-          tabindex="0"
-          v-bind:class="{
-            'active':
-              loadedRule.type === ruleSetTypes.CURRENT &&
-              loadedRule.index === index
-          }"
-          v-bind:key="index"
-          v-for="(ruleSet, index) in currentRules"
-          v-on:click="selectRule(index, ruleSetTypes.CURRENT)"
-          style="cursor:pointer;"
-        >
-          <span>{{index + 1}}. {{ ruleSet.name }}</span>
-        </a>
+        <nav class="nav nav-pills p-2">
+          <a
+            class="nav-link active"
+            id="nav-immutable-tab"
+            data-toggle="tab"
+            href="#rules-immutable"
+            role="tab"
+          >Immutable</a>
+          <a
+            class="nav-link"
+            id="nav-mutable-tab"
+            data-toggle="tab"
+            href="#rules-mutable"
+            role="tab"
+          >Mutable</a>
+        </nav>
+        <div class="tab-content flex-grow-1 flex-shrink-1 overflow-auto">
+          <!-- IMMUTABLE RULES -->
+          <div
+            id="rules-immutable"
+            class="list-group list-group-flush tab-pane fade active show"
+            role="tab-panel"
+            v-if="!queuedOnly"
+          >
+            <p
+              class="list-group-item border-0 text-muted"
+              v-if="currentRules.immutable.length === 0"
+            >No immutable rules loaded...</p>
+            <a
+              class="ruleset btn btn-outline-primary list-group-item list-group-item-action"
+              role="button"
+              tabindex="0"
+              v-bind:class="{
+                'active':
+                  loadedRule.type === ruleSetTypes.IMMUTABLE &&
+                  loadedRule.index === index
+              }"
+              v-bind:key="index"
+              v-for="(ruleSet, index) in currentRules.immutable"
+              v-on:click="selectRule(index, ruleSetTypes.IMMUTABLE)"
+              style="cursor:pointer;"
+            >
+              <span class="font-weight-bold">Rule {{ index }}</span>
+            </a>
+          </div>
+          <!-- MUTABLE RULES -->
+          <div
+            id="rules-mutable"
+            class="list-group list-group-flush tab-pane fade"
+            role="tab-panel"
+            v-if="!queuedOnly"
+          >
+            <p
+              class="list-group-item border-0 text-muted"
+              v-if="currentRules.mutable.length === 0"
+            >No mutable rules loaded...</p>
+            <a
+              class="ruleset btn btn-outline-primary list-group-item list-group-item-action"
+              role="button"
+              tabindex="0"
+              v-bind:class="{
+                'active':
+                  loadedRule.type === ruleSetTypes.MUTABLE &&
+                  loadedRule.index === index
+              }"
+              v-bind:key="index"
+              v-for="(ruleSet, index) in currentRules.mutable"
+              v-on:click="selectRule(index, ruleSetTypes.MUTABLE)"
+              style="cursor:pointer;"
+            >
+              <span class="font-weight-bold">Rule {{ index }}</span>
+            </a>
+          </div>
+        </div>
       </div>
       <!-- PLAYER-SAVED RULES -->
       <div
@@ -67,13 +124,13 @@
         <p
           class="list-group-item border-0 text-muted"
           v-if="savedRules.length === 0"
-        >No saved rule sets...</p>
+        >No saved rules...</p>
         <p
           class="list-group-item border-0 text-muted"
           v-if="queuedRules.length > 0 && unQueuedRules.length === 0"
-        >All of your saved rule sets are queued!</p>
+        >All of your saved rules are queued!</p>
         <a
-          class="ruleset btn btn-outline-success list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          class="ruleset btn btn-outline-primary list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           role="button"
           tabindex="0"
           v-bind:class="{
@@ -107,9 +164,9 @@
         <p
           class="list-group-item border-0 text-muted"
           v-if="queuedRules.length === 0"
-        >No queued rule sets...</p>
+        >No queued rules...</p>
         <a
-          class="ruleset btn btn-outline-success list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          class="ruleset btn btn-outline-primary list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           role="button"
           tabindex="0"
           v-bind:class="{
@@ -133,73 +190,82 @@
       </div>
     </div>
   </div>
+
+  <!-- Immutable and Mutable rules only -->
 </template>
 
 <script>
-  const ruleSetTypes = {
-    SAVED: 'SAVED',
-    CURRENT: 'CURRENT',
-    QUEUED: 'QUEUED'
-  }
+import { ruleSetTypes, ruleTypes } from '../../constants/constants.js';
 
-  export default {
-    props: {
-      loadedRule: {
-        type: Object,
-        default: () => ({
-          type: 0,
-          index: ruleSetTypes.CURRENT
-        })
-      },
-      currentRules: {
-        type: Array,
-        default: () => []
-      },
-      savedRules: {
-        type: Array,
-        default: () => []
-      },
-      unQueuedRules: {
-        type: Array,
-        default: () => []
-      },
-      queuedRules: {
-        type: Array,
-        default: () => []
-      },
-      queuedOnly: {
-        type: Boolean,
-        default: false
-      },
-      currentOnly: {
-        type: Boolean,
-        default: false
-      }
+export default {
+  props: {
+    loadedRule: {
+      type: Object,
+      default: () => ({
+        index: 0,
+        type: ruleSetTypes.IMMUTABLE
+      })
     },
-    data: function () {
-      return {
-        ruleSetTypes: ruleSetTypes
-      }
+    currentRules: {
+      type: Object,
+      default: () => ({
+        immutable: [],
+        mutable: []
+      })
     },
-    methods: {
-      selectRule: function (savedIndex, ruleType) {
-        if (
-          typeof(savedIndex) !== 'number' ||
-          !Object.values(ruleSetTypes).includes(ruleType)
-        ) {
-          return false;
-        }
+    savedRules: {
+      type: Array,
+      default: () => []
+    },
+    unQueuedRules: {
+      type: Array,
+      default: () => []
+    },
+    queuedRules: {
+      type: Array,
+      default: () => []
+    },
+    queuedOnly: {
+      type: Boolean,
+      default: false
+    },
+    currentOnly: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data: function () {
+    return {
+      ruleSetTypes: ruleSetTypes
+    }
+  },
+  mounted: function () {
+    // Auto-select Rule 0
+    if (!this.queuedOnly) {
+      this.$nextTick(() => {
+        this.selectRule(0, ruleSetTypes.IMMUTABLE);
+      })
+    }
+  },
+  methods: {
+    selectRule: function (savedIndex, ruleType) {
+      if (
+        typeof(savedIndex) !== 'number' ||
+        !Object.values(ruleSetTypes).includes(ruleType)
+      ) {
+        return false;
+      }
 
-        this.$emit('select-rule', savedIndex, ruleType);
-      },
-      queueRule: async function (savedIndex) {
-        this.$emit('queue-rule', savedIndex);
-      },
-      unQueueRule: async function (savedIndex, queuedIndex) {
-        this.$emit('unqueue-rule', savedIndex, queuedIndex);
-      }
+      this.$emit('rule-selected', savedIndex, ruleType);
+    },
+    queueRule: async function (savedIndex) {
+      this.$emit('queue-rule', savedIndex);
+    },
+    unQueueRule: async function (savedIndex, queuedIndex) {
+      this.$emit('unqueue-rule', savedIndex, queuedIndex);
     }
   }
+}
 </script>
 
 <style scoped>
