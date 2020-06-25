@@ -36,7 +36,7 @@
 
         <section>
           <Voting
-            v-if="chatChannelJoined && votingCandidate"
+            v-if="votingCandidate"
             v-bind:turn-window="gameVars.turnDuration"
             v-on:vote-cast="onVoteCast"
             ref="voting"
@@ -533,6 +533,7 @@ export default {
           round = parseInt(matches[2]);
 
           // Update round number
+          this.currentRound ++;
           await this.getCurrentRound();
           // Increment YES vote once for the player who proposed
           if (player !== this.address && round === this.currentRound) {
@@ -570,6 +571,8 @@ export default {
           round = parseInt(matches[1]);
 
           if (round === this.currentRound) {
+            // Increment to next round
+            this.currentRound ++;
             // Re-run setup methods to sync with state of game in API
             this.gameSetup();
           }
@@ -682,10 +685,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     ruleProposalHandler: function (testing) {
-      if (this.proposedThisRound && !testing) {
-        console.log('You already proposed this round! Skipping proposal prompt...');
-        return;
-      }
+      // if (this.proposedThisRound && !testing) {
+      //   console.log('You already proposed this round! Skipping proposal prompt...');
+      //   return;
+      // }
 
       if (!this.jwtToken) {
         this.alert.type = 'danger';
@@ -835,9 +838,9 @@ export default {
         
         // Make sure the response data has the important stuff...
         if (
-          !proposedRule.code ||
           !proposedRule.author ||
           !proposedRule.proposal ||
+          (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
           typeof proposedRule.index !== 'number'
         )
           return;
