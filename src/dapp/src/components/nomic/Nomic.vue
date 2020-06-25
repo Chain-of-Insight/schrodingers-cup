@@ -570,12 +570,9 @@ export default {
           // Parse round number
           round = parseInt(matches[1]);
 
-          if (round === this.currentRound) {
-            // Increment to next round
-            this.currentRound ++;
-            // Re-run setup methods to sync with state of game in API
-            this.gameSetup();
-          }
+          // Increment to next round
+          this.currentRound ++;
+          this.gameSetup();
           break;
       }
 
@@ -685,10 +682,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     ruleProposalHandler: function (testing) {
-      // if (this.proposedThisRound && !testing) {
-      //   console.log('You already proposed this round! Skipping proposal prompt...');
-      //   return;
-      // }
+      if (this.proposedThisRound && !testing) {
+        console.log('You already proposed this round! Skipping proposal prompt...');
+        return;
+      }
 
       if (!this.jwtToken) {
         this.alert.type = 'danger';
@@ -837,18 +834,22 @@ export default {
         const proposedRule = result.data;
         
         // Make sure the response data has the important stuff...
-        if (
-          // !proposedRule.author ||
-          // !proposedRule.proposal ||
-          // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
-          typeof proposedRule.index !== 'number'
-        )
-          return;
+        // if (
+        //   // !proposedRule.author ||
+        //   // !proposedRule.proposal ||
+        //   // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
+        //   typeof proposedRule.index !== 'number' ||
+        //   // !proposedRule.type ||
+        //   // proposedRule.type !== 'mutable' ||
+        //   // proposedRule.type !== 'immutable'
+        //   typeof proposedRule.type !== 'string'
+        // )
+        //   return;
 
-        if (proposedRule.proposal !== proposalTypes.CREATE) {
-          // Store current rule code for voting display
-          proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
-        }
+        // if (proposedRule.proposal !== proposalTypes.CREATE) {
+        //   // Store current rule code for voting display
+        //   proposedRule.original = this.currentRules[proposedRule.kind][proposedRule.index].code;
+        // }
         // Store proposed rule for voting (triggers showing of voting 'ribbon')
         this.votingCandidate = proposedRule;
       } else {
