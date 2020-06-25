@@ -10,8 +10,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type pointsList []struct {
+	Player string `json:"player"`
+	Points int `json:"points"`
+}
+
 // @description Leaderboard
-// @success 200 {object} PlayerList "List of players sorted by points"
+// @success 200 {object} pointsList "List of players sorted by points"
 // @router /leaderboard [get]
 // @produce json
 func Leaderboard(c echo.Context) error {

@@ -57,6 +57,7 @@ func main() {
 	e.GET("/players", handlers.Players)
 	e.GET("/round", handlers.Round)
 	e.GET("/leaderboard", handlers.Leaderboard)
+	e.GET("/rules/list", handlers.ListRules)
 	e.POST("/test", handlers.TestNomsu)
 	e.POST("/auth", handlers.Auth)
 	// Wildcard routes
