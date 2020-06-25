@@ -914,6 +914,24 @@ func processRound(round int) (bool, string) {
 		}
 	}
 
+	// Update player points in tezos contract
+	fmt.Println("[TEZOS] Updating gameScore in contract", viper.GetString("TZ_CONTRACT_GAME"))
+	pointsList, err := getPlayerPoints()
+	if err != nil {
+		fmt.Println("[TEZOS] ERR:", err)
+	} else {
+		var pointsMap map[string]int
+		for _, p := range *pointsList {
+			pointsMap[p.Player] = p.Points
+		}
+		op, err := tezos.UpdateGameScore(viper.GetString("TZ_CONTRACT_GAME"), pointsMap)
+		if err != nil {
+			fmt.Println("[TEZOS] ERR:", err)
+		} else {
+			fmt.Println("[TEZOS] Operation Hash:", op)
+		}
+	}
+
 	// Update round storage (Redis)
 	round = round + 1
 	if _, err := conn.Do("SET", roundCounterKey, round); err != nil {
