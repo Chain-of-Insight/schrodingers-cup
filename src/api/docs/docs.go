@@ -111,6 +111,22 @@ var doc = `{
                 }
             }
         },
+        "/game/vars": {
+            "get": {
+                "description": "Get game vars",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VarsResult"
+                        }
+                    }
+                }
+            }
+        },
         "/game/vote": {
             "post": {
                 "description": "Receive and tabulate votes, stage vote outcome to be processed when game window is settled",
@@ -428,6 +444,32 @@ var doc = `{
                 },
                 "resultHtml": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.VarsResult": {
+            "type": "object",
+            "properties": {
+                "playerStartPts": {
+                    "type": "integer"
+                },
+                "pointsToWin": {
+                    "type": "integer"
+                },
+                "quorumRatio": {
+                    "type": "number"
+                },
+                "ruleFailedPenalty": {
+                    "type": "integer"
+                },
+                "rulePassPts": {
+                    "type": "integer"
+                },
+                "turnDuration": {
+                    "type": "integer"
+                },
+                "voteAgainstPts": {
+                    "type": "integer"
                 }
             }
         },

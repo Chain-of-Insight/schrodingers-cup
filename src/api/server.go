@@ -14,11 +14,7 @@ import (
 	"nomsu-api/handlers"
 )
 
-// @title Schrodinger's Cup API
-// @version 1.0
-// @description A game of Peter Suber's Nomic running on the Tezos network.
-// @BasePath /
-func main() {
+func init() {
 	// config
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
@@ -31,7 +27,13 @@ func main() {
 	viper.SetDefault("NOMSU", "nomsu")
 	viper.SetDefault("JWT_SECRET", "secret")
 	viper.SetDefault("PRODUCTION", "0")
+}
 
+// @title Schrodinger's Cup API
+// @version 1.0
+// @description A game of Peter Suber's Nomic running on the Tezos network.
+// @BasePath /
+func main() {
 	e := echo.New()
 
 	// TLS
@@ -63,6 +65,7 @@ func main() {
 	// Wildcard routes
 	e.GET("/proposal/:round", handlers.Proposal)
 	e.GET("/votes/:round", handlers.GetVotes)
+	e.GET("/game/vars", handlers.GetVars)
 
 	// Game requires auth
 	g := e.Group("/game")

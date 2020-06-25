@@ -1,29 +1,73 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
-	"nomsu-api/nomsu"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"math"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gomodule/redigo/redis"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+
+	"nomsu-api/nomsu"
+	"nomsu-api/tezos"
 )
 
-// XXX TODO: Set all these vars from Tezos
-var turnDuration int = 300
-var quorumRatio float64 = 100
-var pointsToWin int = 100
-var playerStartPts int = 0
-var rulePassPts int = 10
-var voteAgainstPts int = 10
-var ruleFailedPenalty int = 10
+// global game vars
+var (
+	turnDuration      int     = 0
+	quorumRatio       float64 = 0
+	pointsToWin       int     = 0
+	playerStartPts    int     = 0
+	rulePassPts       int     = 0
+	voteAgainstPts    int     = 0
+	ruleFailedPenalty int     = 0
+)
+
+func init() {
+	// config
+	viper.SetConfigFile(".env")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Sprintf("error reading config file: %v\n", err))
+	}
+
+	// read vars from tezos contract
+	storage, _ := tezos.GetContractStorage(viper.GetString("TZ_CONTRACT_GAME"))
+	for _, element := range storage["children"].([]interface{}) {
+		if el, ok := element.(map[string]interface{}); ok {
+			if el["name"].(string) == "gameVars" {
+				for _, childelement := range el["children"].([]interface{}) {
+					if childel, ok := childelement.(map[string]interface{}); ok {
+						switch childel["name"].(string) {
+						case "turnWindowDuration":
+							turnDuration, _ = strconv.Atoi(childel["value"].(string))
+						case "voteRatioRequired":
+							qr, _ := strconv.Atoi(childel["value"].(string))
+							quorumRatio = float64(qr)
+						case "winPoints":
+							pointsToWin, _ = strconv.Atoi(childel["value"].(string))
+						case "startPoints":
+							playerStartPts, _ = strconv.Atoi(childel["value"].(string))
+						case "rulePassPoints":
+							rulePassPts, _ = strconv.Atoi(childel["value"].(string))
+						case "voteAgainstPoints":
+							voteAgainstPts, _ = strconv.Atoi(childel["value"].(string))
+						case "ruleFailedPenalty":
+							ruleFailedPenalty, _ = strconv.Atoi(childel["value"].(string))
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 const DELETE = "delete"
 const CREATE = "create"
@@ -53,6 +97,33 @@ type VoteResult struct {
 type Vote struct {
 	Vote  bool `json:"vote"`
 	Round int  `json:"round"`
+}
+
+type VarsResult struct {
+	TurnDuration      int     `json:"turnDuration"`
+	QuorumRatio       float64 `json:"quorumRatio"`
+	PointsToWin       int     `json:"pointsToWin"`
+	PlayerStartPts    int     `json:"playerStartPts"`
+	RulePassPts       int     `json:"rulePassPts"`
+	VoteAgainstPts    int     `json:"voteAgainstPts"`
+	RuleFailedPenalty int     `json:"ruleFailedPenalty"`
+}
+
+// @description Get game vars
+// @router /game/vars [get]
+// @success 200 {object} VarsResult ""
+// @produce json
+func GetVars(c echo.Context) error {
+	r := &VarsResult{
+		TurnDuration:      turnDuration,
+		QuorumRatio:       quorumRatio,
+		PointsToWin:       pointsToWin,
+		PlayerStartPts:    playerStartPts,
+		RulePassPts:       rulePassPts,
+		VoteAgainstPts:    voteAgainstPts,
+		RuleFailedPenalty: ruleFailedPenalty,
+	}
+	return c.JSON(http.StatusOK, r)
 }
 
 // @description Submit a new rule proposal
@@ -363,7 +434,6 @@ func CastVote(c echo.Context) error {
 // 	return c.String(http.StatusOK, "todo settle game")
 // }
 
-
 // Helper functions
 
 // Store a rule proposal
@@ -561,7 +631,7 @@ func processRound(round int) (bool, string) {
 	proposingPlayer := proposal.author
 
 	// 0) Determine if the vote was voted in or voted down by the quorum
-	
+
 	// Determine if passing / failing proposal
 	voteKey := "votes:" + currentDay + ":" + strconv.Itoa(round)
 	votes, err := redis.Strings(conn.Do("LRANGE", voteKey, 0, -1))
@@ -569,9 +639,9 @@ func processRound(round int) (bool, string) {
 		return false, "Error retrieving votes from db with LRANGE for key " + voteKey
 	}
 
-	var votedYes int = 0;
-	var votedNo int = 0;
-	var votedAgainstPlayers []string;
+	var votedYes int = 0
+	var votedNo int = 0
+	var votedAgainstPlayers []string
 	for _, s := range votes {
 		split := strings.Split(s, " ")
 		address := split[0]
@@ -596,7 +666,7 @@ func processRound(round int) (bool, string) {
 
 	totalPlayers := len(players)
 
-	var rulePassed bool;
+	var rulePassed bool
 	qMulter := quorumRatio * 0.01
 	playersThreshold := float64(totalPlayers) * qMulter
 	playersThreshold_i := int(math.Round(playersThreshold))
@@ -609,7 +679,7 @@ func processRound(round int) (bool, string) {
 	}
 
 	// 1) Call your file system functions to change the target rule (see: proposal)
-	
+
 	if rulePassed {
 		switch proposal.proposal {
 		case UPDATE:
@@ -633,7 +703,7 @@ func processRound(round int) (bool, string) {
 				return false, "Error performing nomsu TRANSMUTE with proposal.ruleindex " + strconv.Itoa(proposal.ruleindex) + " for proposal.ruletype " + proposal.ruletype
 			}
 		}
-		
+
 		// 2) (rules loop) Run updated ruleset using master.nom
 		output, err := nomsu.RunMaster()
 		if err != nil {
@@ -647,7 +717,7 @@ func processRound(round int) (bool, string) {
 			if word == "=" {
 				val, err := strconv.Atoi(words[idx+1])
 				if err != nil {
-					return false, "Error converting master.nom output to integer at word index " + strconv.Itoa(idx + 1) + " with value: " + words[idx+1]
+					return false, "Error converting master.nom output to integer at word index " + strconv.Itoa(idx+1) + " with value: " + words[idx+1]
 				}
 				ruleSet = append(ruleSet, val)
 			}
@@ -698,7 +768,7 @@ func processRound(round int) (bool, string) {
 	}
 
 	// 5 a) (players loop) Apply point changes to each user (as necessary)
-	
+
 	// say("Player starting points = " + $bl_startPoints)
 	// say("Points required to win the game = " + $bl_winPoints)
 	// say("Points gained for passing a rule = " + $bl_rulePassPts)
@@ -713,7 +783,7 @@ func processRound(round int) (bool, string) {
 	// Get player refs and award points
 	type PlayerRoundResult struct {
 		player string `redis:"player"`
-		points int `redis:"points"`
+		points int    `redis:"points"`
 	}
 
 	// Parse points
@@ -745,7 +815,7 @@ func processRound(round int) (bool, string) {
 	}
 
 	// Determine if player gains points
-	for _, s := range votedAgainstPlayers {				
+	for _, s := range votedAgainstPlayers {
 		if rulePassed {
 			if voteAgainstPts > 0 {
 				againstKey := s + ":points:" + currentDay
@@ -755,7 +825,7 @@ func processRound(round int) (bool, string) {
 				}
 				playerUpdate := new(PlayerRoundResult)
 				playerUpdate.player = s
-				
+
 				// Points increase
 				playerUpdate.points = voteAgainstPts
 				points = points + voteAgainstPts
@@ -772,9 +842,7 @@ func processRound(round int) (bool, string) {
 		}
 	}
 
-
 	// 5 b) (rounds loop) TODO: Apply changes to rules (e.g. necro rule strategy)
-
 
 	// 6) Release chat notifications
 	general := releaseNotification("Round " + strconv.Itoa(round) + " has concluded")
@@ -932,7 +1000,7 @@ func checkGameOver() bool {
 	return gameover
 }
 
-// {Event} Gameover 
+// {Event} Gameover
 // @see CastVote
 // @see isValidQuorum
 // DONE - Update chat with game result
@@ -990,7 +1058,7 @@ func userCan(players []string, times []string) string {
 	} else {
 		// No wrap
 		if round < totalPlayers {
-			turn = players[round - 1]
+			turn = players[round-1]
 			// Wrap last
 		} else if round == totalPlayers {
 			turn = players[0]
