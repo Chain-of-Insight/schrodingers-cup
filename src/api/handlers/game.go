@@ -91,8 +91,6 @@ func SubmitProposal(c echo.Context) error {
 	// Update to new round
 	if round == 0 || err != nil {
 		round = 1
-	} else {
-		round += 1
 	}
 
 	// Load existing logged in players
