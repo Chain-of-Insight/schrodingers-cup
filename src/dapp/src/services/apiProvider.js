@@ -153,6 +153,13 @@ async function getVotes(round) {
   return res;
 }
 
+async function getRules() {
+  let apiEndpoint = API_URL + 'rules/list';
+  const res = await axios.get(apiEndpoint);
+
+  return res;
+}
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
@@ -161,5 +168,6 @@ module.exports = {
   getRoundNumber: getRoundNumber,
   getPlayers: getPlayers,
   getProposedRule: getProposedRule,
-  getVotes: getVotes
+  getVotes: getVotes,
+  getRules: getRules
 };

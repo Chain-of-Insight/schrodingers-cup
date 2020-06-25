@@ -108,7 +108,7 @@ export default {
     ruleCandidate: {
       code: null,
       index: null,
-      kind: 'mutable'
+      kind: 'immutable'
     },
     queuedIndex: 0,
   }),
@@ -160,8 +160,10 @@ export default {
         this.currentView = 'Practice';
       }
     },
-    selectCurrentRule: function (currentIndex) {
-      this.ruleCandidate.index = currentIndex;
+    selectCurrentRule: function (index, kind) {
+      console.log('Selecting current:', index, kind);
+      this.ruleCandidate.index = index;
+      this.ruleCandidate.kind = kind;
     },
     selectQueuedRule: function (queuedIndex, ruleSetType) {
       if (ruleSetType !== ruleSetTypes.QUEUED)
@@ -195,7 +197,7 @@ export default {
         this.proposeRule();
       }
     },
-    proposeRule () {
+    proposeRule: function () {
       if (this.changeType === proposalTypes.CREATE) {
         this.ruleCandidate.index = -1;
       } else if (typeof(this.ruleCandidate.index) !== 'number') {

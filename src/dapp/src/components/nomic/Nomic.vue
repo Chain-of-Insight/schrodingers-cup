@@ -194,10 +194,11 @@ export default {
     players: [],
     currentTurn: null,
     nextTurn: null,
-    ruleSets: {
-      current: [],
-      saved: []
+    currentRules: {
+      immutable: [],
+      mutable: []
     },
+    savedRules: [],
     currentVotes: [],
     votedThisRound: false,
     proposedThisRound: false,
@@ -729,6 +730,7 @@ export default {
           return false;
         }
 
+        console.log('Round number =====>', result);
         this.currentRound = result.data.round;
       } else {
         console.error('Error while trying to get current round number: ', result);
@@ -785,24 +787,57 @@ export default {
         }
 
 
-        // console.log('Proposed rule =====>', result);
+        console.log('Proposed rule =====>', result);
         const proposedRule = result.data;
         
         // Make sure the response data has the important stuff...
-        if (typeof proposedRule.code === 'string' && typeof proposedRule.index === 'number') {
-          if (proposedRule.proposal !== proposalTypes.CREATE) {
-            // Store current rule code for voting display
-            proposedRule.original = this.ruleSets.current[proposedRule.index].code;
-          }
-          // Store proposed rule for voting (triggers showing of voting 'ribbon')
-          this.votingCandidate = proposedRule;
+        if (
+          !proposedRule.code ||
+          !proposdRule.authro ||
+          !proposedRule.proposal ||
+          typeof proposedRule.index === 'number'
+        )
+          return;
+
+        if (proposedRule.proposal !== proposalTypes.CREATE) {
+          // Store current rule code for voting display
+          proposedRule.original = this.currentRules.mutable[proposedRule.index].code;
         }
+        // Store proposed rule for voting (triggers showing of voting 'ribbon')
+        this.votingCandidate = proposedRule;
       } else {
         console.error('Error while trying to get proposed rule:', result);
       }
     },
-    getCurrentRules: function () {
-      this.ruleSets.current = CURRENT_RULES;
+    getCurrentRules: async function () {
+      let result = null;
+      try {
+        result = await api.getRules();
+      } catch (error) {
+        console.error('Error while trying to get rules:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
+      }
+
+      if (result.status && result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        // console.log('Rules =====>', result);
+        if (result.data.Immutable instanceof Array) {
+          this.currentRules.immutable = result.data.Immutable;
+        }
+        if (result.data.Mutable instanceof Array) {
+          this.currentRules.mutable = result.data.Mutable;
+        }
+      } else {
+        console.error('Error while trying to get rules: ', result);
+      }
     },
     getCurrentVotes: async function () {
       let result = null;
@@ -823,7 +858,7 @@ export default {
           return false;
         }
 
-        console.log('Votes =====>', result);
+        // console.log('Votes =====>', result);
         if (result.data.Votes instanceof Array) {
           this.currentVotes = result.data.Votes;
         }

@@ -4,9 +4,10 @@ export const ruleTypes = {
 }
 
 export const ruleSetTypes = {
-  SAVED: 'SAVED',
-  CURRENT: 'CURRENT',
-  QUEUED: 'QUEUED'
+  SAVED: 'saved',
+  IMMUTABLE: 'immutable',
+  MUTABLE: 'mutable',
+  QUEUED: 'queued'
 }
 
 export const proposalTypes = {
