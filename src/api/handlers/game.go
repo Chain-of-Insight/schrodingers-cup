@@ -95,13 +95,12 @@ type RuleProposal struct {
 	Code         string `json:"code" form:"code"`   // Nomsu code
 	ProposalType string `json:"type" form:"type"`   // Update, Create, Delete, Transmute
 	RuleType     string `json:"kind" form:"kind"`   // Mutable / Immutable
-	RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule
-	// (or -1 if creating a new rule)
+	RuleIndex    int    `json:"index" form:"index"` // rule index of the existing rule (or -1 if creating a new rule)
 }
 
 type VoteResult struct {
-	Success bool   `json:"success"`
-	Round   int    `json:"round"`   //
+	Success bool   `json:"success"` // Vote passed / failed (if requisite quorum)
+	Round   int    `json:"round"`   // Current round
 	Message string `json:"message"` // "OK!" or error message
 }
 

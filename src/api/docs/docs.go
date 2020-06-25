@@ -432,7 +432,7 @@ var doc = `{
                     "type": "string"
                 },
                 "index": {
-                    "description": "rule index of the existing rule",
+                    "description": "rule index of the existing rule (or -1 if creating a new rule)",
                     "type": "integer"
                 },
                 "kind": {
