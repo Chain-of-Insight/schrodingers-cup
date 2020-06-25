@@ -160,6 +160,13 @@ async function getRules() {
   return res;
 }
 
+async function getGameVars() {
+  let apiEndpoint = API_URL + 'game/vars';
+  const res = await axios.get(apiEndpoint);
+
+  return res;
+}
+
 module.exports = {
   testNomic: testNomic,
   PerformAuth: auth,
@@ -169,5 +176,6 @@ module.exports = {
   getPlayers: getPlayers,
   getProposedRule: getProposedRule,
   getVotes: getVotes,
-  getRules: getRules
+  getRules: getRules,
+  getGameVars: getGameVars
 };

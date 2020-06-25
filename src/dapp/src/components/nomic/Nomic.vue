@@ -29,7 +29,7 @@
             v-if="currentRound !== -1"
             v-bind:round="currentRound"
             v-bind="currentTotals"
-            :turn-window="turnWindow"
+            :turn-window="gameVars.turnDuration"
             ref="totals"
           ></Totals>
         </section>
@@ -37,7 +37,7 @@
         <section>
           <Voting
             v-if="chatChannelJoined && votingCandidate"
-            v-bind:turn-window="turnWindow"
+            v-bind:turn-window="gameVars.turnDuration"
             v-on:vote-cast="onVoteCast"
             ref="voting"
             :voting-candidate="votingCandidate"
@@ -99,7 +99,7 @@
         <RuleProposal
           ref="proposal"
           v-on:rule-proposed="onRuleProposed"
-          :turn-window="turnWindow"
+          :turn-window="gameVars.turnDuration"
         ></RuleProposal>
         <Practice
           :active-game="true"
@@ -183,7 +183,6 @@ export default {
     loginSigned: null,
     jwtToken: null,
     showEditor: false,
-    turnWindow: 300, // from rule 'external: $bl_turnWindowDuration = 300'
     votingCandidate: null,
     currentRound: -1,
     currentTotals: {
@@ -202,6 +201,15 @@ export default {
     currentVotes: [],
     votedThisRound: false,
     proposedThisRound: false,
+    gameVars: {
+      playerStartPts: 0,
+      pointsToWin: 0,
+      quorumRatio: 0,
+      ruleFailedPenalty: 0,
+      rulePassPts: 0,
+      turnDuration: 0,
+      voteAgainstPts: 0
+    }
   }),
   watch: {
     currentVotes: function (votes) {
@@ -250,7 +258,9 @@ export default {
     gameSetup: async function () {
       this.resetVoteTotals();
       // Get current rule set
-      this.getCurrentRules();
+      await this.getCurrentRules();
+      // Get current game vars
+      await this.getCurrentVars();
       // Get current round number
       await this.getCurrentRound();
       // Get players
@@ -864,6 +874,41 @@ export default {
         }
       } else {
         console.error('Error while trying to get votes: ', result);
+      }
+    },
+    getCurrentVars: async function () {
+      let result = null;
+      try {
+        result = await api.getGameVars();
+      } catch (error) {
+        console.error('Error while trying to get vars:', error);
+        if (error.response) {
+          result = error.response;
+        } else {
+          result = error;
+        }
+      }
+
+      if (result.status && result.status == 200) {
+        if (!result.data) {
+          console.error('Response successful but no data present:', result);
+          return false;
+        }
+
+        console.log('Vars =====>', result);
+        const gameVars = result.data;
+
+        // Check for all vars:
+        Object.keys(this.gameVars).forEach(varName => {
+          if (!gameVars.hasOwnProperty(varName)) {
+            console.error('Error with fetched game vars: response data missing var "' + varName + '"');
+            return false;
+          }
+        });
+
+        this.gameVars = gameVars;
+      } else {
+        console.error('Error while trying to get vars: ', result);
       }
     },
     resetVoteTotals: function () {
