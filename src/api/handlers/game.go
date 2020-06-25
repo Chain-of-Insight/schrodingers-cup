@@ -785,6 +785,12 @@ func processRound(round int) (bool, string) {
 		} else {
 			fmt.Println("[TEZOS] Operation Hash:", op)
 		}
+		// Release operation hash to chat
+		opMsg := "Game state changes detected. More info: https://better-call.dev/carthagenet/opg/" + op + "/contents"
+		opM := releaseNotification(opMsg)
+		if !opM {
+			fmt.Println("[TEZOS] ERR:", err)
+		}
 	}
 
 	// 5 a) (players loop) Apply point changes to each user (as necessary)
