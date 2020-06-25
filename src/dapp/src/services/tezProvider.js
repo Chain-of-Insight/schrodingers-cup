@@ -2,6 +2,8 @@ import { TezBridgeSigner } from '@taquito/tezbridge-signer';
 import { Tezos } from '@taquito/taquito';
 import { validateAddress } from '@taquito/utils';
 
+const gameContract = process.env.TZ_CONTRACT_GAME;
+
 const mountProvider = function () {
   Tezos.setProvider({
     rpc: process.env.TESTNET,
@@ -66,5 +68,6 @@ module.exports = {
   getBalance: getBalance,
   getContractInstance: getContractInstance,
   signMessage: signMessage,
-  validateAddress: validateAddress
+  validateAddress: validateAddress,
+  gameContract: gameContract
 };

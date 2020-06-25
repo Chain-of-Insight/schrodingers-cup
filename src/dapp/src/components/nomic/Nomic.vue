@@ -36,7 +36,7 @@
 
         <section>
           <Voting
-            v-if="chatChannelJoined && votingCandidate"
+            v-if="votingCandidate"
             v-bind:turn-window="gameVars.turnDuration"
             v-on:vote-cast="onVoteCast"
             ref="voting"
@@ -46,41 +46,58 @@
 
         <!-- Player Chat -->
         <section>
-          <div ref="chatWindow" id="messages" class="message-container">
-            <!-- Chat Messages -->
-            <p
-              v-for="(message, index) in chatMessages"
-              v-bind:key="index"
-              v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']"
-            >
-              <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
-              <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
-            </p>
-          </div>
+          <div class="container-fluid p-0">
+            <div class="row">
+              <div class="col-4">
+                <h6 class="font-weight-bold">Players:</h6>
+                <ul v-if="players.length > 0" class="list-group list-group-flush">
+                  <li
+                    v-for="player in players"
+                    :key="player"
+                    class="list-group-item border-0 p-1"
+                    :class="{ 'active': player === currentTurn }"
+                  ><small>{{ player }}</small></li>
+                </ul>
+              </div>
+              <div class="col-8">
+                <div ref="chatWindow" id="messages" class="message-container">
+                  <!-- Chat Messages -->
+                  <p
+                    v-for="(message, index) in chatMessages"
+                    v-bind:key="index"
+                    v-bind:class="[message.type, (message.author) ? message.author : 'system', 'chat-msg']"
+                  >
+                    <span v-if="message.author" class="chat-author">{{ message.author }}:</span>
+                    <span v-bind:class="['chat-msg-body', message.type]" v-if="message.msg">{{ message.msg }}</span>
+                  </p>
+                </div>
 
-          <!-- Chat Form Input -->
-          <div class="input-group chat-controls">
-            <input 
-              id="chat-input" 
-              type="text" 
-              class="form-control"
-              aria-label="Send a chat message..."
-              aria-describedby="Nomic player chat"
-              placeholder="Send a chat message..." 
-              v-model="chatInput.value"
-              @focus="chatInput.focused = true"
-              @blur="chatInput.focused = false"
-              v-on:keyup="chatKeyListener($event)"
-            />
-            <!-- Send Message -->
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+                <!-- Chat Form Input -->
+                <div class="input-group chat-controls">
+                  <input 
+                    id="chat-input" 
+                    type="text" 
+                    class="form-control"
+                    aria-label="Send a chat message..."
+                    aria-describedby="Nomic player chat"
+                    placeholder="Send a chat message..." 
+                    v-model="chatInput.value"
+                    @focus="chatInput.focused = true"
+                    @blur="chatInput.focused = false"
+                    v-on:keyup="chatKeyListener($event)"
+                  />
+                  <!-- Send Message -->
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" @click="submitChatMessage()">Send</button>
+                  </div>
+                </div>
+
+                <!-- Send test chat messages with fake API wallet address -->
+                <p class="h5 mt-3">Testing:</p>
+                <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
+              </div>
             </div>
           </div>
-
-          <!-- Send test chat messages with fake API wallet address -->
-          <p class="h5 mt-3">Testing:</p>
-          <button class="btn btn-primary" type="button" @click="ruleProposalHandler(true)">Proposal</button>
         </section>
 
         <!-- IDE -->
@@ -118,7 +135,9 @@ import {
   mountProvider,
   getBalance,
   signMessage,
-  validateAddress
+  validateAddress,
+  getContractInstance,
+  gameContract
 } from '../../services/tezProvider';
 
 import { 
@@ -209,7 +228,10 @@ export default {
       rulePassPts: 0,
       turnDuration: 0,
       voteAgainstPts: 0
-    }
+    },
+    getContractInstance: getContractInstance,
+    contractInstance: null,
+    gameContract: gameContract
   }),
   watch: {
     currentVotes: function (votes) {
@@ -253,6 +275,14 @@ export default {
       // Start fresh or sync up with running game
       await this.gameSetup();
     }
+
+    // Testing getting the contract instance...
+    // const contractAddress = this.gameContract;
+    // console.log('Contract address =====>', gameContract);
+    // this.contractInstance = await this.getContractInstance(contractAddress);
+    // console.log('Contract instance =====>', this.contractInstance);
+    // const gameInfo = await this.contractInstance.storage();
+    // console.log('Game info =====>', gameInfo);
   },
   methods: {
     gameSetup: async function () {
@@ -503,6 +533,7 @@ export default {
           round = parseInt(matches[2]);
 
           // Update round number
+          this.currentRound ++;
           await this.getCurrentRound();
           // Increment YES vote once for the player who proposed
           if (player !== this.address && round === this.currentRound) {
@@ -540,6 +571,8 @@ export default {
           round = parseInt(matches[1]);
 
           if (round === this.currentRound) {
+            // Increment to next round
+            this.currentRound ++;
             // Re-run setup methods to sync with state of game in API
             this.gameSetup();
           }
@@ -652,10 +685,10 @@ export default {
     },
     // XXX: remove 'testing' param later. For testing with buttons only
     ruleProposalHandler: function (testing) {
-      if (this.proposedThisRound && !testing) {
-        console.log('You already proposed this round! Skipping proposal prompt...');
-        return;
-      }
+      // if (this.proposedThisRound && !testing) {
+      //   console.log('You already proposed this round! Skipping proposal prompt...');
+      //   return;
+      // }
 
       if (!this.jwtToken) {
         this.alert.type = 'danger';
@@ -805,9 +838,9 @@ export default {
         
         // Make sure the response data has the important stuff...
         if (
-          !proposedRule.code ||
-          !proposedRule.author ||
-          !proposedRule.proposal ||
+          // !proposedRule.author ||
+          // !proposedRule.proposal ||
+          // (!proposedRule.code && !proposedRule.proposal !== proposalTypes.DELETE) ||
           typeof proposedRule.index !== 'number'
         )
           return;
