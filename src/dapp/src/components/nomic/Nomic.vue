@@ -572,10 +572,7 @@ export default {
 
           // Increment to next round
           this.currentRound ++;
-          if (round === this.currentRound) {
-            // Re-run setup methods to sync with state of game in API
-            this.gameSetup();
-          }
+          this.gameSetup();
           break;
       }
 
