@@ -25,10 +25,10 @@ The overall winner of the Nomic game receives an XTZ reward transferred to their
 We hope to produce a blockchain game that's entertaining but psychologically intense, and that educates players about how Tezos actually works. Additionally, our NFT and rewards distribution system presents a reasonable implementation to show how esports tournament ladders can be run on blockchain technology.
 
 ## Links
-Dapp (Player interface): https://nomic.schrodingerscup.com/
-API: https://api.schrodingerscup.com/
-Game Contract (Successfully completed game of Nomic): https://better-call.dev/carthagenet/KT1UBKq1mMym1vHwgk3JbcLqmRhu3ActcLYB/operations
-NFT Rewards Contract: https://better-call.dev/carthagenet/KT1QkCAYZT4Eo94RML6yXzXFZMXx6gSFgAg5/operations
+- Dapp (Player interface): https://nomic.schrodingerscup.com/
+- API: https://api.schrodingerscup.com/
+- Game Contract (Successfully completed game of Nomic): https://better-call.dev/carthagenet/KT1UBKq1mMym1vHwgk3JbcLqmRhu3ActcLYB/operations
+- NFT Rewards Contract: https://better-call.dev/carthagenet/KT1QkCAYZT4Eo94RML6yXzXFZMXx6gSFgAg5/operations
 
 
 ---
@@ -49,7 +49,7 @@ In between game play sessions, you'll want to brush up on your skills for dealin
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/hHpEHMu.png">
+  <img src="https://i.imgur.com/hHpEHMu.png">
 </p>
 <br/>
 
@@ -59,13 +59,13 @@ Before joining an active game play session, users are required to sign a message
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/WBS6dE4.png">
+  <img src="https://i.imgur.com/WBS6dE4.png">
 </p>
 <br/>
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/Y65TKb3.png">
+  <img src="https://i.imgur.com/Y65TKb3.png">
 </p>
 <br/>
 
@@ -75,7 +75,7 @@ In an active game the order of turns is the same as the order in which players j
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/yaSSkPe.png">
+  <img src="https://i.imgur.com/yaSSkPe.png">
 </p>
 <br/>
 
@@ -83,7 +83,7 @@ Clicking the "Show rule code" button displays a side-by-side if a previously con
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/XDGXCun.png">
+  <img src="https://i.imgur.com/XDGXCun.png">
 </p>
 <br/>
 
@@ -91,7 +91,7 @@ As defined in [Mutable Rule 0](https://github.com/Chain-of-Insight/schrodingers-
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/C4R7t3e.png">
+  <img src="https://i.imgur.com/C4R7t3e.png">
 </p>
 <br/>
 
@@ -99,7 +99,7 @@ Once there is a quorum of votes is arrived at the API server will update the gam
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/00w5oXC.png">
+  <img src="https://i.imgur.com/00w5oXC.png">
 </p>
 <br/>
 
@@ -107,6 +107,6 @@ Once a rule change occurs that triggers a game over event the API wallet initiat
 
 <br/>
 <p align="center">
-  <img width="450px" height="auto" src="https://i.imgur.com/XmNiZRA.png">
+  <img src="https://i.imgur.com/XmNiZRA.png">
 </p>
 <br/>
