@@ -45,7 +45,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-### In between game play sessions, you'll want to brush up on your skills. The game's meta-programming language, for changing the rules, is called [Nomsu] (https://nomsu.org/). Head to https://nomic.schrodingerscup.com/practice where you can test compiling rules and save or queue them for use in the next game session.
+### In between game play sessions, you'll want to brush up on your skills. The game's meta-programming language, for changing the rules, is called [Nomsu](https://nomsu.org/). Head to https://nomic.schrodingerscup.com/practice where you can test compiling rules and save or queue them for use in the next game session.
 
 <br/>
 <p align="center">
