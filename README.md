@@ -55,7 +55,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 
 ## The Game Knows Who You Are 😱
 
-### Before joining live play, users sign a message proving ownership of their Tezos address. The API server Server wallet sends some of the game's transactions keeping it a "free-to-play" game. Additionally, this ensures nobody else can claim your wallet address as a display name in the game chat.
+### Before joining live play, users sign a message proving ownership of their Tezos address. The API server sends some of the game's transactions keeping it a "free-to-play" game, but this also ensures nobody else can claim your wallet address as a display name in the game chat.
 
 <br/>
 <p align="center">
