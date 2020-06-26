@@ -103,7 +103,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-### Once there is a rule change occurs that triggers a game over event, the API initiates an operation on the game contract which transfers an NFT reward to the winning player. [Example operation](https://better-call.dev/search?text=oocc7Sz4nyaCcn9ucz5NEru9dop7Ugsyc6LN4PEhghptfoFEhiH)
+### Once there is a rule change that triggers a game over event, the API initiates an operation on the game contract which transfers an NFT reward to the winning player. [Example operation](https://better-call.dev/search?text=oocc7Sz4nyaCcn9ucz5NEru9dop7Ugsyc6LN4PEhghptfoFEhiH)
 
 <br/>
 <p align="center">
