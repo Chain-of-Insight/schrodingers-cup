@@ -37,7 +37,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 
 ## Pre-game Warmup
 
-### After connecting with your wallet you'll see a countdown to the next game of Nomic. Game play sessions are held played daily at 16:00 UTC until a winner is declared in the contract.
+### After connecting with your wallet you'll see a countdown to the next game. Play sessions are held daily at 16:00 UTC until a winner is declared in the contract.
 
 <br/>
 <p align="center">
@@ -45,7 +45,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-### In between game play sessions, you'll want to brush up on your skills for dealing with our game's meta-programming language called [Nomsu] (https://nomsu.org/). At https://nomic.schrodingerscup.com/practice you can test compiling some rules as well as save or queue them for use in the next game session.
+### In between game play sessions, you'll want to brush up on your skills and the game's meta-programming language called [Nomsu] (https://nomsu.org/). Head to https://nomic.schrodingerscup.com/practice and you can test compiling rules, and save or queue them for use in the next game session.
 
 <br/>
 <p align="center">
@@ -53,9 +53,9 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-## The Game Knows Who You Are
+## The Game Knows Who You Are 😱
 
-### Before joining an active game play session, users are required to sign a message proving ownership of their Tezos address. This allows the game to initiate transactions to the game smart contract using the API server Server wallet, and keeps it a "free-to-play" game. Additionally, it provides security to ensure nobody else can claim your wallet address as a display name in the game chat.
+### Before joining live play, users sign a message proving ownership of their Tezos address. The API server Server wallet sends some of the game's transactions keeping it a "free-to-play" game. Additionally, this ensures nobody else can claim your wallet address as a display name in the game chat.
 
 <br/>
 <p align="center">
@@ -69,9 +69,9 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-## Live Game Play
+## Live Play
 
-### In an active game the order of turns is the same as the order in which players joined the game session. Once a rule has been proposed by the "first joiner", a voting interface is presented to each other player above the game chat.
+### In an active game, the order of turns is decided by the order players joined the game session. Once a rule is proposed by the "first joiner", a voting interface is presented to each other player appearing above the game chat.
 
 <br/>
 <p align="center">
@@ -79,7 +79,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-### Clicking the "Show rule code" button displays a side-by-side if a previously confirmed rule is being changed or a display of the rule code being added if the proposal is a new rule candidate. If the proposal is to delete or transmute a previous rule only that current rule code is shown.
+### Clicking the "Show rule code" button displays information you'll want to check out. Here we see a side-by-side if a previous rule is being changed, or just the new code if it's a rule being added. If the proposal is to delete or transmute a previous rule, only that rule's current code is shown.
 
 <br/>
 <p align="center">
@@ -87,7 +87,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-### As defined in [Mutable Rule 0](https://github.com/Chain-of-Insight/schrodingers-cup/blob/master/src/api/nomsu/rules/mutable/rule0.nom) (at the outset of the game at least) everyone will need to vote before triggering a decision, but while you're waiting on those slow-pokes you can watch the vote results in real time 😎
+### As defined in [Mutable Rule 0](https://github.com/Chain-of-Insight/schrodingers-cup/blob/master/src/api/nomsu/rules/mutable/rule0.nom) (at the outset of the game at least) everyone will need to vote before triggering a decision. While you're waiting on those slow-pokes you can watch voting results in real time 😎
 
 <br/>
 <p align="center">
@@ -95,7 +95,7 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 </p>
 <br/>
 
-Once there is a quorum of votes is arrived at the API server will update the game chat with results of the round.
+### Once there is a quorum of votes, the API server updates the game chat with results of the round, and updates Tezos storage on the game contract. 
 
 <br/>
 <p align="center">
@@ -103,7 +103,7 @@ Once there is a quorum of votes is arrived at the API server will update the gam
 </p>
 <br/>
 
-### Once a rule change occurs that triggers a game over event the API wallet initiates an operation on the game contract which transfers an NFT reward to the winning player. [Example operation](https://better-call.dev/search?text=oocc7Sz4nyaCcn9ucz5NEru9dop7Ugsyc6LN4PEhghptfoFEhiH)
+### Once there is a rule change occurs that triggers a game over event, the API initiates an operation on the game contract which transfers an NFT reward to the winning player. [Example operation](https://better-call.dev/search?text=oocc7Sz4nyaCcn9ucz5NEru9dop7Ugsyc6LN4PEhghptfoFEhiH)
 
 <br/>
 <p align="center">
