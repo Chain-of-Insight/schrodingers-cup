@@ -29,7 +29,8 @@ We hope to produce a blockchain game that's entertaining but psychologically int
 - API: https://api.schrodingerscup.com/
 - Game Contract (Successfully completed game of Nomic): https://better-call.dev/carthagenet/KT1UBKq1mMym1vHwgk3JbcLqmRhu3ActcLYB/operations
 - NFT Rewards Contract: https://better-call.dev/carthagenet/KT1QkCAYZT4Eo94RML6yXzXFZMXx6gSFgAg5/operations
-
+- Past Winners: https://better-call.dev/carthagenet/KT1QkCAYZT4Eo94RML6yXzXFZMXx6gSFgAg5/storage
+- Demo Video: https://youtu.be/vloSAc__jpc
 
 ---
 
